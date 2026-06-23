@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrance Assessment | African Global Scholarship Foundation</title>
+<meta name="description" content="Take your AGSF entrance assessment.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --c-white: #FFFFFF; --c-dark-menu: #4A4541; --c-dark-menu-2: #423D3A;
+  --c-ink: #1A1816; --c-ink-soft: #2E2A27; --c-gold: #C8862B; --c-gold-light: #E0A94F;
+  --c-terracotta: #8B3A1F; --c-cream: #F5F2ED; --c-cream-2: #EFEAE1; --c-line: #E4DFD6;
+  --c-line-dark: rgba(255,255,255,0.18); --c-success: #2E7D4F; --c-error: #B3361E;
+  --c-white-text: #FFFFFF; --c-muted: #6B655D;
+  --f-display: 'Sora', sans-serif; --f-body: 'Inter', sans-serif;
+  --header-h: 76px; --maxw: 1180px;
+  --radius-sm: 8px; --radius-md: 14px; --radius-lg: 22px;
+  --shadow-card: 0 8px 30px rgba(26,24,22,0.08); --shadow-modal: 0 24px 64px rgba(26,24,22,0.28);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; } html { scroll-behavior: smooth; }
+body { margin: 0; font-family: var(--f-body); color: var(--c-ink); background: var(--c-white); -webkit-font-smoothing: antialiased; line-height: 1.6; }
+h1,h2,h3,h4 { font-family: var(--f-display); color: var(--c-ink); margin: 0; line-height: 1.15; letter-spacing: -0.01em; }
+p { margin: 0 0 1em; color: var(--c-ink-soft); }
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font-family: var(--f-body); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; } }
+
+.site-header { position: sticky; top: 0; z-index: 200; height: var(--header-h); background: var(--c-white); border-bottom: 1px solid var(--c-line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+.icon-btn { background: none; border: none; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: var(--c-ink); transition: background 0.2s var(--ease), transform 0.2s var(--ease); }
+.icon-btn:hover { background: var(--c-cream); }
+.icon-btn:active { transform: scale(0.93); }
+.icon-btn svg { width: 24px; height: 24px; }
+.icon-btn:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 2px; }
+.site-header .logo-link { display: flex; align-items: center; height: 100%; }
+.site-header .logo-link img { height: 48px; width: 48px; object-fit: contain; }
+
+.menu-overlay { position: fixed; inset: 0; background: var(--c-dark-menu); z-index: 500; display: flex; flex-direction: column; transform: translateY(-100%); transition: transform 0.45s var(--ease); overflow-y: auto; }
+.menu-overlay.open { transform: translateY(0); }
+.menu-top { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; flex-shrink: 0; }
+.menu-top .logo-link img { height: 48px; width: 48px; object-fit: contain; }
+.menu-search-wrap { padding: 4px 24px 18px; }
+.menu-search-box { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid var(--c-line-dark); border-radius: 999px; padding: 10px 18px; opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.3s var(--ease), max-height 0.3s var(--ease), margin 0.3s var(--ease); }
+.menu-search-box.open { opacity: 1; max-height: 60px; margin-bottom: 4px; }
+.menu-search-box input { flex: 1; background: none; border: none; outline: none; color: var(--c-white); font-family: var(--f-body); font-size: 15px; }
+.menu-search-box input::placeholder { color: rgba(255,255,255,0.5); }
+.menu-search-box svg { width: 18px; height: 18px; color: rgba(255,255,255,0.6); flex-shrink: 0; }
+.menu-search-results { margin: 0 24px 10px; display: none; flex-direction: column; gap: 2px; }
+.menu-search-results.show { display: flex; }
+.menu-search-results a { color: var(--c-white); background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: var(--radius-sm); font-size: 14px; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s var(--ease); }
+.menu-search-results a:hover { background: rgba(255,255,255,0.14); }
+.menu-search-results .no-results { color: rgba(255,255,255,0.5); padding: 12px 16px; font-size: 14px; }
+.menu-items { flex: 1; padding: 8px 0 24px; }
+.menu-item { border-bottom: 1px solid var(--c-line-dark); }
+.menu-item:first-child { border-top: 1px solid var(--c-line-dark); }
+.menu-item-head { width: 100%; background: none; border: none; display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; color: var(--c-white-text); text-align: left; }
+.menu-item-head .label { font-family: var(--f-display); font-weight: 600; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase; }
+.menu-item-head .chevron-wrap { display: flex; align-items: center; gap: 14px; }
+.menu-item-head .divider { width: 1px; height: 18px; background: rgba(255,255,255,0.35); }
+.menu-item-head .chevron { width: 18px; height: 18px; transition: transform 0.3s var(--ease); color: var(--c-white); }
+.menu-item.open .chevron { transform: rotate(180deg); }
+.menu-item-body { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease); background: var(--c-dark-menu-2); }
+.menu-item.open .menu-item-body { max-height: 600px; }
+.menu-item-body-inner { padding: 4px 24px 22px 24px; display: flex; flex-direction: column; gap: 2px; }
+.menu-item-body-inner a { color: rgba(255,255,255,0.82); font-size: 14.5px; padding: 11px 6px; border-radius: 6px; transition: background 0.2s var(--ease), color 0.2s var(--ease), padding-left 0.2s var(--ease); }
+.menu-item-body-inner a:hover { background: rgba(255,255,255,0.08); color: var(--c-white); padding-left: 12px; }
+.menu-lang { flex-shrink: 0; border-top: 1px solid var(--c-line-dark); display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; color: var(--c-white); }
+.menu-lang .lang-left { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: 0.04em; font-size: 14px; }
+.menu-lang svg { width: 20px; height: 20px; }
+body.menu-locked { overflow: hidden; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 30px; border-radius: 999px; font-family: var(--f-display); font-weight: 600; font-size: 15px; letter-spacing: 0.01em; border: none; transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease); }
+.btn-primary { background: var(--c-gold); color: var(--c-white); box-shadow: 0 6px 20px rgba(200,134,43,0.35); }
+.btn-primary:hover { background: var(--c-gold-light); transform: translateY(-2px); box-shadow: 0 10px 26px rgba(200,134,43,0.42); }
+.btn-primary:active { transform: translateY(0); }
+.btn-outline { background: transparent; color: var(--c-ink); border: 1.5px solid var(--c-ink); }
+.btn-outline:hover { background: var(--c-ink); color: var(--c-white); }
+.btn-ghost { background: var(--c-cream); color: var(--c-ink); }
+.btn-ghost:hover { background: var(--c-cream-2); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+.btn:focus-visible { outline: 2px solid var(--c-gold); outline-offset: 3px; }
+.btn-block { width: 100%; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(26,24,22,0.55); backdrop-filter: blur(3px); z-index: 800; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease); }
+.modal-backdrop.open { opacity: 1; pointer-events: auto; }
+.modal-card { background: var(--c-white); border-radius: var(--radius-lg); max-width: 480px; width: 100%; max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-modal); transform: translateY(24px) scale(0.97); opacity: 0; transition: transform 0.35s var(--ease), opacity 0.35s var(--ease); }
+.modal-backdrop.open .modal-card { transform: translateY(0) scale(1); opacity: 1; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 22px 24px 0; }
+.modal-head h3 { font-size: 20px; }
+.modal-close { background: var(--c-cream); border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s var(--ease); }
+.modal-close:hover { background: var(--c-cream-2); }
+.modal-close svg { width: 16px; height: 16px; }
+.modal-body { padding: 18px 24px 28px; }
+.field { margin-bottom: 16px; display: flex; flex-direction: column; gap: 7px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--c-ink); letter-spacing: 0.01em; }
+.field input, .field select, .field textarea { font-family: var(--f-body); padding: 13px 15px; border-radius: var(--radius-sm); border: 1.5px solid var(--c-line); font-size: 15px; background: var(--c-cream); color: var(--c-ink); transition: border-color 0.2s var(--ease), background 0.2s var(--ease); outline: none; width: 100%; }
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--c-gold); background: var(--c-white); }
+.field textarea { resize: vertical; min-height: 90px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+.modal-actions .btn { flex: 1; }
+.modal-status { font-size: 13.5px; padding: 11px 14px; border-radius: var(--radius-sm); margin-bottom: 14px; display: none; }
+.modal-status.show { display: block; }
+.modal-status.success { background: #E7F4EC; color: var(--c-success); }
+.modal-status.error { background: #FBEAE6; color: var(--c-error); }
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: var(--c-white); border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+.btn.loading .spinner { display: inline-block; }
+.btn.loading .btn-label { opacity: 0.7; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--c-ink); color: var(--c-white); padding: 14px 22px; border-radius: 999px; font-size: 14px; font-weight: 500; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease), transform 0.3s var(--ease); box-shadow: 0 12px 30px rgba(0,0,0,0.25); display: flex; align-items: center; gap: 10px; max-width: 90vw; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--c-success); }
+.toast.error { background: var(--c-error); }
+
+.site-footer { background: var(--c-ink); color: rgba(255,255,255,0.85); padding: 64px 24px 28px; }
+.footer-inner { max-width: var(--maxw); margin: 0 auto; }
+.footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.footer-brand img { height: 44px; width: 44px; margin-bottom: 14px; object-fit: contain; }
+.footer-brand p { color: rgba(255,255,255,0.6); font-size: 14px; max-width: 320px; }
+.footer-col h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-gold-light); margin-bottom: 16px; }
+.footer-col a, .footer-col button.footer-link { display: block; background: none; border: none; text-align: left; color: rgba(255,255,255,0.75); font-size: 14.5px; padding: 7px 0; font-family: var(--f-body); transition: color 0.2s var(--ease), padding-left 0.2s var(--ease); width: 100%; }
+.footer-col a:hover, .footer-col button.footer-link:hover { color: var(--c-gold-light); padding-left: 4px; }
+.footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; padding-top: 24px; font-size: 13px; color: rgba(255,255,255,0.5); }
+.footer-legal { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.footer-legal a { color: rgba(255,255,255,0.5); transition: color 0.2s var(--ease); }
+.footer-legal a:hover { color: var(--c-white); }
+.footer-legal .sep { color: rgba(255,255,255,0.3); }
+@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; gap: 30px; } .footer-bottom { flex-direction: column; align-items: flex-start; } }
+
+.back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--c-muted); font-size: 14px; font-weight: 600; margin-bottom: 28px; transition: gap 0.2s var(--ease), color 0.2s var(--ease); }
+.back-link:hover { gap: 12px; color: var(--c-ink); }
+.back-link svg { width: 16px; height: 16px; }
+.eyebrow { display: inline-block; font-family: var(--f-display); font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-gold); margin-bottom: 14px; }
+
+/* ============ EXAM-SPECIFIC ============ */
+.exam-wrap { max-width: 760px; margin: 0 auto; padding: 48px 24px 90px; }
+
+.exam-card { background: var(--c-cream); border-radius: var(--radius-lg); padding: 40px; text-align: center; }
+.exam-card h2 { font-size: 26px; margin-bottom: 14px; }
+.exam-card p { max-width: 480px; margin-left: auto; margin-right: auto; }
+.exam-number-badge { display: inline-block; background: var(--c-ink); color: var(--c-white); font-family: var(--f-display); font-weight: 700; letter-spacing: 0.03em; padding: 10px 20px; border-radius: 999px; font-size: 15px; margin: 14px 0 22px; }
+.exam-warning { background: #FBF3E6; border: 1px solid #EAD6AD; border-radius: var(--radius-sm); padding: 14px 18px; font-size: 13.5px; color: #7A5417; text-align: left; margin: 22px 0; }
+
+.exam-progress-bar { height: 6px; background: var(--c-line); border-radius: 999px; overflow: hidden; margin-bottom: 36px; }
+.exam-progress-fill { height: 100%; background: var(--c-gold); border-radius: 999px; transition: width 0.4s var(--ease); width: 0%; }
+.exam-progress-label { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--c-muted); margin-bottom: 10px; font-weight: 600; }
+
+.q-card { display: none; }
+.q-card.active { display: block; animation: qfade 0.4s var(--ease); }
+@keyframes qfade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.q-subject { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-gold); margin-bottom: 10px; }
+.q-text { font-size: 21px; font-weight: 600; font-family: var(--f-display); margin-bottom: 26px; color: var(--c-ink); }
+.q-options { display: flex; flex-direction: column; gap: 12px; }
+.q-option { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border: 1.5px solid var(--c-line); border-radius: var(--radius-md); background: var(--c-white); transition: border-color 0.2s var(--ease), background 0.2s var(--ease), transform 0.15s var(--ease); text-align: left; }
+.q-option:hover { border-color: var(--c-gold-light); transform: translateX(2px); }
+.q-option.selected { border-color: var(--c-gold); background: #FBF3E6; }
+.q-option .letter { width: 30px; height: 30px; border-radius: 50%; background: var(--c-cream); display: flex; align-items: center; justify-content: center; font-family: var(--f-display); font-weight: 700; font-size: 13px; flex-shrink: 0; color: var(--c-ink); }
+.q-option.selected .letter { background: var(--c-gold); color: var(--c-white); }
+.q-option .opt-text { font-size: 15px; color: var(--c-ink); }
+
+.exam-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 36px; gap: 12px; }
+.exam-nav .btn { min-width: 110px; }
+.exam-dots { display: flex; gap: 5px; flex-wrap: wrap; justify-content: center; max-width: 200px; }
+.exam-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--c-line); transition: background 0.2s var(--ease); }
+.exam-dots span.answered { background: var(--c-gold-light); }
+.exam-dots span.current { background: var(--c-gold); transform: scale(1.3); }
+
+/* Results */
+.results-card { text-align: center; }
+.score-ring-wrap { width: 180px; height: 180px; margin: 0 auto 24px; position: relative; }
+.score-ring-wrap svg { transform: rotate(-90deg); }
+.score-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+.score-pct .num { font-family: var(--f-display); font-weight: 800; font-size: 38px; color: var(--c-ink); }
+.score-pct .label { font-size: 12px; color: var(--c-muted); }
+.result-badge { display: inline-block; padding: 8px 20px; border-radius: 999px; font-family: var(--f-display); font-weight: 700; font-size: 14px; margin-bottom: 8px; }
+.result-badge.excellent { background: #E7F4EC; color: var(--c-success); }
+.result-badge.pass { background: #FBF3E6; color: #946217; }
+.result-badge.fail { background: #FBEAE6; color: var(--c-error); }
+.result-breakdown { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 30px 0; text-align: left; }
+.rb-card { background: var(--c-white); border: 1px solid var(--c-line); border-radius: var(--radius-sm); padding: 16px; }
+.rb-card .rb-subject { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--c-muted); margin-bottom: 6px; }
+.rb-card .rb-score { font-family: var(--f-display); font-weight: 700; font-size: 20px; color: var(--c-ink); }
+.save-note { background: var(--c-cream); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 13.5px; text-align: left; margin-top: 24px; }
+.save-note strong { color: var(--c-ink); }
+
+@media (max-width: 600px) {
+  .exam-card { padding: 28px 22px; }
+  .result-breakdown { grid-template-columns: 1fr; }
+  .exam-nav .btn { min-width: 90px; padding: 12px 18px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="site-header">
+  <button class="icon-btn" id="hamburgerBtn" aria-label="Open menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <a href="index.html" class="logo-link" aria-label="AGSF Home">
+    <img src="logo.png" alt="African Global Scholarship Foundation logo" onerror="this.style.display='none'">
+  </a>
+  <button class="icon-btn" id="headerSearchBtn" aria-label="Search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </button>
+</header>
+
+<!-- ============ SLIDE-IN MENU ============ -->
+<nav class="menu-overlay" id="menuOverlay" aria-label="Main menu">
+  <div class="menu-top">
+    <button class="icon-btn" id="menuCloseBtn" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <a href="index.html" class="logo-link" aria-label="AGSF Home">
+      <img src="logo.png" alt="AGSF logo" onerror="this.style.display='none'">
+    </a>
+    <button class="icon-btn" id="menuSearchBtn" aria-label="Toggle search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </div>
+  <div class="menu-search-wrap">
+    <div class="menu-search-box" id="menuSearchBox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="menuSearchInput" placeholder="Search the site…" autocomplete="off">
+    </div>
+    <div class="menu-search-results" id="menuSearchResults"></div>
+  </div>
+  <div class="menu-items">
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">Who We Are</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="index.html#who-we-are">Our Vision &amp; Mission</a>
+        <a href="index.html#why-we-exist">Why We Exist</a>
+        <a href="index.html#founder">Message from the Founder</a>
+      </div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">What We Do</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="index.html#what-we-do">Talent Identification</a>
+        <a href="index.html#what-we-do">Assessment &amp; Selection</a>
+        <a href="index.html#what-we-do">University Placement</a>
+        <a href="index.html#what-we-do">Full Educational Sponsorship</a>
+        <a href="index.html#what-we-do">Leadership Development</a>
+        <a href="index.html#what-we-do">Alumni Network</a>
+      </div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">Where We Work</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner"><a href="index.html#where-we-work">Our Regional Footprint</a></div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">How We Work</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="index.html#how-we-work">Our Scholarship Model</a>
+        <a href="index.html#long-term-goal">Our Long-Term Goal</a>
+      </div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">Resources and Media</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="story.html">Our Stories</a>
+        <a href="index.html#resources-media">Media &amp; Updates</a>
+      </div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">Get Involved</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="exam.html">Apply for Assessment</a>
+        <a href="index.html#get-involved">Sponsor a Future Leader</a>
+        <a href="index.html#get-involved">Partner With Us</a>
+        <a href="index.html#get-involved">Join Our Mission</a>
+      </div></div>
+    </div>
+  </div>
+  <div class="menu-lang">
+    <span class="lang-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</nav>
+
+<main>
+  <div class="exam-wrap">
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Home
+    </a>
+
+    <!-- STATE 1: No registration found -->
+    <div id="noRegState" class="exam-card" style="display:none;">
+      <span class="eyebrow">Entrance Assessment</span>
+      <h2>Let's get you registered first</h2>
+      <p>We couldn't find an active registration on this device. Please apply for assessment to receive your exam number before starting the test.</p>
+      <button class="btn btn-primary" id="goApplyBtn" style="margin-top:10px;">Apply for Assessment</button>
+    </div>
+
+    <!-- STATE 2: Intro / ready to start -->
+    <div id="introState" class="exam-card" style="display:none;">
+      <span class="eyebrow">Entrance Assessment</span>
+      <h2 id="introGreeting">Welcome</h2>
+      <p>Your exam number has been generated below. Please keep it safe — you'll need it to retrieve your results.</p>
+      <div class="exam-number-badge" id="introExamNumber">AGSF-000000</div>
+      <p>You are about to take a <strong>30-question</strong> entrance assessment covering English, Mathematics and General Knowledge. There is no time limit — take your time and answer every question.</p>
+      <div class="exam-warning">
+        <strong>Before you begin:</strong> each candidate receives a different, randomly selected set of questions. Make sure you have a stable internet connection so your results can be saved.
+      </div>
+      <button class="btn btn-primary btn-block" id="startExamBtn">Start Assessment</button>
+    </div>
+
+    <!-- STATE 3: Already completed -->
+    <div id="doneState" class="exam-card" style="display:none;">
+      <span class="eyebrow">Entrance Assessment</span>
+      <h2>You've already completed this assessment</h2>
+      <p>Your results have been submitted to our admissions team. A full report will be sent to your email shortly.</p>
+      <div class="exam-number-badge" id="doneExamNumber">AGSF-000000</div>
+      <button class="btn btn-outline" onclick="window.location.href='index.html'" style="margin-top:6px;">Return to Home</button>
+    </div>
+
+    <!-- STATE 4: Active exam -->
+    <div id="examState" style="display:none;">
+      <div class="exam-progress-label">
+        <span id="progressText">Question 1 of 30</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="exam-progress-bar"><div class="exam-progress-fill" id="progressFill"></div></div>
+      <div id="questionsContainer"></div>
+      <div class="exam-nav">
+        <button class="btn btn-ghost" id="prevBtn">Back</button>
+        <div class="exam-dots" id="examDots"></div>
+        <button class="btn btn-primary" id="nextBtn">Next</button>
+      </div>
+    </div>
+
+    <!-- STATE 5: Results -->
+    <div id="resultsState" class="exam-card results-card" style="display:none;">
+      <span class="eyebrow">Your Results</span>
+      <div class="score-ring-wrap">
+        <svg width="180" height="180" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="78" fill="none" stroke="#E4DFD6" stroke-width="14"/>
+          <circle id="scoreCircle" cx="90" cy="90" r="78" fill="none" stroke="#C8862B" stroke-width="14" stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="490"/>
+        </svg>
+        <div class="score-pct"><span class="num" id="scoreNum">0%</span><span class="label">SCORE</span></div>
+      </div>
+      <div id="resultBadge" class="result-badge pass">PASS</div>
+      <h2 id="resultHeadline">Well done!</h2>
+      <p id="resultMessage">You scored 0 out of 30 questions correctly.</p>
+      <div class="result-breakdown" id="resultBreakdown"></div>
+      <div class="save-note">
+        <strong>Keep your exam number safe:</strong> <span id="resultExamNumber">AGSF-000000</span><br>
+        Your full results report will be sent to your registered email address soon.
+      </div>
+      <button class="btn btn-outline" onclick="window.location.href='index.html'" style="margin-top:24px;">Return to Home</button>
+    </div>
+  </div>
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="logo.png" alt="AGSF logo" onerror="this.style.display='none'">
+        <p>Empowering African minds. Building global leaders. Transforming Africa — one fully funded scholarship at a time.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a>
+        <a href="story.html">Our Stories</a>
+        <a href="exam.html">Apply for Assessment</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="index.html#who-we-are">Who We Are</a>
+        <a href="index.html#what-we-do">What We Do</a>
+        <a href="index.html#how-we-work">How We Work</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 1967 – 2026 African Global Scholarship Foundation. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="terms.html">Terms &amp; Conditions</a><span class="sep">·</span><a href="privacy.html">Privacy Policy</a><span class="sep">·</span><span>Cookie Notice</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="question_bank.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCJEpqM7Xu7fIxKAwJJwNY-kmd6xNjjc5w",
+  authDomain: "agsf-a34f4.firebaseapp.com",
+  projectId: "agsf-a34f4",
+  storageBucket: "agsf-a34f4.firebasestorage.app",
+  messagingSenderId: "1047176725753",
+  appId: "1:1047176725753:web:988c2ae4411392553a8e28",
+  measurementId: "G-RLHSFP6K4J"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function showToast(message, type, duration) {
+  duration = duration || 3200;
+  let toast = document.getElementById('global-toast');
+  if (!toast) { toast = document.createElement('div'); toast.id = 'global-toast'; toast.className = 'toast'; document.body.appendChild(toast); }
+  toast.textContent = message;
+  toast.className = 'toast show' + (type && type !== 'default' ? ' ' + type : '');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(function(){ toast.classList.remove('show'); }, duration);
+}
+
+/* ---------- Menu (same as index) ---------- */
+function initMenu() {
+  const hamburger = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('menuOverlay');
+  const closeBtn = document.getElementById('menuCloseBtn');
+  const searchBtn = document.getElementById('menuSearchBtn');
+  const headerSearchBtn = document.getElementById('headerSearchBtn');
+  const searchBox = document.getElementById('menuSearchBox');
+  const searchInput = document.getElementById('menuSearchInput');
+  if (!overlay) return;
+  function openMenu(){ overlay.classList.add('open'); document.body.classList.add('menu-locked'); }
+  function closeMenu(){
+    overlay.classList.remove('open'); document.body.classList.remove('menu-locked');
+    if (searchBox) searchBox.classList.remove('open');
+    const results = document.getElementById('menuSearchResults');
+    if (results) results.classList.remove('show');
+  }
+  if (hamburger) hamburger.addEventListener('click', openMenu);
+  if (headerSearchBtn) headerSearchBtn.addEventListener('click', function(){
+    openMenu();
+    setTimeout(function(){ if (searchBox) searchBox.classList.add('open'); if (searchInput) searchInput.focus(); }, 200);
+  });
+  if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+  if (searchBtn) searchBtn.addEventListener('click', function(){
+    searchBox.classList.toggle('open');
+    if (searchBox.classList.contains('open')) searchInput.focus();
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('open')) closeMenu(); });
+  document.querySelectorAll('.menu-item-head').forEach(function(head){
+    head.addEventListener('click', function(){
+      const item = head.closest('.menu-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.menu-item.open').forEach(function(i){ if (i !== item) i.classList.remove('open'); });
+      item.classList.toggle('open', !isOpen);
+    });
+  });
+  const SEARCH_INDEX = [
+    { label: 'Who We Are', href: 'index.html#who-we-are' },
+    { label: 'What We Do', href: 'index.html#what-we-do' },
+    { label: 'Where We Work', href: 'index.html#where-we-work' },
+    { label: 'How We Work', href: 'index.html#how-we-work' },
+    { label: 'Our Stories', href: 'story.html' },
+    { label: 'Apply for Assessment', href: 'exam.html' },
+    { label: 'Terms & Conditions', href: 'terms.html' },
+    { label: 'Privacy Policy', href: 'privacy.html' },
+  ];
+  if (searchInput) {
+    const resultsBox = document.getElementById('menuSearchResults');
+    searchInput.addEventListener('input', function(){
+      const q = searchInput.value.trim().toLowerCase();
+      resultsBox.innerHTML = '';
+      if (!q) { resultsBox.classList.remove('show'); return; }
+      const matches = SEARCH_INDEX.filter(function(item){ return item.label.toLowerCase().includes(q); });
+      resultsBox.classList.add('show');
+      if (matches.length === 0) { resultsBox.innerHTML = '<div class="no-results">No results found</div>'; return; }
+      matches.slice(0, 8).forEach(function(m){
+        const a = document.createElement('a');
+        a.href = m.href;
+        a.innerHTML = '<span>' + m.label + '</span>';
+        a.addEventListener('click', function(){ closeMenu(); });
+        resultsBox.appendChild(a);
+      });
+    });
+  }
+}
+
+/* ---------- Exam Engine ---------- */
+let EXAM_QUESTIONS = [];
+let CURRENT_INDEX = 0;
+let ANSWERS = [];
+let APPLICANT = null;
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildPersonalExam() {
+  const english = shuffleArray(QUESTION_BANK.filter(q => q.subject === 'English')).slice(0, 10);
+  const maths = shuffleArray(QUESTION_BANK.filter(q => q.subject === 'Mathematics')).slice(0, 10);
+  const gk = shuffleArray(QUESTION_BANK.filter(q => q.subject === 'General Knowledge')).slice(0, 10);
+  let combined = shuffleArray([...english, ...maths, ...gk]);
+
+  // Shuffle each question's option order too, tracking the correct answer text
+  combined = combined.map(q => {
+    const correctText = q.options[q.answer];
+    const shuffledOptions = shuffleArray(q.options);
+    const newAnswerIndex = shuffledOptions.indexOf(correctText);
+    return { subject: q.subject, q: q.q, options: shuffledOptions, answer: newAnswerIndex };
+  });
+
+  return combined;
+}
+
+function renderQuestions() {
+  const container = document.getElementById('questionsContainer');
+  const dotsContainer = document.getElementById('examDots');
+  container.innerHTML = '';
+  dotsContainer.innerHTML = '';
+
+  EXAM_QUESTIONS.forEach((q, idx) => {
+    const card = document.createElement('div');
+    card.className = 'q-card' + (idx === 0 ? ' active' : '');
+    card.id = 'qcard-' + idx;
+
+    const letters = ['A', 'B', 'C', 'D'];
+    let optsHtml = '';
+    q.options.forEach((opt, oi) => {
+      optsHtml += `<button type="button" class="q-option" data-qidx="${idx}" data-oidx="${oi}">
+        <span class="letter">${letters[oi]}</span><span class="opt-text">${opt}</span>
+      </button>`;
+    });
+
+    card.innerHTML = `
+      <div class="q-subject">${q.subject} · Question ${idx + 1}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="q-options">${optsHtml}</div>
+    `;
+    container.appendChild(card);
+
+    const dot = document.createElement('span');
+    dot.id = 'dot-' + idx;
+    if (idx === 0) dot.classList.add('current');
+    dotsContainer.appendChild(dot);
+  });
+
+  container.querySelectorAll('.q-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const qidx = Number(btn.dataset.qidx);
+      const oidx = Number(btn.dataset.oidx);
+      ANSWERS[qidx] = oidx;
+      document.querySelectorAll(`.q-option[data-qidx="${qidx}"]`).forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      document.getElementById('dot-' + qidx).classList.add('answered');
+      updateNavButtons();
+    });
+  });
+}
+
+function showQuestion(idx) {
+  document.querySelectorAll('.q-card').forEach(c => c.classList.remove('active'));
+  document.getElementById('qcard-' + idx).classList.add('active');
+  document.querySelectorAll('.exam-dots span').forEach(d => d.classList.remove('current'));
+  document.getElementById('dot-' + idx).classList.add('current');
+
+  const total = EXAM_QUESTIONS.length;
+  document.getElementById('progressText').textContent = `Question ${idx + 1} of ${total}`;
+  const pct = Math.round(((idx + 1) / total) * 100);
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressFill').style.width = pct + '%';
+
+  CURRENT_INDEX = idx;
+  updateNavButtons();
+}
+
+function updateNavButtons() {
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  prevBtn.style.visibility = CURRENT_INDEX === 0 ? 'hidden' : 'visible';
+  const isLast = CURRENT_INDEX === EXAM_QUESTIONS.length - 1;
+  nextBtn.textContent = isLast ? 'Submit Exam' : 'Next';
+}
+
+function initExamNav() {
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    if (CURRENT_INDEX > 0) showQuestion(CURRENT_INDEX - 1);
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (ANSWERS[CURRENT_INDEX] === undefined) {
+      showToast('Please select an answer before continuing.', 'error');
+      return;
+    }
+    const isLast = CURRENT_INDEX === EXAM_QUESTIONS.length - 1;
+    if (isLast) {
+      submitExam();
+    } else {
+      showQuestion(CURRENT_INDEX + 1);
+    }
+  });
+}
+
+async function submitExam() {
+  const unanswered = EXAM_QUESTIONS.findIndex((q, i) => ANSWERS[i] === undefined);
+  if (unanswered !== -1) {
+    showToast('Please answer all questions before submitting.', 'error');
+    showQuestion(unanswered);
+    return;
+  }
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.disabled = true;
+  nextBtn.textContent = 'Submitting…';
+
+  let correctCount = 0;
+  const bySubject = { English: { correct: 0, total: 0 }, Mathematics: { correct: 0, total: 0 }, 'General Knowledge': { correct: 0, total: 0 } };
+
+  EXAM_QUESTIONS.forEach((q, i) => {
+    bySubject[q.subject].total++;
+    if (ANSWERS[i] === q.answer) {
+      correctCount++;
+      bySubject[q.subject].correct++;
+    }
+  });
+
+  const totalQuestions = EXAM_QUESTIONS.length;
+  const percentage = Math.round((correctCount / totalQuestions) * 100);
+
+  const resultData = {
+    name: APPLICANT.name,
+    email: APPLICANT.email,
+    phone: APPLICANT.phone,
+    examNumber: APPLICANT.examNumber,
+    score: correctCount,
+    totalQuestions: totalQuestions,
+    percentage: percentage,
+    breakdown: bySubject,
+    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try {
+    await db.collection('examResults').doc(APPLICANT.examNumber).set(resultData);
+    await db.collection('applicants').doc(APPLICANT.email).set({ examStatus: 'completed', score: percentage }, { merge: true });
+
+    const stored = JSON.parse(sessionStorage.getItem('agsf_applicant') || '{}');
+    stored.examCompleted = true;
+    stored.score = percentage;
+    sessionStorage.setItem('agsf_applicant', JSON.stringify(stored));
+
+    showResults(correctCount, totalQuestions, percentage, bySubject);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not submit your results. Please check your connection and try again.', 'error', 4000);
+    nextBtn.disabled = false;
+    nextBtn.textContent = 'Submit Exam';
+  }
+}
+
+function showResults(correct, total, pct, bySubject) {
+  document.getElementById('examState').style.display = 'none';
+  document.getElementById('resultsState').style.display = 'block';
+
+  const circumference = 2 * Math.PI * 78;
+  const offset = circumference - (pct / 100) * circumference;
+  const circle = document.getElementById('scoreCircle');
+  circle.style.strokeDasharray = circumference;
+  setTimeout(() => { circle.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)'; circle.style.strokeDashoffset = offset; }, 100);
+
+  document.getElementById('scoreNum').textContent = pct + '%';
+  document.getElementById('resultExamNumber').textContent = APPLICANT.examNumber;
+
+  const badge = document.getElementById('resultBadge');
+  const headline = document.getElementById('resultHeadline');
+  const message = document.getElementById('resultMessage');
+
+  if (pct >= 80) {
+    badge.textContent = 'EXCELLENT';
+    badge.className = 'result-badge excellent';
+    headline.textContent = 'Outstanding work!';
+  } else if (pct >= 70) {
+    badge.textContent = 'PASS';
+    badge.className = 'result-badge pass';
+    headline.textContent = 'Well done — you passed!';
+  } else {
+    badge.textContent = 'NOT YET A PASS';
+    badge.className = 'result-badge fail';
+    headline.textContent = 'Thank you for completing the assessment';
+  }
+  message.textContent = `You scored ${correct} out of ${total} questions correctly.`;
+
+  const breakdown = document.getElementById('resultBreakdown');
+  breakdown.innerHTML = '';
+  Object.keys(bySubject).forEach(subject => {
+    const s = bySubject[subject];
+    const div = document.createElement('div');
+    div.className = 'rb-card';
+    div.innerHTML = `<div class="rb-subject">${subject}</div><div class="rb-score">${s.correct}/${s.total}</div>`;
+    breakdown.appendChild(div);
+  });
+}
+
+/* ---------- Page entry logic ---------- */
+async function initExamPage() {
+  const stored = sessionStorage.getItem('agsf_applicant');
+  if (!stored) {
+    document.getElementById('noRegState').style.display = 'block';
+    document.getElementById('goApplyBtn').addEventListener('click', () => { window.location.href = 'index.html#get-involved'; });
+    return;
+  }
+
+  APPLICANT = JSON.parse(stored);
+
+  // Check Firestore for existing exam result (in case of reload after submission)
+  try {
+    const resultDoc = await db.collection('examResults').doc(APPLICANT.examNumber).get();
+    if (resultDoc.exists) {
+      const data = resultDoc.data();
+      document.getElementById('doneState').style.display = 'block';
+      document.getElementById('doneExamNumber').textContent = APPLICANT.examNumber;
+      return;
+    }
+  } catch (err) {
+    console.warn('Could not check existing result', err);
+  }
+
+  document.getElementById('introState').style.display = 'block';
+  document.getElementById('introGreeting').textContent = `Welcome, ${APPLICANT.name.split(' ')[0]}!`;
+  document.getElementById('introExamNumber').textContent = APPLICANT.examNumber;
+
+  document.getElementById('startExamBtn').addEventListener('click', () => {
+    document.getElementById('introState').style.display = 'none';
+    document.getElementById('examState').style.display = 'block';
+    EXAM_QUESTIONS = buildPersonalExam();
+    ANSWERS = [];
+    renderQuestions();
+    showQuestion(0);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMenu();
+  initExamNav();
+  initExamPage();
+});
+</script>
+</body>
+</html>

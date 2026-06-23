@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Stories | African Global Scholarship Foundation</title>
+<meta name="description" content="Read stories from AGSF scholars, mentors and communities shaping the future of African education.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --c-white: #FFFFFF; --c-dark-menu: #4A4541; --c-dark-menu-2: #423D3A;
+  --c-ink: #1A1816; --c-ink-soft: #2E2A27; --c-gold: #C8862B; --c-gold-light: #E0A94F;
+  --c-terracotta: #8B3A1F; --c-cream: #F5F2ED; --c-cream-2: #EFEAE1; --c-line: #E4DFD6;
+  --c-line-dark: rgba(255,255,255,0.18); --c-success: #2E7D4F; --c-error: #B3361E;
+  --c-white-text: #FFFFFF; --c-muted: #6B655D;
+  --f-display: 'Sora', sans-serif; --f-body: 'Inter', sans-serif;
+  --header-h: 76px; --maxw: 1180px;
+  --radius-sm: 8px; --radius-md: 14px; --radius-lg: 22px;
+  --shadow-card: 0 8px 30px rgba(26,24,22,0.08);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; } html { scroll-behavior: smooth; }
+body { margin: 0; font-family: var(--f-body); color: var(--c-ink); background: var(--c-white); -webkit-font-smoothing: antialiased; line-height: 1.6; }
+h1,h2,h3,h4 { font-family: var(--f-display); color: var(--c-ink); margin: 0; line-height: 1.15; letter-spacing: -0.01em; }
+p { margin: 0 0 1em; color: var(--c-ink-soft); }
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font-family: var(--f-body); cursor: pointer; }
+
+.site-header { position: sticky; top: 0; z-index: 200; height: var(--header-h); background: var(--c-white); border-bottom: 1px solid var(--c-line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+.icon-btn { background: none; border: none; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: var(--c-ink); transition: background 0.2s var(--ease); }
+.icon-btn:hover { background: var(--c-cream); }
+.icon-btn svg { width: 24px; height: 24px; }
+.site-header .logo-link { display: flex; align-items: center; height: 100%; }
+.site-header .logo-link img { height: 48px; width: 48px; object-fit: contain; }
+
+.menu-overlay { position: fixed; inset: 0; background: var(--c-dark-menu); z-index: 500; display: flex; flex-direction: column; transform: translateY(-100%); transition: transform 0.45s var(--ease); overflow-y: auto; }
+.menu-overlay.open { transform: translateY(0); }
+.menu-top { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; flex-shrink: 0; }
+.menu-top .logo-link img { height: 48px; width: 48px; object-fit: contain; }
+.menu-search-wrap { padding: 4px 24px 18px; }
+.menu-search-box { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid var(--c-line-dark); border-radius: 999px; padding: 10px 18px; opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.3s var(--ease), max-height 0.3s var(--ease); }
+.menu-search-box.open { opacity: 1; max-height: 60px; margin-bottom: 4px; }
+.menu-search-box input { flex: 1; background: none; border: none; outline: none; color: var(--c-white); font-size: 15px; }
+.menu-search-box input::placeholder { color: rgba(255,255,255,0.5); }
+.menu-search-box svg { width: 18px; height: 18px; color: rgba(255,255,255,0.6); flex-shrink: 0; }
+.menu-search-results { margin: 0 24px 10px; display: none; flex-direction: column; gap: 2px; }
+.menu-search-results.show { display: flex; }
+.menu-search-results a { color: var(--c-white); background: rgba(255,255,255,0.06); padding: 12px 16px; border-radius: var(--radius-sm); font-size: 14px; transition: background 0.2s var(--ease); }
+.menu-search-results a:hover { background: rgba(255,255,255,0.14); }
+.menu-search-results .no-results { color: rgba(255,255,255,0.5); padding: 12px 16px; font-size: 14px; }
+.menu-items { flex: 1; padding: 8px 0 24px; }
+.menu-item { border-bottom: 1px solid var(--c-line-dark); }
+.menu-item:first-child { border-top: 1px solid var(--c-line-dark); }
+.menu-item-head { width: 100%; background: none; border: none; display: flex; align-items: center; justify-content: space-between; padding: 22px 24px; color: var(--c-white-text); text-align: left; }
+.menu-item-head .label { font-family: var(--f-display); font-weight: 600; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase; }
+.menu-item-head .chevron-wrap { display: flex; align-items: center; gap: 14px; }
+.menu-item-head .divider { width: 1px; height: 18px; background: rgba(255,255,255,0.35); }
+.menu-item-head .chevron { width: 18px; height: 18px; transition: transform 0.3s var(--ease); color: var(--c-white); }
+.menu-item.open .chevron { transform: rotate(180deg); }
+.menu-item-body { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease); background: var(--c-dark-menu-2); }
+.menu-item.open .menu-item-body { max-height: 600px; }
+.menu-item-body-inner { padding: 4px 24px 22px 24px; display: flex; flex-direction: column; gap: 2px; }
+.menu-item-body-inner a { color: rgba(255,255,255,0.82); font-size: 14.5px; padding: 11px 6px; border-radius: 6px; transition: background 0.2s var(--ease), color 0.2s var(--ease), padding-left 0.2s var(--ease); }
+.menu-item-body-inner a:hover { background: rgba(255,255,255,0.08); color: var(--c-white); padding-left: 12px; }
+.menu-lang { flex-shrink: 0; border-top: 1px solid var(--c-line-dark); display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; color: var(--c-white); }
+.menu-lang .lang-left { display: flex; align-items: center; gap: 12px; font-weight: 600; letter-spacing: 0.04em; font-size: 14px; }
+.menu-lang svg { width: 20px; height: 20px; }
+body.menu-locked { overflow: hidden; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 30px; border-radius: 999px; font-family: var(--f-display); font-weight: 600; font-size: 15px; border: none; transition: transform 0.2s var(--ease), background 0.2s var(--ease); }
+.btn-primary { background: var(--c-gold); color: var(--c-white); box-shadow: 0 6px 20px rgba(200,134,43,0.35); }
+.btn-primary:hover { background: var(--c-gold-light); transform: translateY(-2px); }
+
+.site-footer { background: var(--c-ink); color: rgba(255,255,255,0.85); padding: 64px 24px 28px; }
+.footer-inner { max-width: var(--maxw); margin: 0 auto; }
+.footer-grid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.footer-brand img { height: 44px; width: 44px; margin-bottom: 14px; object-fit: contain; }
+.footer-brand p { color: rgba(255,255,255,0.6); font-size: 14px; max-width: 320px; }
+.footer-col h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--c-gold-light); margin-bottom: 16px; }
+.footer-col a { display: block; color: rgba(255,255,255,0.75); font-size: 14.5px; padding: 7px 0; transition: color 0.2s var(--ease); }
+.footer-col a:hover { color: var(--c-gold-light); }
+.footer-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; padding-top: 24px; font-size: 13px; color: rgba(255,255,255,0.5); }
+.footer-legal { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.footer-legal a { color: rgba(255,255,255,0.5); transition: color 0.2s var(--ease); }
+.footer-legal a:hover { color: var(--c-white); }
+.footer-legal .sep { color: rgba(255,255,255,0.3); }
+@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; gap: 30px; } .footer-bottom { flex-direction: column; align-items: flex-start; } }
+
+.back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--c-muted); font-size: 14px; font-weight: 600; margin-bottom: 28px; transition: gap 0.2s var(--ease), color 0.2s var(--ease); }
+.back-link:hover { gap: 12px; color: var(--c-ink); }
+.back-link svg { width: 16px; height: 16px; }
+.eyebrow { display: inline-block; font-family: var(--f-display); font-size: 12.5px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--c-gold); margin-bottom: 14px; }
+
+.stories-hero { max-width: var(--maxw); margin: 0 auto; padding: 48px 24px 20px; }
+.stories-hero h1 { font-size: clamp(32px, 4.5vw, 50px); max-width: 720px; }
+.stories-hero p.lede { font-size: 18px; max-width: 600px; margin-top: 18px; }
+
+.story-list { max-width: var(--maxw); margin: 0 auto; padding: 30px 24px 80px; display: flex; flex-direction: column; gap: 60px; }
+.story-block { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 44px; align-items: center; }
+.story-block:nth-child(even) { direction: rtl; }
+.story-block:nth-child(even) > * { direction: ltr; }
+.story-img { border-radius: var(--radius-lg); overflow: hidden; aspect-ratio: 4/3; box-shadow: var(--shadow-card); }
+.story-img img { width: 100%; height: 100%; object-fit: cover; }
+.story-tag { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-terracotta); background: #FBEAE6; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
+.story-block h2 { font-size: 26px; margin-bottom: 14px; }
+.story-block p { font-size: 15px; }
+.story-name { font-weight: 700; color: var(--c-ink); margin-top: 18px; }
+.story-role { font-size: 13px; color: var(--c-muted); }
+
+.cta-banner { background: var(--c-cream); border-radius: var(--radius-lg); max-width: var(--maxw); margin: 0 auto 80px; padding: 48px 24px; text-align: center; }
+.cta-banner h2 { font-size: 26px; margin-bottom: 12px; }
+.cta-banner p { max-width: 480px; margin: 0 auto 26px; }
+
+@media (max-width: 860px) {
+  .story-block, .story-block:nth-child(even) { grid-template-columns: 1fr; direction: ltr; }
+  .story-img { max-width: 480px; margin: 0 auto; }
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <button class="icon-btn" id="hamburgerBtn" aria-label="Open menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <a href="index.html" class="logo-link" aria-label="AGSF Home">
+    <img src="logo.png" alt="AGSF logo" onerror="this.style.display='none'">
+  </a>
+  <button class="icon-btn" id="headerSearchBtn" aria-label="Search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </button>
+</header>
+
+<nav class="menu-overlay" id="menuOverlay" aria-label="Main menu">
+  <div class="menu-top">
+    <button class="icon-btn" id="menuCloseBtn" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <a href="index.html" class="logo-link" aria-label="AGSF Home"><img src="logo.png" alt="AGSF logo" onerror="this.style.display='none'"></a>
+    <button class="icon-btn" id="menuSearchBtn" aria-label="Toggle search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </div>
+  <div class="menu-search-wrap">
+    <div class="menu-search-box" id="menuSearchBox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="menuSearchInput" placeholder="Search the site…" autocomplete="off">
+    </div>
+    <div class="menu-search-results" id="menuSearchResults"></div>
+  </div>
+  <div class="menu-items">
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">Who We Are</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="index.html#who-we-are">Our Vision &amp; Mission</a>
+        <a href="index.html#why-we-exist">Why We Exist</a>
+        <a href="index.html#founder">Message from the Founder</a>
+      </div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">What We Do</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="index.html#what-we-do">Talent Identification</a>
+        <a href="index.html#what-we-do">Assessment &amp; Selection</a>
+        <a href="index.html#what-we-do">University Placement</a>
+        <a href="index.html#what-we-do">Full Educational Sponsorship</a>
+        <a href="index.html#what-we-do">Leadership Development</a>
+        <a href="index.html#what-we-do">Alumni Network</a>
+      </div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">Where We Work</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner"><a href="index.html#where-we-work">Our Regional Footprint</a></div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">How We Work</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="index.html#how-we-work">Our Scholarship Model</a>
+        <a href="index.html#long-term-goal">Our Long-Term Goal</a>
+      </div></div>
+    </div>
+    <div class="menu-item open">
+      <button class="menu-item-head"><span class="label">Resources and Media</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="story.html">Our Stories</a>
+        <a href="index.html#resources-media">Media &amp; Updates</a>
+      </div></div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-item-head"><span class="label">Get Involved</span><span class="chevron-wrap"><span class="divider"></span><svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span></button>
+      <div class="menu-item-body"><div class="menu-item-body-inner">
+        <a href="exam.html">Apply for Assessment</a>
+        <a href="index.html#get-involved">Sponsor a Future Leader</a>
+        <a href="index.html#get-involved">Partner With Us</a>
+        <a href="index.html#get-involved">Join Our Mission</a>
+      </div></div>
+    </div>
+  </div>
+  <div class="menu-lang">
+    <span class="lang-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>EN</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</nav>
+
+<main>
+  <div class="stories-hero">
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Home
+    </a>
+    <span class="eyebrow">Resources &amp; Media</span>
+    <h1>Stories from across our network</h1>
+    <p class="lede">Every scholarship begins as a single story — a student who refused to let circumstance define their ceiling. These are some of the people and communities whose lives intersect with our mission.</p>
+  </div>
+
+  <div class="story-list">
+    <article class="story-block">
+      <div class="story-img"><img src="image1.jpg" alt="Scholar studying" onerror="this.parentElement.style.background='var(--c-cream-2)'"></div>
+      <div>
+        <span class="story-tag">Scholar Story</span>
+        <h2>From a village classroom to a global lecture hall</h2>
+        <p>Growing up in a small farming community, she walked two hours to school each morning, often arriving before sunrise just to study by the schoolroom's only working lamp. Teachers recognised something rare in her — a relentless curiosity that no shortage of books or electricity could dim.</p>
+        <p>When she applied to the African Global Scholarship Foundation, her entrance assessment scores placed her among the top candidates that year. Today, she is completing a degree in biomedical engineering, with her sights set on building affordable diagnostic tools for rural clinics back home.</p>
+        <p class="story-name">"I used to think brilliance needed a certain kind of background. Now I know it only needs a chance."</p>
+        <p class="story-role">AGSF Scholar, Class of 2025</p>
+      </div>
+    </article>
+
+    <article class="story-block">
+      <div class="story-img"><img src="image2.jpg" alt="Community mentor" onerror="this.parentElement.style.background='var(--c-cream-2)'"></div>
+      <div>
+        <span class="story-tag">Mentor Story</span>
+        <h2>The teacher who refused to let talent go unnoticed</h2>
+        <p>As a secondary school instructor, he had watched dozens of gifted students leave school each year with nowhere to direct their potential. When he first heard about AGSF's nationwide talent search, he began personally encouraging his most promising students to apply.</p>
+        <p>Three years later, five of his former students are studying on full scholarship abroad. He now volunteers as a regional mentor, helping the foundation identify talent in communities that rarely make it onto anyone's radar.</p>
+        <p class="story-name">"Every region has its own quiet genius. Someone just has to go looking for it."</p>
+        <p class="story-role">AGSF Regional Mentor</p>
+      </div>
+    </article>
+
+    <article class="story-block">
+      <div class="story-img"><img src="image3.jpg" alt="Family supporting a scholar" onerror="this.parentElement.style.background='var(--c-cream-2)'"></div>
+      <div>
+        <span class="story-tag">Family Story</span>
+        <h2>A mother's sacrifice, a daughter's first flight</h2>
+        <p>She sold part of her market stall inventory just to afford her daughter's transport to the regional assessment center. It was a gamble she had made before — for school fees, for textbooks, for the long bus rides to better-resourced exam centers — but this one paid off in a way she hadn't dared to imagine.</p>
+        <p>Her daughter is now in her second year of a fully sponsored degree program, the first in their family to study outside the country. Every month, they speak by video call, and every month, her mother asks the same question first: "Are you eating well?"</p>
+        <p class="story-name">"I always believed in her. I just never had the means to prove it until now."</p>
+        <p class="story-role">Mother of an AGSF Scholar</p>
+      </div>
+    </article>
+
+    <article class="story-block">
+      <div class="story-img"><img src="image4.jpg" alt="Alumni network gathering" onerror="this.parentElement.style.background='var(--c-cream-2)'"></div>
+      <div>
+        <span class="story-tag">Alumni Story</span>
+        <h2>Coming full circle: from scholar to sponsor</h2>
+        <p>He was among the foundation's earliest cohort of scholars, graduating with a degree in public health before returning home to start a community clinic network. Today, a portion of his clinic's annual surplus goes directly into the AGSF scholarship fund.</p>
+        <p>"I don't see it as charity," he says. "I see it as completing a loop that someone else opened for me." His clinics have since become informal talent-spotting partners for the foundation, flagging promising students in the districts they serve.</p>
+        <p class="story-name">"The scholarship didn't just change my life. It gave me a way to change others'."</p>
+        <p class="story-role">AGSF Alumnus &amp; Founding Cohort Scholar</p>
+      </div>
+    </article>
+
+    <article class="story-block">
+      <div class="story-img"><img src="image5.jpg" alt="Community celebration" onerror="this.parentElement.style.background='var(--c-cream-2)'"></div>
+      <div>
+        <span class="story-tag">Community Story</span>
+        <h2>When one scholarship lifts an entire neighbourhood</h2>
+        <p>The first time a student from this particular community earned a full AGSF scholarship, neighbours gathered outside her family's home to celebrate before she had even packed her bags. Within two years, the community had organised its own informal tutoring circle, preparing younger students for the entrance assessment.</p>
+        <p>Today, that same neighbourhood has sent four students through the program — each one returning, during breaks, to tutor the next group preparing to apply.</p>
+        <p class="story-name">"One scholarship became a tradition. Now it's becoming an expectation."</p>
+        <p class="story-role">Community Organiser</p>
+      </div>
+    </article>
+  </div>
+
+  <div class="cta-banner">
+    <h2>Your story could be next</h2>
+    <p>If you believe you have what it takes, the first step is a simple application and entrance assessment.</p>
+    <button class="btn btn-primary" id="applyFromStoryBtn">Apply for Assessment</button>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="logo.png" alt="AGSF logo" onerror="this.style.display='none'">
+        <p>Empowering African minds. Building global leaders. Transforming Africa — one fully funded scholarship at a time.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <a href="index.html">Home</a>
+        <a href="story.html">Our Stories</a>
+        <a href="exam.html">Apply for Assessment</a>
+      </div>
+      <div class="footer-col">
+        <h4>About</h4>
+        <a href="index.html#who-we-are">Who We Are</a>
+        <a href="index.html#what-we-do">What We Do</a>
+        <a href="index.html#how-we-work">How We Work</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 1967 – 2026 African Global Scholarship Foundation. All rights reserved.</span>
+      <div class="footer-legal">
+        <a href="terms.html">Terms &amp; Conditions</a><span class="sep">·</span><a href="privacy.html">Privacy Policy</a><span class="sep">·</span><span>Cookie Notice</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+function initMenu() {
+  const hamburger = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('menuOverlay');
+  const closeBtn = document.getElementById('menuCloseBtn');
+  const searchBtn = document.getElementById('menuSearchBtn');
+  const headerSearchBtn = document.getElementById('headerSearchBtn');
+  const searchBox = document.getElementById('menuSearchBox');
+  const searchInput = document.getElementById('menuSearchInput');
+  if (!overlay) return;
+  function openMenu(){ overlay.classList.add('open'); document.body.classList.add('menu-locked'); }
+  function closeMenu(){
+    overlay.classList.remove('open'); document.body.classList.remove('menu-locked');
+    if (searchBox) searchBox.classList.remove('open');
+    const results = document.getElementById('menuSearchResults');
+    if (results) results.classList.remove('show');
+  }
+  if (hamburger) hamburger.addEventListener('click', openMenu);
+  if (headerSearchBtn) headerSearchBtn.addEventListener('click', function(){
+    openMenu();
+    setTimeout(function(){ if (searchBox) searchBox.classList.add('open'); if (searchInput) searchInput.focus(); }, 200);
+  });
+  if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+  if (searchBtn) searchBtn.addEventListener('click', function(){
+    searchBox.classList.toggle('open');
+    if (searchBox.classList.contains('open')) searchInput.focus();
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && overlay.classList.contains('open')) closeMenu(); });
+  document.querySelectorAll('.menu-item-head').forEach(function(head){
+    head.addEventListener('click', function(){
+      const item = head.closest('.menu-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.menu-item.open').forEach(function(i){ if (i !== item) i.classList.remove('open'); });
+      item.classList.toggle('open', !isOpen);
+    });
+  });
+  const SEARCH_INDEX = [
+    { label: 'Who We Are', href: 'index.html#who-we-are' },
+    { label: 'What We Do', href: 'index.html#what-we-do' },
+    { label: 'Where We Work', href: 'index.html#where-we-work' },
+    { label: 'How We Work', href: 'index.html#how-we-work' },
+    { label: 'Our Stories', href: 'story.html' },
+    { label: 'Apply for Assessment', href: 'exam.html' },
+    { label: 'Terms & Conditions', href: 'terms.html' },
+    { label: 'Privacy Policy', href: 'privacy.html' },
+  ];
+  if (searchInput) {
+    const resultsBox = document.getElementById('menuSearchResults');
+    searchInput.addEventListener('input', function(){
+      const q = searchInput.value.trim().toLowerCase();
+      resultsBox.innerHTML = '';
+      if (!q) { resultsBox.classList.remove('show'); return; }
+      const matches = SEARCH_INDEX.filter(function(item){ return item.label.toLowerCase().includes(q); });
+      resultsBox.classList.add('show');
+      if (matches.length === 0) { resultsBox.innerHTML = '<div class="no-results">No results found</div>'; return; }
+      matches.slice(0, 8).forEach(function(m){
+        const a = document.createElement('a');
+        a.href = m.href;
+        a.innerHTML = '<span>' + m.label + '</span>';
+        a.addEventListener('click', function(){ closeMenu(); });
+        resultsBox.appendChild(a);
+      });
+    });
+  }
+}
+document.addEventListener('DOMContentLoaded', function(){
+  initMenu();
+  const btn = document.getElementById('applyFromStoryBtn');
+  if (btn) btn.addEventListener('click', function(){ window.location.href = 'index.html#get-involved'; });
+});
+</script>
+</body>
+</html>

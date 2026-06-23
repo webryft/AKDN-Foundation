@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | African Global Scholarship Foundation</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root {
+  --c-white: #FFFFFF; --c-dark-menu: #4A4541; --c-ink: #1A1816; --c-ink-soft: #2E2A27;
+  --c-gold: #C8862B; --c-gold-light: #E0A94F; --c-terracotta: #8B3A1F;
+  --c-cream: #F5F2ED; --c-cream-2: #EFEAE1; --c-line: #E4DFD6;
+  --c-success: #2E7D4F; --c-error: #B3361E; --c-muted: #6B655D;
+  --f-display: 'Sora', sans-serif; --f-body: 'Inter', sans-serif;
+  --radius-sm: 8px; --radius-md: 14px; --radius-lg: 22px;
+  --shadow-card: 0 8px 30px rgba(26,24,22,0.08);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--f-body); color: var(--c-ink); background: var(--c-cream); -webkit-font-smoothing: antialiased; line-height: 1.6; }
+h1,h2,h3,h4 { font-family: var(--f-display); color: var(--c-ink); margin: 0; line-height: 1.2; }
+p { margin: 0; color: var(--c-ink-soft); }
+button, input, select { font-family: var(--f-body); }
+a { color: inherit; text-decoration: none; }
+
+.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.login-card { background: var(--c-white); border-radius: var(--radius-lg); padding: 44px 38px; max-width: 380px; width: 100%; box-shadow: var(--shadow-card); text-align: center; }
+.login-card img { height: 56px; width: 56px; margin: 0 auto 18px; object-fit: contain; }
+.login-card h1 { font-size: 22px; margin-bottom: 6px; }
+.login-card .sub { font-size: 14px; color: var(--c-muted); margin-bottom: 26px; }
+.login-field { text-align: left; margin-bottom: 16px; }
+.login-field label { font-size: 12.5px; font-weight: 600; display: block; margin-bottom: 6px; }
+.login-field input { width: 100%; padding: 13px 15px; border-radius: var(--radius-sm); border: 1.5px solid var(--c-line); background: var(--c-cream); font-size: 15px; outline: none; transition: border-color 0.2s var(--ease); }
+.login-field input:focus { border-color: var(--c-gold); background: var(--c-white); }
+.login-err { font-size: 13px; color: var(--c-error); margin: 6px 0 0; display: none; text-align: left; }
+.login-err.show { display: block; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 24px; border-radius: 999px; font-family: var(--f-display); font-weight: 600; font-size: 14.5px; border: none; cursor: pointer; transition: transform 0.2s var(--ease), background 0.2s var(--ease); width: 100%; margin-top: 8px; }
+.btn-primary { background: var(--c-gold); color: var(--c-white); }
+.btn-primary:hover { background: var(--c-gold-light); }
+
+.admin-shell { display: none; min-height: 100vh; }
+.admin-sidebar { width: 240px; background: var(--c-ink); color: var(--c-white); flex-shrink: 0; padding: 28px 18px; position: fixed; top: 0; bottom: 0; left: 0; display: flex; flex-direction: column; }
+.admin-sidebar .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; padding: 0 8px; }
+.admin-sidebar .brand img { height: 34px; width: 34px; object-fit: contain; }
+.admin-sidebar .brand span { font-family: var(--f-display); font-weight: 700; font-size: 14px; }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: var(--radius-sm); color: rgba(255,255,255,0.7); font-size: 14.5px; font-weight: 500; cursor: pointer; transition: background 0.2s var(--ease), color 0.2s var(--ease); border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover { background: rgba(255,255,255,0.06); color: var(--c-white); }
+.nav-item.active { background: var(--c-gold); color: var(--c-white); }
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.sidebar-bottom { margin-top: auto; }
+
+.admin-main { margin-left: 240px; flex: 1; padding: 36px 40px; width: calc(100% - 240px); }
+.admin-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 14px; }
+.admin-topbar h2 { font-size: 24px; }
+.admin-topbar .sub { font-size: 13.5px; color: var(--c-muted); margin-top: 4px; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 30px; }
+.stat-card { background: var(--c-white); border-radius: var(--radius-md); padding: 22px; box-shadow: var(--shadow-card); }
+.stat-card .stat-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-muted); }
+.stat-card .stat-num { font-family: var(--f-display); font-weight: 800; font-size: 30px; margin-top: 6px; }
+
+.panel { background: var(--c-white); border-radius: var(--radius-md); box-shadow: var(--shadow-card); overflow: hidden; margin-bottom: 24px; }
+.panel-head { padding: 20px 24px; border-bottom: 1px solid var(--c-line); display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.panel-head h3 { font-size: 17px; }
+.search-box { display: flex; align-items: center; gap: 8px; background: var(--c-cream); border-radius: 999px; padding: 9px 16px; min-width: 240px; }
+.search-box svg { width: 16px; height: 16px; color: var(--c-muted); flex-shrink: 0; }
+.search-box input { border: none; background: none; outline: none; font-size: 14px; width: 100%; }
+
+table { width: 100%; border-collapse: collapse; }
+thead th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-muted); font-weight: 600; padding: 12px 24px; border-bottom: 1px solid var(--c-line); background: var(--c-cream); }
+tbody td { padding: 14px 24px; font-size: 14px; border-bottom: 1px solid var(--c-line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: #FBFAF8; }
+.score-pill { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+.score-pill.excellent { background: #E7F4EC; color: var(--c-success); }
+.score-pill.pass { background: #FBF3E6; color: #946217; }
+.score-pill.fail { background: #FBEAE6; color: var(--c-error); }
+.status-pill { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; background: var(--c-cream-2); color: var(--c-muted); }
+.status-pill.new { background: #FBF3E6; color: #946217; }
+.empty-row td { text-align: center; padding: 50px 24px; color: var(--c-muted); font-size: 14px; }
+.mono { font-family: 'Courier New', monospace; font-size: 13px; }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+@media (max-width: 1000px) {
+  .admin-sidebar { display: none; }
+  .admin-main { margin-left: 0; width: 100%; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  table { display: block; overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <img src="logo.png" alt="AGSF logo" onerror="this.style.display='none'">
+    <h1>Admin Dashboard</h1>
+    <p class="sub">African Global Scholarship Foundation</p>
+    <form id="loginForm">
+      <div class="login-field">
+        <label for="adminName">Admin Name</label>
+        <input type="text" id="adminName" placeholder="Enter admin name" autocomplete="off">
+      </div>
+      <div class="login-field">
+        <label for="adminPassword">Password</label>
+        <input type="password" id="adminPassword" placeholder="Enter password" autocomplete="off">
+      </div>
+      <div class="login-err" id="loginErr">Incorrect admin name or password.</div>
+      <button type="submit" class="btn btn-primary">Log In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div class="admin-shell" id="adminShell">
+  <aside class="admin-sidebar">
+    <div class="brand"><img src="logo.png" alt="" onerror="this.style.display='none'"><span>AGSF Admin</span></div>
+    <button class="nav-item active" data-tab="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Overview
+    </button>
+    <button class="nav-item" data-tab="exams">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Exam Results
+    </button>
+    <button class="nav-item" data-tab="questions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      Questions Submitted
+    </button>
+    <div class="sidebar-bottom">
+      <button class="nav-item" id="logoutBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <!-- OVERVIEW TAB -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="admin-topbar">
+        <div><h2>Overview</h2><p class="sub">A snapshot of applicants, exams and questions.</p></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Total Applicants</div><div class="stat-num" id="statApplicants">0</div></div>
+        <div class="stat-card"><div class="stat-label">Exams Completed</div><div class="stat-num" id="statExams">0</div></div>
+        <div class="stat-card"><div class="stat-label">Average Score</div><div class="stat-num" id="statAvg">0%</div></div>
+        <div class="stat-card"><div class="stat-label">New Questions</div><div class="stat-num" id="statQuestions">0</div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><h3>Most Recent Exam Submissions</h3></div>
+        <table>
+          <thead><tr><th>Name</th><th>Exam Number</th><th>Score</th><th>Submitted</th></tr></thead>
+          <tbody id="recentExamsBody"><tr class="empty-row"><td colspan="4">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EXAMS TAB -->
+    <div class="tab-panel" id="tab-exams">
+      <div class="admin-topbar">
+        <div><h2>Exam Results</h2><p class="sub">Search by exam number or email address.</p></div>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="examSearchInput" placeholder="Search exam number or email…">
+        </div>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Exam Number</th><th>Score</th><th>Submitted</th></tr></thead>
+          <tbody id="examsBody"><tr class="empty-row"><td colspan="6">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- QUESTIONS TAB -->
+    <div class="tab-panel" id="tab-questions">
+      <div class="admin-topbar">
+        <div><h2>Questions Submitted</h2><p class="sub">FAQ submissions from the site's "Ask a Question" form.</p></div>
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="questionSearchInput" placeholder="Search name or email…">
+        </div>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Question</th><th>Status</th><th>Submitted</th></tr></thead>
+          <tbody id="questionsBody"><tr class="empty-row"><td colspan="5">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCJEpqM7Xu7fIxKAwJJwNY-kmd6xNjjc5w",
+  authDomain: "agsf-a34f4.firebaseapp.com",
+  projectId: "agsf-a34f4",
+  storageBucket: "agsf-a34f4.firebasestorage.app",
+  messagingSenderId: "1047176725753",
+  appId: "1:1047176725753:web:988c2ae4411392553a8e28",
+  measurementId: "G-RLHSFP6K4J"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const ADMIN_NAME = "CVG";
+const ADMIN_PASSWORD = "CVG242";
+
+let ALL_EXAMS = [];
+let ALL_QUESTIONS = [];
+let ALL_APPLICANTS = [];
+
+function initLogin() {
+  const form = document.getElementById('loginForm');
+  const err = document.getElementById('loginErr');
+
+  if (sessionStorage.getItem('agsf_admin_auth') === 'true') {
+    showDashboard();
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('adminName').value.trim();
+    const pass = document.getElementById('adminPassword').value;
+    if (name === ADMIN_NAME && pass === ADMIN_PASSWORD) {
+      sessionStorage.setItem('agsf_admin_auth', 'true');
+      err.classList.remove('show');
+      showDashboard();
+    } else {
+      err.classList.add('show');
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    sessionStorage.removeItem('agsf_admin_auth');
+    document.getElementById('adminShell').style.display = 'none';
+    document.getElementById('loginWrap').style.display = 'flex';
+    document.getElementById('loginForm').reset();
+  });
+}
+
+function showDashboard() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('adminShell').style.display = 'flex';
+  loadAllData();
+}
+
+function initTabs() {
+  document.querySelectorAll('.nav-item[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item[data-tab]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+}
+
+function scoreClass(pct) {
+  if (pct >= 80) return 'excellent';
+  if (pct >= 70) return 'pass';
+  return 'fail';
+}
+
+function formatDate(ts) {
+  if (!ts || !ts.toDate) return '—';
+  const d = ts.toDate();
+  return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) + ' · ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+async function loadAllData() {
+  try {
+    const [applicantsSnap, examsSnap, questionsSnap] = await Promise.all([
+      db.collection('applicants').get(),
+      db.collection('examResults').orderBy('submittedAt', 'desc').get(),
+      db.collection('questions').orderBy('createdAt', 'desc').get()
+    ]);
+
+    ALL_APPLICANTS = applicantsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    ALL_EXAMS = examsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    ALL_QUESTIONS = questionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    renderOverview();
+    renderExamsTable(ALL_EXAMS);
+    renderQuestionsTable(ALL_QUESTIONS);
+  } catch (err) {
+    console.error('Failed to load admin data', err);
+    document.getElementById('recentExamsBody').innerHTML = '<tr class="empty-row"><td colspan="4">Could not load data. Check your connection and Firebase rules.</td></tr>';
+    document.getElementById('examsBody').innerHTML = '<tr class="empty-row"><td colspan="6">Could not load data.</td></tr>';
+    document.getElementById('questionsBody').innerHTML = '<tr class="empty-row"><td colspan="5">Could not load data.</td></tr>';
+  }
+}
+
+function renderOverview() {
+  document.getElementById('statApplicants').textContent = ALL_APPLICANTS.length;
+  document.getElementById('statExams').textContent = ALL_EXAMS.length;
+  const avg = ALL_EXAMS.length ? Math.round(ALL_EXAMS.reduce((s, e) => s + (e.percentage || 0), 0) / ALL_EXAMS.length) : 0;
+  document.getElementById('statAvg').textContent = avg + '%';
+  const newQ = ALL_QUESTIONS.filter(q => q.status === 'new').length;
+  document.getElementById('statQuestions').textContent = newQ;
+
+  const recentBody = document.getElementById('recentExamsBody');
+  const recent = ALL_EXAMS.slice(0, 6);
+  if (!recent.length) {
+    recentBody.innerHTML = '<tr class="empty-row"><td colspan="4">No exam submissions yet.</td></tr>';
+    return;
+  }
+  recentBody.innerHTML = recent.map(e => `
+    <tr>
+      <td>${escapeHtml(e.name || '—')}</td>
+      <td class="mono">${escapeHtml(e.examNumber || '—')}</td>
+      <td><span class="score-pill ${scoreClass(e.percentage || 0)}">${e.percentage ?? 0}%</span></td>
+      <td>${formatDate(e.submittedAt)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderExamsTable(list) {
+  const body = document.getElementById('examsBody');
+  if (!list.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="6">No exam submissions yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(e => `
+    <tr>
+      <td>${escapeHtml(e.name || '—')}</td>
+      <td>${escapeHtml(e.email || '—')}</td>
+      <td>${escapeHtml(e.phone || '—')}</td>
+      <td class="mono">${escapeHtml(e.examNumber || '—')}</td>
+      <td><span class="score-pill ${scoreClass(e.percentage || 0)}">${e.score ?? 0}/${e.totalQuestions ?? 30} · ${e.percentage ?? 0}%</span></td>
+      <td>${formatDate(e.submittedAt)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderQuestionsTable(list) {
+  const body = document.getElementById('questionsBody');
+  if (!list.length) {
+    body.innerHTML = '<tr class="empty-row"><td colspan="5">No questions submitted yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = list.map(q => `
+    <tr>
+      <td>${escapeHtml(q.name || '—')}</td>
+      <td>${escapeHtml(q.email || '—')}</td>
+      <td style="max-width:320px;">${escapeHtml(q.question || '—')}</td>
+      <td><span class="status-pill ${q.status === 'new' ? 'new' : ''}">${escapeHtml(q.status || 'new')}</span></td>
+      <td>${formatDate(q.createdAt)}</td>
+    </tr>
+  `).join('');
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function initSearches() {
+  document.getElementById('examSearchInput').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) { renderExamsTable(ALL_EXAMS); return; }
+    const filtered = ALL_EXAMS.filter(ex =>
+      (ex.examNumber || '').toLowerCase().includes(q) ||
+      (ex.email || '').toLowerCase().includes(q) ||
+      (ex.name || '').toLowerCase().includes(q)
+    );
+    renderExamsTable(filtered);
+  });
+
+  document.getElementById('questionSearchInput').addEventListener('input', (e) => {
+    const q = e.target.value.trim().toLowerCase();
+    if (!q) { renderQuestionsTable(ALL_QUESTIONS); return; }
+    const filtered = ALL_QUESTIONS.filter(item =>
+      (item.name || '').toLowerCase().includes(q) ||
+      (item.email || '').toLowerCase().includes(q)
+    );
+    renderQuestionsTable(filtered);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initLogin();
+  initTabs();
+  initSearches();
+});
+</script>
+</body>
+</html>
