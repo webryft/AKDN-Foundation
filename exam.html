@@ -636,22 +636,23 @@ async function submitExam() {
     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
+  // Save locally immediately — user always sees results even if Firebase is down
+  const stored = JSON.parse(sessionStorage.getItem('agsf_applicant') || '{}');
+  stored.examCompleted = true;
+  stored.score = percentage;
+  sessionStorage.setItem('agsf_applicant', JSON.stringify(stored));
+
+  // Show results right away — don't wait for Firebase
+  showResults(correctCount, totalQuestions, percentage, bySubject);
+
+  // Save to Firebase in background (non-blocking)
   try {
-    await db.collection('examResults').doc(APPLICANT.examNumber).set(resultData);
-    await db.collection('applicants').doc(APPLICANT.email).set({ examStatus: 'completed', score: percentage }, { merge: true });
-
-    const stored = JSON.parse(sessionStorage.getItem('agsf_applicant') || '{}');
-    stored.examCompleted = true;
-    stored.score = percentage;
-    sessionStorage.setItem('agsf_applicant', JSON.stringify(stored));
-
-    showResults(correctCount, totalQuestions, percentage, bySubject);
-  } catch (err) {
-    console.error(err);
-    showToast('Could not submit your results. Please check your connection and try again.', 'error', 4000);
-    nextBtn.disabled = false;
-    nextBtn.textContent = 'Submit Exam';
-  }
+    db.collection('examResults').doc(APPLICANT.examNumber).set(resultData)
+      .catch(function(err){ console.warn('Firebase result save failed:', err); });
+    db.collection('applicants').doc(APPLICANT.email).set(
+      { examStatus: 'completed', score: percentage }, { merge: true }
+    ).catch(function(err){ console.warn('Firebase applicant update failed:', err); });
+  } catch(err) { console.warn('Firebase save skipped:', err); }
 }
 
 function showResults(correct, total, pct, bySubject) {
@@ -698,34 +699,40 @@ function showResults(correct, total, pct, bySubject) {
 }
 
 /* ---------- Page entry logic ---------- */
-async function initExamPage() {
+function initExamPage() {
   const stored = sessionStorage.getItem('agsf_applicant');
   if (!stored) {
     document.getElementById('noRegState').style.display = 'block';
-    document.getElementById('goApplyBtn').addEventListener('click', () => { window.location.href = 'index.html#get-involved'; });
+    document.getElementById('goApplyBtn').addEventListener('click', function(){ window.location.href = 'index.html#get-involved'; });
     return;
   }
 
   APPLICANT = JSON.parse(stored);
 
-  // Check Firestore for existing exam result (in case of reload after submission)
-  try {
-    const resultDoc = await db.collection('examResults').doc(APPLICANT.examNumber).get();
-    if (resultDoc.exists) {
-      const data = resultDoc.data();
-      document.getElementById('doneState').style.display = 'block';
-      document.getElementById('doneExamNumber').textContent = APPLICANT.examNumber;
-      return;
-    }
-  } catch (err) {
-    console.warn('Could not check existing result', err);
+  // If already completed (stored locally), show done screen without hitting Firebase
+  if (APPLICANT.examCompleted) {
+    document.getElementById('doneState').style.display = 'block';
+    document.getElementById('doneExamNumber').textContent = APPLICANT.examNumber;
+    return;
   }
 
+  // Show intro immediately — no waiting on Firebase
   document.getElementById('introState').style.display = 'block';
-  document.getElementById('introGreeting').textContent = `Welcome, ${APPLICANT.name.split(' ')[0]}!`;
+  document.getElementById('introGreeting').textContent = 'Welcome, ' + APPLICANT.name.split(' ')[0] + '!';
   document.getElementById('introExamNumber').textContent = APPLICANT.examNumber;
 
-  document.getElementById('startExamBtn').addEventListener('click', () => {
+  // Non-blocking background check if already submitted (won't block the user)
+  try {
+    db.collection('examResults').doc(APPLICANT.examNumber).get().then(function(doc){
+      if (doc.exists) {
+        document.getElementById('introState').style.display = 'none';
+        document.getElementById('doneState').style.display = 'block';
+        document.getElementById('doneExamNumber').textContent = APPLICANT.examNumber;
+      }
+    }).catch(function(err){ console.warn('Background check skipped:', err); });
+  } catch(err) { console.warn('Firebase check skipped:', err); }
+
+  document.getElementById('startExamBtn').addEventListener('click', function(){
     document.getElementById('introState').style.display = 'none';
     document.getElementById('examState').style.display = 'block';
     EXAM_QUESTIONS = buildPersonalExam();
