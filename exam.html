@@ -31,7 +31,8 @@ img { max-width: 100%; display: block; }
 button { font-family: var(--f-body); cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; } }
 
-.site-header { position: sticky; top: 0; z-index: 200; height: var(--header-h); background: var(--c-white); border-bottom: 1px solid var(--c-line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+.site-header { position: sticky; top: 0; z-index: 200; height: var(--header-h); background: var(--c-white); border-bottom: 1px solid var(--c-line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: relative; }
+.site-header .logo-link { position: absolute; left: 50%; transform: translateX(-50%); display: flex; align-items: center; height: 100%; }
 .icon-btn { background: none; border: none; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; color: var(--c-ink); transition: background 0.2s var(--ease), transform 0.2s var(--ease); }
 .icon-btn:hover { background: var(--c-cream); }
 .icon-btn:active { transform: scale(0.93); }
@@ -177,16 +178,38 @@ body.menu-locked { overflow: hidden; }
 .score-pct { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; }
 .score-pct .num { font-family: var(--f-display); font-weight: 800; font-size: 38px; color: var(--c-ink); }
 .score-pct .label { font-size: 12px; color: var(--c-muted); }
-.result-badge { display: inline-block; padding: 8px 20px; border-radius: 999px; font-family: var(--f-display); font-weight: 700; font-size: 14px; margin-bottom: 8px; }
-.result-badge.excellent { background: #E7F4EC; color: var(--c-success); }
-.result-badge.pass { background: #FBF3E6; color: #946217; }
-.result-badge.fail { background: #FBEAE6; color: var(--c-error); }
+.result-badge { display: inline-block; padding: 10px 28px; border-radius: 999px; font-family: var(--f-display); font-weight: 800; font-size: 16px; letter-spacing: 0.04em; margin-bottom: 14px; }
+.result-badge.excellent { background: #D4EDDF; color: #1E6B3E; }
+.result-badge.pass      { background: #FBF3E6; color: #7A5417; }
+.result-badge.fail      { background: #FBEAE6; color: #9B2418; }
+.results-card h2 { font-size: 22px; margin-bottom: 4px; }
 .result-breakdown { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin: 30px 0; text-align: left; }
 .rb-card { background: var(--c-white); border: 1px solid var(--c-line); border-radius: var(--radius-sm); padding: 16px; }
 .rb-card .rb-subject { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--c-muted); margin-bottom: 6px; }
 .rb-card .rb-score { font-family: var(--f-display); font-weight: 700; font-size: 20px; color: var(--c-ink); }
 .save-note { background: var(--c-cream); border-radius: var(--radius-sm); padding: 16px 18px; font-size: 13.5px; text-align: left; margin-top: 24px; }
 .save-note strong { color: var(--c-ink); }
+
+/* Countdown Timer */
+.timer-bar { display: flex; align-items: center; justify-content: space-between; background: var(--c-white); border: 1.5px solid var(--c-line); border-radius: var(--radius-md); padding: 12px 18px; margin-bottom: 20px; }
+.timer-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-muted); }
+.timer-display { font-family: var(--f-display); font-weight: 800; font-size: 22px; color: var(--c-ink); letter-spacing: 0.04em; transition: color 0.3s; }
+.timer-display.warning { color: #C8862B; }
+.timer-display.danger { color: #B3361E; animation: pulse-red 0.8s ease-in-out infinite; }
+@keyframes pulse-red { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.timer-track { flex: 1; height: 6px; background: var(--c-line); border-radius: 999px; margin: 0 16px; overflow: hidden; }
+.timer-fill { height: 100%; background: var(--c-gold); border-radius: 999px; transition: width 1s linear, background 0.5s; }
+.timer-fill.warning { background: #C8862B; }
+.timer-fill.danger { background: #B3361E; }
+
+/* Time up modal */
+.timeup-backdrop { position: fixed; inset: 0; background: rgba(26,24,22,0.7); backdrop-filter: blur(4px); z-index: 900; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease); }
+.timeup-backdrop.open { opacity: 1; pointer-events: auto; }
+.timeup-card { background: var(--c-white); border-radius: var(--radius-lg); max-width: 400px; width: 100%; padding: 36px 30px; text-align: center; box-shadow: 0 24px 64px rgba(26,24,22,0.3); transform: scale(0.92); transition: transform 0.35s var(--ease); }
+.timeup-backdrop.open .timeup-card { transform: scale(1); }
+.timeup-icon { font-size: 48px; margin-bottom: 14px; }
+.timeup-card h2 { font-size: 22px; margin-bottom: 10px; }
+.timeup-card p { font-size: 14.5px; margin-bottom: 24px; }
 
 @media (max-width: 600px) {
   .exam-card { padding: 28px 22px; }
@@ -323,6 +346,13 @@ body.menu-locked { overflow: hidden; }
 
     <!-- STATE 4: Active exam -->
     <div id="examState" style="display:none;">
+      <!-- Countdown Timer -->
+      <div class="timer-bar" id="timerBar">
+        <span class="timer-label">Time Left</span>
+        <div class="timer-track"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+        <span class="timer-display" id="timerDisplay">10:00</span>
+      </div>
+
       <div class="exam-progress-label">
         <span id="progressText">Question 1 of 30</span>
         <span id="progressPct">0%</span>
@@ -336,9 +366,19 @@ body.menu-locked { overflow: hidden; }
       </div>
     </div>
 
+    <!-- TIME UP MODAL -->
+    <div class="timeup-backdrop" id="timeupModal">
+      <div class="timeup-card">
+        <div class="timeup-icon">⏰</div>
+        <h2>Time is up!</h2>
+        <p>Your 10 minutes have ended. We are submitting your answers now — any unanswered questions will be marked incorrect.</p>
+        <button class="btn btn-primary" id="timeupSubmitBtn" style="width:100%">See My Results</button>
+      </div>
+    </div>
+
     <!-- STATE 5: Results -->
     <div id="resultsState" class="exam-card results-card" style="display:none;">
-      <span class="eyebrow">Your Results</span>
+      <span class="eyebrow">Assessment Complete</span>
       <div class="score-ring-wrap">
         <svg width="180" height="180" viewBox="0 0 180 180">
           <circle cx="90" cy="90" r="78" fill="none" stroke="#E4DFD6" stroke-width="14"/>
@@ -348,13 +388,12 @@ body.menu-locked { overflow: hidden; }
       </div>
       <div id="resultBadge" class="result-badge pass">PASS</div>
       <h2 id="resultHeadline">Well done!</h2>
-      <p id="resultMessage">You scored 0 out of 30 questions correctly.</p>
-      <div class="result-breakdown" id="resultBreakdown"></div>
+      <p id="resultMessage" style="font-size:15px; margin:10px 0 28px;"></p>
       <div class="save-note">
-        <strong>Keep your exam number safe:</strong> <span id="resultExamNumber">AGSF-000000</span><br>
+        <strong>Save your exam number:</strong> <span id="resultExamNumber" style="font-family:monospace; font-weight:700; color:var(--c-ink);">AGSF-000000</span><br>
         Your full results report will be sent to your registered email address soon.
       </div>
-      <button class="btn btn-outline" onclick="window.location.href='index.html'" style="margin-top:24px;">Return to Home</button>
+      <button class="btn btn-primary" onclick="window.location.href='index.html'" style="margin-top:24px; width:100%;">Return to Home</button>
     </div>
   </div>
 </main>
@@ -389,7 +428,166 @@ body.menu-locked { overflow: hidden; }
   </div>
 </footer>
 
-<script src="question_bank.js"></script>
+<script>
+const QUESTION_BANK = [
+  // ===================== ENGLISH (50) =====================
+  { subject: "English", q: "Which of the following is a synonym for 'abundant'?", options: ["Scarce", "Plentiful", "Limited", "Rare"], answer: 1 },
+  { subject: "English", q: "Choose the correct sentence.", options: ["Neither of the boys have done their homework.", "Neither of the boys has done his homework.", "Neither of the boys has done their homework.", "Neither of the boys have done his homework."], answer: 1 },
+  { subject: "English", q: "What is the antonym of 'transparent'?", options: ["Clear", "Obvious", "Opaque", "Visible"], answer: 2 },
+  { subject: "English", q: "Identify the adverb in: 'She spoke very quietly during the meeting.'", options: ["She", "spoke", "quietly", "meeting"], answer: 2 },
+  { subject: "English", q: "Which sentence is in the passive voice?", options: ["The teacher marked the papers.", "The papers were marked by the teacher.", "The teacher was marking the papers.", "The teacher marks the papers."], answer: 1 },
+  { subject: "English", q: "Choose the word that best completes: 'The politician was known for his _____ speeches that moved the crowd.'", options: ["monotonous", "eloquent", "brief", "confusing"], answer: 1 },
+  { subject: "English", q: "What literary device is used in: 'The wind whispered through the trees'?", options: ["Simile", "Metaphor", "Personification", "Alliteration"], answer: 2 },
+  { subject: "English", q: "Which of the following words is spelled correctly?", options: ["Occurance", "Occurrence", "Occurence", "Ocurrence"], answer: 1 },
+  { subject: "English", q: "Choose the correct plural of 'criterion'.", options: ["Criterions", "Criteria", "Criterias", "Criteriones"], answer: 1 },
+  { subject: "English", q: "What is the meaning of the idiom 'to burn the midnight oil'?", options: ["To start a fire at night", "To work late into the night", "To waste electricity", "To cook late at night"], answer: 1 },
+  { subject: "English", q: "Which sentence uses a semicolon correctly?", options: ["I wanted to go; but I was tired.", "I wanted to go; however I was tired.", "I wanted to go; however, I was tired.", "I wanted to; go however I was tired."], answer: 2 },
+  { subject: "English", q: "Identify the type of clause in bold: 'She left early **because she was unwell**.'", options: ["Noun clause", "Adverbial clause", "Relative clause", "Main clause"], answer: 1 },
+  { subject: "English", q: "What is the meaning of the word 'diligent'?", options: ["Lazy and careless", "Hardworking and persistent", "Rude and arrogant", "Quiet and shy"], answer: 1 },
+  { subject: "English", q: "Which of these is a compound sentence?", options: ["She studied hard.", "Because she studied hard, she passed.", "She studied hard and she passed.", "Studying hard leads to success."], answer: 2 },
+  { subject: "English", q: "Choose the correct word: The committee has given its _____ to the proposal.", options: ["ascent", "assent", "absent", "accent"], answer: 1 },
+  { subject: "English", q: "What is an 'abstract noun'?", options: ["A noun that names a physical object", "A noun that names a place", "A noun that names an idea, feeling or quality", "A noun that names a group of people"], answer: 2 },
+  { subject: "English", q: "Which tense is used in: 'By the time she arrives, I will have finished cooking.'?", options: ["Simple future", "Future perfect", "Present perfect", "Past perfect"], answer: 1 },
+  { subject: "English", q: "What does 'ambiguous' mean?", options: ["Very clear and direct", "Open to more than one interpretation", "Extremely important", "Difficult to achieve"], answer: 1 },
+  { subject: "English", q: "Choose the correctly punctuated sentence.", options: ["Its a beautiful day isnt it?", "It's a beautiful day, isn't it?", "Its a beautiful day, isn't it?", "It's a beautiful day isn't it?"], answer: 1 },
+  { subject: "English", q: "Which word is an example of onomatopoeia?", options: ["Beautiful", "Sizzle", "Running", "Angry"], answer: 1 },
+  { subject: "English", q: "The word 'benevolent' most nearly means:", options: ["Strict and demanding", "Kind and generous", "Clever and cunning", "Quiet and reserved"], answer: 1 },
+  { subject: "English", q: "Which of these sentences contains a dangling modifier?", options: ["Walking to school, she found a coin.", "Walking to school, a coin was found.", "She found a coin while walking to school.", "A coin was found by her while walking."], answer: 1 },
+  { subject: "English", q: "What is a 'thesis statement' in an essay?", options: ["The title of the essay", "The concluding paragraph", "The main argument or claim of the essay", "A list of references used"], answer: 2 },
+  { subject: "English", q: "Choose the correct form: 'If I _____ the answer, I would tell you.'", options: ["know", "knew", "had known", "would know"], answer: 1 },
+  { subject: "English", q: "What figure of speech is: 'Life is a journey'?", options: ["Simile", "Metaphor", "Hyperbole", "Irony"], answer: 1 },
+  { subject: "English", q: "Which word means 'to make something worse'?", options: ["Alleviate", "Ameliorate", "Aggravate", "Appease"], answer: 2 },
+  { subject: "English", q: "Identify the preposition in: 'The book is on the table beside the lamp.'", options: ["book", "table", "on", "lamp"], answer: 2 },
+  { subject: "English", q: "What does 'coherent' mean in writing?", options: ["Long and detailed", "Clear, logical and well-connected", "Creative and imaginative", "Short and simple"], answer: 1 },
+  { subject: "English", q: "Which sentence is grammatically correct?", options: ["Between you and I, this is wrong.", "Between you and me, this is wrong.", "Between yourself and me, this is wrong.", "Between you and myself, this is wrong."], answer: 1 },
+  { subject: "English", q: "The prefix 'mis-' in the word 'misunderstand' means:", options: ["Again", "Before", "Wrongly", "Against"], answer: 2 },
+  { subject: "English", q: "What type of essay presents both sides of an argument?", options: ["Narrative", "Descriptive", "Argumentative/Discursive", "Expository"], answer: 2 },
+  { subject: "English", q: "Which word is a conjunction?", options: ["Quickly", "Although", "Beautiful", "Desk"], answer: 1 },
+  { subject: "English", q: "What does 'infer' mean?", options: ["To state clearly", "To conclude from evidence", "To disagree strongly", "To describe in detail"], answer: 1 },
+  { subject: "English", q: "'The crowd roared like thunder.' This is an example of:", options: ["Metaphor", "Personification", "Simile", "Alliteration"], answer: 2 },
+  { subject: "English", q: "Choose the word that means 'relating to the city':", options: ["Rural", "Urban", "Suburban", "Regional"], answer: 1 },
+  { subject: "English", q: "Which is a correct use of a colon?", options: ["She likes: apples, and oranges.", "She needs three things: courage, patience, and faith.", "She left early: because she was tired.", "She said: that she was tired."], answer: 1 },
+  { subject: "English", q: "What is 'alliteration'?", options: ["Repetition of the same vowel sound", "Repetition of the same consonant sound at the start of nearby words", "A comparison using 'like' or 'as'", "Giving human qualities to non-human things"], answer: 1 },
+  { subject: "English", q: "The word 'prolific' means:", options: ["Rare and unusual", "Producing a large amount of work", "Slow and careful", "Strict and authoritarian"], answer: 1 },
+  { subject: "English", q: "Choose the sentence with the correct subject-verb agreement:", options: ["The team are playing well today.", "The team is playing well today.", "The team were playing well today.", "The team play well today."], answer: 1 },
+  { subject: "English", q: "What does the word 'empathy' mean?", options: ["Feeling sorry for someone", "Understanding and sharing another person's feelings", "Being emotionally detached", "Helping someone financially"], answer: 1 },
+  { subject: "English", q: "Which sentence uses 'their', 'there', and 'they're' correctly?", options: ["They're going to their school over there.", "Their going to they're school over there.", "There going to their school they're.", "They're going to there school over their."], answer: 0 },
+  { subject: "English", q: "What is the purpose of a 'topic sentence' in a paragraph?", options: ["To conclude the paragraph", "To introduce the main idea of the paragraph", "To provide evidence and examples", "To transition to the next paragraph"], answer: 1 },
+  { subject: "English", q: "Which word is an antonym of 'verbose'?", options: ["Talkative", "Concise", "Eloquent", "Detailed"], answer: 1 },
+  { subject: "English", q: "'He has been working here since 2018.' What tense is this?", options: ["Simple past", "Past perfect", "Present perfect continuous", "Simple present"], answer: 2 },
+  { subject: "English", q: "What does 'plagiarism' mean?", options: ["Editing someone else's work", "Using another person's work or ideas without credit", "Researching information online", "Writing in an academic style"], answer: 1 },
+  { subject: "English", q: "Which literary term describes the main character of a story?", options: ["Antagonist", "Narrator", "Protagonist", "Foil"], answer: 2 },
+  { subject: "English", q: "Choose the word that means 'to officially cancel or withdraw':", options: ["Implement", "Revoke", "Approve", "Endorse"], answer: 1 },
+  { subject: "English", q: "What is the function of a 'conclusion' in an essay?", options: ["To introduce the topic", "To present new arguments", "To summarise the main points and restate the thesis", "To list supporting evidence"], answer: 2 },
+  { subject: "English", q: "Which of the following is an example of a complex sentence?", options: ["I went to the market.", "I went to the market and I bought fruit.", "I went to the market because I needed food.", "Go to the market!"], answer: 2 },
+  { subject: "English", q: "The word 'notorious' means:", options: ["Famous for good deeds", "Famous for something negative", "Unknown and anonymous", "Extremely talented"], answer: 1 },
+
+  // ===================== MATHEMATICS (50) =====================
+  { subject: "Mathematics", q: "Simplify: 3x + 5x - 2x", options: ["6x", "8x", "4x", "10x"], answer: 0 },
+  { subject: "Mathematics", q: "What is 15% of 200?", options: ["20", "25", "30", "35"], answer: 2 },
+  { subject: "Mathematics", q: "If 2x + 3 = 11, what is x?", options: ["3", "4", "5", "6"], answer: 1 },
+  { subject: "Mathematics", q: "What is the area of a rectangle with length 8cm and width 5cm?", options: ["26cm²", "40cm²", "13cm²", "45cm²"], answer: 1 },
+  { subject: "Mathematics", q: "Which of the following is a prime number?", options: ["21", "27", "29", "33"], answer: 2 },
+  { subject: "Mathematics", q: "What is the value of 3²  + 4²?", options: ["14", "25", "49", "12"], answer: 1 },
+  { subject: "Mathematics", q: "A car travels 120km in 2 hours. What is its average speed?", options: ["40 km/h", "50 km/h", "60 km/h", "70 km/h"], answer: 2 },
+  { subject: "Mathematics", q: "Simplify the fraction 18/24.", options: ["2/3", "3/4", "4/6", "5/8"], answer: 1 },
+  { subject: "Mathematics", q: "What is the square root of 144?", options: ["10", "11", "12", "13"], answer: 2 },
+  { subject: "Mathematics", q: "If a shirt costs ₦2,500 and is sold at a 20% discount, what is the selling price?", options: ["₦1,500", "₦2,000", "₦2,200", "₦1,800"], answer: 1 },
+  { subject: "Mathematics", q: "What is the perimeter of a square with side 7cm?", options: ["21cm", "28cm", "35cm", "49cm"], answer: 1 },
+  { subject: "Mathematics", q: "Solve: 5(x - 2) = 20", options: ["x = 4", "x = 5", "x = 6", "x = 8"], answer: 2 },
+  { subject: "Mathematics", q: "Convert 0.75 to a fraction in its lowest terms.", options: ["3/5", "7/10", "3/4", "4/5"], answer: 2 },
+  { subject: "Mathematics", q: "What is the mean of: 4, 8, 6, 10, 12?", options: ["7", "8", "9", "10"], answer: 1 },
+  { subject: "Mathematics", q: "A bag contains 5 red balls and 3 blue balls. What is the probability of picking a red ball?", options: ["3/8", "5/3", "5/8", "1/2"], answer: 2 },
+  { subject: "Mathematics", q: "What is 2³ × 2²?", options: ["2⁵", "2⁶", "4⁵", "2⁴"], answer: 0 },
+  { subject: "Mathematics", q: "If the angles of a triangle are in the ratio 2:3:4, what is the largest angle?", options: ["60°", "70°", "80°", "90°"], answer: 2 },
+  { subject: "Mathematics", q: "Which of the following is NOT a factor of 36?", options: ["6", "9", "8", "12"], answer: 2 },
+  { subject: "Mathematics", q: "A student scored 72 out of 90 in a test. What percentage did she score?", options: ["75%", "78%", "80%", "82%"], answer: 2 },
+  { subject: "Mathematics", q: "Evaluate: (4 + 6) × 3 - 5", options: ["22", "25", "28", "30"], answer: 1 },
+  { subject: "Mathematics", q: "What is the gradient of the line y = 3x + 7?", options: ["7", "3", "3x", "1/3"], answer: 1 },
+  { subject: "Mathematics", q: "A circle has a radius of 7cm. What is its circumference? (π ≈ 22/7)", options: ["22cm", "44cm", "66cm", "154cm"], answer: 1 },
+  { subject: "Mathematics", q: "Expand: (x + 3)(x - 2)", options: ["x² - x - 6", "x² + x - 6", "x² - x + 6", "x² + x + 6"], answer: 0 },
+  { subject: "Mathematics", q: "What is 0.3 × 0.4?", options: ["1.2", "0.12", "0.012", "12"], answer: 1 },
+  { subject: "Mathematics", q: "A rectangle has area 48cm² and length 8cm. What is its width?", options: ["4cm", "5cm", "6cm", "7cm"], answer: 2 },
+  { subject: "Mathematics", q: "What is the LCM of 6 and 8?", options: ["12", "18", "24", "48"], answer: 2 },
+  { subject: "Mathematics", q: "If x = 3 and y = 2, find the value of 2x² - y.", options: ["14", "16", "18", "20"], answer: 1 },
+  { subject: "Mathematics", q: "Which is greater: 2/3 or 3/5?", options: ["3/5", "2/3", "They are equal", "Cannot be determined"], answer: 1 },
+  { subject: "Mathematics", q: "A shop buys an item for ₦800 and sells it for ₦1,000. What is the profit percentage?", options: ["20%", "25%", "28%", "30%"], answer: 1 },
+  { subject: "Mathematics", q: "What is the sum of the interior angles of a triangle?", options: ["90°", "180°", "270°", "360°"], answer: 1 },
+  { subject: "Mathematics", q: "Solve for x: x/4 = 7", options: ["x = 21", "x = 24", "x = 28", "x = 32"], answer: 2 },
+  { subject: "Mathematics", q: "What is the HCF (GCF) of 12 and 18?", options: ["3", "4", "6", "9"], answer: 2 },
+  { subject: "Mathematics", q: "Express 4.5 × 10² in standard form.", options: ["45", "450", "4500", "0.045"], answer: 1 },
+  { subject: "Mathematics", q: "A train departs at 08:45 and arrives at 11:15. How long is the journey?", options: ["2 hours 15 minutes", "2 hours 30 minutes", "2 hours 45 minutes", "3 hours"], answer: 1 },
+  { subject: "Mathematics", q: "What type of triangle has all sides equal?", options: ["Scalene", "Isosceles", "Equilateral", "Right-angled"], answer: 2 },
+  { subject: "Mathematics", q: "The mode of the data set {3, 5, 7, 5, 9, 5, 3} is:", options: ["3", "5", "7", "9"], answer: 1 },
+  { subject: "Mathematics", q: "What is 30% of 450?", options: ["115", "125", "135", "145"], answer: 2 },
+  { subject: "Mathematics", q: "A cone and a cylinder have the same radius and height. What is the ratio of their volumes?", options: ["1:1", "1:2", "1:3", "2:3"], answer: 2 },
+  { subject: "Mathematics", q: "What is the value of √(25 + 144)?", options: ["12", "13", "14", "15"], answer: 1 },
+  { subject: "Mathematics", q: "Factorise: x² - 9", options: ["(x-3)(x+3)", "(x-9)(x+1)", "(x+3)²", "(x-3)²"], answer: 0 },
+  { subject: "Mathematics", q: "In a class of 40 students, 60% are girls. How many boys are there?", options: ["12", "14", "16", "18"], answer: 2 },
+  { subject: "Mathematics", q: "What is the next term in the sequence: 2, 5, 10, 17, 26, ___?", options: ["33", "35", "37", "39"], answer: 2 },
+  { subject: "Mathematics", q: "Evaluate log₁₀ 1000.", options: ["2", "3", "4", "10"], answer: 1 },
+  { subject: "Mathematics", q: "What is the area of a circle with diameter 14cm? (π = 22/7)", options: ["44cm²", "88cm²", "154cm²", "616cm²"], answer: 2 },
+  { subject: "Mathematics", q: "If f(x) = 2x - 1, what is f(5)?", options: ["8", "9", "10", "11"], answer: 1 },
+  { subject: "Mathematics", q: "Simplify: (a³)²", options: ["a⁵", "a⁶", "a⁹", "2a³"], answer: 1 },
+  { subject: "Mathematics", q: "What is the value of 5! (5 factorial)?", options: ["25", "60", "100", "120"], answer: 3 },
+  { subject: "Mathematics", q: "A water tank holds 500 litres. If it is 40% full, how many more litres are needed to fill it?", options: ["200 litres", "250 litres", "300 litres", "350 litres"], answer: 2 },
+  { subject: "Mathematics", q: "Which of the following is an irrational number?", options: ["0.5", "√4", "√3", "3/7"], answer: 2 },
+  { subject: "Mathematics", q: "Two angles are supplementary. One angle is 65°. What is the other?", options: ["25°", "105°", "115°", "125°"], answer: 2 },
+
+  // ===================== GENERAL KNOWLEDGE (50) =====================
+  { subject: "General Knowledge", q: "What is the capital city of Nigeria?", options: ["Lagos", "Kano", "Abuja", "Port Harcourt"], answer: 2 },
+  { subject: "General Knowledge", q: "Which planet is closest to the Sun?", options: ["Venus", "Earth", "Mercury", "Mars"], answer: 2 },
+  { subject: "General Knowledge", q: "Who wrote the novel 'Things Fall Apart'?", options: ["Wole Soyinka", "Chinua Achebe", "Ngugi wa Thiong'o", "Ben Okri"], answer: 1 },
+  { subject: "General Knowledge", q: "What is the chemical symbol for water?", options: ["O2", "CO2", "H2O", "HO2"], answer: 2 },
+  { subject: "General Knowledge", q: "In what year did Nigeria gain independence?", options: ["1957", "1960", "1963", "1966"], answer: 1 },
+  { subject: "General Knowledge", q: "Which organ of the body is responsible for pumping blood?", options: ["Liver", "Lungs", "Kidney", "Heart"], answer: 3 },
+  { subject: "General Knowledge", q: "What is the largest continent in the world?", options: ["Africa", "North America", "Asia", "Europe"], answer: 2 },
+  { subject: "General Knowledge", q: "Which gas do plants absorb during photosynthesis?", options: ["Oxygen", "Nitrogen", "Carbon dioxide", "Hydrogen"], answer: 2 },
+  { subject: "General Knowledge", q: "What is the powerhouse of the cell?", options: ["Nucleus", "Ribosome", "Mitochondria", "Chloroplast"], answer: 2 },
+  { subject: "General Knowledge", q: "Which African country has the largest population?", options: ["Ethiopia", "South Africa", "Egypt", "Nigeria"], answer: 3 },
+  { subject: "General Knowledge", q: "What does DNA stand for?", options: ["Deoxyribonucleic Acid", "Dinitrogen Acid", "Dynamic Nucleic Acid", "Dioxyribose Nucleic Acid"], answer: 0 },
+  { subject: "General Knowledge", q: "Who is known as the father of modern computers?", options: ["Bill Gates", "Alan Turing", "Charles Babbage", "Steve Jobs"], answer: 2 },
+  { subject: "General Knowledge", q: "How many chambers does the human heart have?", options: ["2", "3", "4", "5"], answer: 2 },
+  { subject: "General Knowledge", q: "Which country is home to the Amazon Rainforest?", options: ["Colombia", "Peru", "Venezuela", "Brazil"], answer: 3 },
+  { subject: "General Knowledge", q: "What is the currency of the United Kingdom?", options: ["Euro", "Dollar", "Pound Sterling", "Franc"], answer: 2 },
+  { subject: "General Knowledge", q: "Which law states that for every action there is an equal and opposite reaction?", options: ["Newton's First Law", "Newton's Second Law", "Newton's Third Law", "Law of Gravity"], answer: 2 },
+  { subject: "General Knowledge", q: "What is the largest ocean in the world?", options: ["Atlantic Ocean", "Indian Ocean", "Arctic Ocean", "Pacific Ocean"], answer: 3 },
+  { subject: "General Knowledge", q: "Which vitamin is produced by the skin when exposed to sunlight?", options: ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"], answer: 3 },
+  { subject: "General Knowledge", q: "What is the United Nations' primary purpose?", options: ["To promote international trade", "To maintain international peace and security", "To govern developing countries", "To oversee global banking"], answer: 1 },
+  { subject: "General Knowledge", q: "Which element has the atomic number 1?", options: ["Helium", "Oxygen", "Hydrogen", "Carbon"], answer: 2 },
+  { subject: "General Knowledge", q: "What type of government does Nigeria practice?", options: ["Monarchy", "Military dictatorship", "Federal democratic republic", "Parliamentary system"], answer: 2 },
+  { subject: "General Knowledge", q: "Which blood type is known as the 'universal donor'?", options: ["AB+", "AB-", "O+", "O-"], answer: 3 },
+  { subject: "General Knowledge", q: "What is the capital of South Africa's legislative branch?", options: ["Johannesburg", "Cape Town", "Pretoria", "Durban"], answer: 1 },
+  { subject: "General Knowledge", q: "How many planets are in our solar system?", options: ["7", "8", "9", "10"], answer: 1 },
+  { subject: "General Knowledge", q: "What does the acronym 'CPU' stand for in computing?", options: ["Central Processing Unit", "Computer Power Unit", "Central Program Utility", "Computer Processing Upgrade"], answer: 0 },
+  { subject: "General Knowledge", q: "The Berlin Wall fell in which year?", options: ["1985", "1987", "1989", "1991"], answer: 2 },
+  { subject: "General Knowledge", q: "Which country invented paper?", options: ["Japan", "Egypt", "China", "India"], answer: 2 },
+  { subject: "General Knowledge", q: "What is the process by which water vapor turns into liquid water called?", options: ["Evaporation", "Condensation", "Precipitation", "Transpiration"], answer: 1 },
+  { subject: "General Knowledge", q: "Which of the following is a renewable energy source?", options: ["Coal", "Natural Gas", "Solar Energy", "Petroleum"], answer: 2 },
+  { subject: "General Knowledge", q: "What does 'GDP' stand for?", options: ["Gross Domestic Product", "General Development Plan", "Global Development Progress", "Government Distribution Policy"], answer: 0 },
+  { subject: "General Knowledge", q: "Which disease is caused by the Plasmodium parasite?", options: ["Cholera", "Typhoid", "Malaria", "Tuberculosis"], answer: 2 },
+  { subject: "General Knowledge", q: "Who painted the Mona Lisa?", options: ["Michelangelo", "Leonardo da Vinci", "Pablo Picasso", "Vincent van Gogh"], answer: 1 },
+  { subject: "General Knowledge", q: "Which of these is not a branch of the Nigerian government?", options: ["Executive", "Legislative", "Judicial", "Electoral"], answer: 3 },
+  { subject: "General Knowledge", q: "What is the speed of light approximately?", options: ["300,000 km/s", "30,000 km/s", "3,000 km/s", "3,000,000 km/s"], answer: 0 },
+  { subject: "General Knowledge", q: "Which African country was never colonised?", options: ["Ghana", "Kenya", "Ethiopia", "Senegal"], answer: 2 },
+  { subject: "General Knowledge", q: "What is the main function of the kidneys?", options: ["To pump blood", "To filter waste from blood and produce urine", "To digest food", "To produce hormones"], answer: 1 },
+  { subject: "General Knowledge", q: "Which is the smallest country in the world by area?", options: ["Monaco", "San Marino", "Vatican City", "Liechtenstein"], answer: 2 },
+  { subject: "General Knowledge", q: "What is the main gas found in the Earth's atmosphere?", options: ["Oxygen", "Carbon Dioxide", "Nitrogen", "Argon"], answer: 2 },
+  { subject: "General Knowledge", q: "Who was the first President of Nigeria?", options: ["Nnamdi Azikiwe", "Tafawa Balewa", "Yakubu Gowon", "Obafemi Awolowo"], answer: 0 },
+  { subject: "General Knowledge", q: "In which city is the Eiffel Tower located?", options: ["Rome", "London", "Paris", "Berlin"], answer: 2 },
+  { subject: "General Knowledge", q: "What does the internet protocol 'HTTP' stand for?", options: ["HyperText Transfer Protocol", "High-Tech Transfer Process", "Hyperlink Text Transfer Program", "High Transfer Technical Protocol"], answer: 0 },
+  { subject: "General Knowledge", q: "Which continent has the most countries?", options: ["Asia", "America", "Africa", "Europe"], answer: 2 },
+  { subject: "General Knowledge", q: "What is inflation?", options: ["A decrease in the money supply", "A rise in the general price level of goods and services", "A reduction in government spending", "An increase in exports"], answer: 1 },
+  { subject: "General Knowledge", q: "What year did World War II end?", options: ["1943", "1944", "1945", "1946"], answer: 2 },
+  { subject: "General Knowledge", q: "Which gas makes up most of the air we breathe?", options: ["Oxygen (21%)", "Nitrogen (78%)", "Carbon dioxide (0.04%)", "Argon (0.9%)"], answer: 1 },
+  { subject: "General Knowledge", q: "What is the function of the ozone layer?", options: ["To produce rain", "To regulate ocean temperatures", "To protect Earth from harmful UV radiation", "To supply oxygen to the atmosphere"], answer: 2 },
+  { subject: "General Knowledge", q: "Which organisation is responsible for maintaining peace in the world?", options: ["World Health Organisation", "United Nations", "World Trade Organisation", "International Monetary Fund"], answer: 1 },
+  { subject: "General Knowledge", q: "What does 'photosynthesis' produce?", options: ["Carbon dioxide and water", "Glucose and oxygen", "Nitrogen and glucose", "Oxygen and carbon dioxide only"], answer: 1 },
+  { subject: "General Knowledge", q: "Which of these is an example of an input device for a computer?", options: ["Printer", "Monitor", "Keyboard", "Speaker"], answer: 2 },
+  { subject: "General Knowledge", q: "What is the chemical formula for table salt?", options: ["KCl", "NaCl", "MgCl", "CaCl"], answer: 1 }
+];
+
+</script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyCJEpqM7Xu7fIxKAwJJwNY-kmd6xNjjc5w",
@@ -484,6 +682,9 @@ let EXAM_QUESTIONS = [];
 let CURRENT_INDEX = 0;
 let ANSWERS = [];
 let APPLICANT = null;
+let TIMER_INTERVAL = null;
+let TIMER_SECONDS_LEFT = 10 * 60; // 10 minutes
+const TIMER_TOTAL = 10 * 60;
 
 function shuffleArray(arr) {
   const a = arr.slice();
@@ -598,12 +799,15 @@ function initExamNav() {
   });
 }
 
-async function submitExam() {
-  const unanswered = EXAM_QUESTIONS.findIndex((q, i) => ANSWERS[i] === undefined);
-  if (unanswered !== -1) {
-    showToast('Please answer all questions before submitting.', 'error');
-    showQuestion(unanswered);
-    return;
+async function submitExam(force) {
+  stopTimer(); // Stop countdown when submitting
+  if (!force) {
+    const unanswered = EXAM_QUESTIONS.findIndex((q, i) => ANSWERS[i] === undefined);
+    if (unanswered !== -1) {
+      showToast('Please answer all questions before submitting.', 'error');
+      showQuestion(unanswered);
+      return;
+    }
   }
 
   const nextBtn = document.getElementById('nextBtn');
@@ -636,110 +840,174 @@ async function submitExam() {
     submittedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  // Save locally immediately — user always sees results even if Firebase is down
-  const stored = JSON.parse(sessionStorage.getItem('agsf_applicant') || '{}');
-  stored.examCompleted = true;
-  stored.score = percentage;
-  sessionStorage.setItem('agsf_applicant', JSON.stringify(stored));
-
-  // Show results right away — don't wait for Firebase
-  showResults(correctCount, totalQuestions, percentage, bySubject);
-
-  // Save to Firebase in background (non-blocking)
   try {
-    db.collection('examResults').doc(APPLICANT.examNumber).set(resultData)
-      .catch(function(err){ console.warn('Firebase result save failed:', err); });
-    db.collection('applicants').doc(APPLICANT.email).set(
-      { examStatus: 'completed', score: percentage }, { merge: true }
-    ).catch(function(err){ console.warn('Firebase applicant update failed:', err); });
-  } catch(err) { console.warn('Firebase save skipped:', err); }
+    await db.collection('examResults').doc(APPLICANT.examNumber).set(resultData);
+    await db.collection('applicants').doc(APPLICANT.email).set({ examStatus: 'completed', score: percentage }, { merge: true });
+
+    const stored = JSON.parse(sessionStorage.getItem('agsf_applicant') || '{}');
+    stored.examCompleted = true;
+    stored.score = percentage;
+    sessionStorage.setItem('agsf_applicant', JSON.stringify(stored));
+
+    showResults(correctCount, totalQuestions, percentage, bySubject);
+  } catch (err) {
+    console.error(err);
+    showToast('Could not submit your results. Please check your connection and try again.', 'error', 4000);
+    nextBtn.disabled = false;
+    nextBtn.textContent = 'Submit Exam';
+  }
 }
 
 function showResults(correct, total, pct, bySubject) {
   document.getElementById('examState').style.display = 'none';
   document.getElementById('resultsState').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 
+  // Animate score ring
   const circumference = 2 * Math.PI * 78;
   const offset = circumference - (pct / 100) * circumference;
   const circle = document.getElementById('scoreCircle');
   circle.style.strokeDasharray = circumference;
-  setTimeout(() => { circle.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.22,1,0.36,1)'; circle.style.strokeDashoffset = offset; }, 100);
+  circle.style.strokeDashoffset = circumference;
+
+  // Ring colour by grade
+  if (pct >= 90) circle.style.stroke = '#2E7D4F';
+  else if (pct >= 75) circle.style.stroke = '#C8862B';
+  else circle.style.stroke = '#B3361E';
+
+  setTimeout(function() {
+    circle.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(0.22,1,0.36,1)';
+    circle.style.strokeDashoffset = offset;
+  }, 150);
 
   document.getElementById('scoreNum').textContent = pct + '%';
   document.getElementById('resultExamNumber').textContent = APPLICANT.examNumber;
 
-  const badge = document.getElementById('resultBadge');
+  const badge   = document.getElementById('resultBadge');
   const headline = document.getElementById('resultHeadline');
-  const message = document.getElementById('resultMessage');
+  const message  = document.getElementById('resultMessage');
 
-  if (pct >= 80) {
-    badge.textContent = 'EXCELLENT';
-    badge.className = 'result-badge excellent';
-    headline.textContent = 'Outstanding work!';
-  } else if (pct >= 70) {
-    badge.textContent = 'PASS';
-    badge.className = 'result-badge pass';
-    headline.textContent = 'Well done — you passed!';
+  // 90%+ = Excellent | 75-89% = Pass | below 75% = Failed
+  if (pct >= 90) {
+    badge.textContent     = '★ EXCELLENT';
+    badge.className       = 'result-badge excellent';
+    headline.textContent  = 'Outstanding performance!';
+  } else if (pct >= 75) {
+    badge.textContent     = '✔ PASS';
+    badge.className       = 'result-badge pass';
+    headline.textContent  = 'Well done — you passed!';
   } else {
-    badge.textContent = 'NOT YET A PASS';
-    badge.className = 'result-badge fail';
-    headline.textContent = 'Thank you for completing the assessment';
+    badge.textContent     = '✖ FAILED';
+    badge.className       = 'result-badge fail';
+    headline.textContent  = 'Keep pushing — you can do better!';
   }
-  message.textContent = `You scored ${correct} out of ${total} questions correctly.`;
 
-  const breakdown = document.getElementById('resultBreakdown');
-  breakdown.innerHTML = '';
-  Object.keys(bySubject).forEach(subject => {
-    const s = bySubject[subject];
-    const div = document.createElement('div');
-    div.className = 'rb-card';
-    div.innerHTML = `<div class="rb-subject">${subject}</div><div class="rb-score">${s.correct}/${s.total}</div>`;
-    breakdown.appendChild(div);
-  });
+  message.textContent = 'You scored ' + correct + ' out of ' + total + ' questions correctly.';
 }
 
 /* ---------- Page entry logic ---------- */
-function initExamPage() {
+async function initExamPage() {
   const stored = sessionStorage.getItem('agsf_applicant');
   if (!stored) {
     document.getElementById('noRegState').style.display = 'block';
-    document.getElementById('goApplyBtn').addEventListener('click', function(){ window.location.href = 'index.html#get-involved'; });
+    document.getElementById('goApplyBtn').addEventListener('click', () => { window.location.href = 'index.html#get-involved'; });
     return;
   }
 
   APPLICANT = JSON.parse(stored);
 
-  // If already completed (stored locally), show done screen without hitting Firebase
-  if (APPLICANT.examCompleted) {
-    document.getElementById('doneState').style.display = 'block';
-    document.getElementById('doneExamNumber').textContent = APPLICANT.examNumber;
-    return;
+  // Check Firestore for existing exam result (in case of reload after submission)
+  try {
+    const resultDoc = await db.collection('examResults').doc(APPLICANT.examNumber).get();
+    if (resultDoc.exists) {
+      const data = resultDoc.data();
+      document.getElementById('doneState').style.display = 'block';
+      document.getElementById('doneExamNumber').textContent = APPLICANT.examNumber;
+      return;
+    }
+  } catch (err) {
+    console.warn('Could not check existing result', err);
   }
 
-  // Show intro immediately — no waiting on Firebase
   document.getElementById('introState').style.display = 'block';
-  document.getElementById('introGreeting').textContent = 'Welcome, ' + APPLICANT.name.split(' ')[0] + '!';
+  document.getElementById('introGreeting').textContent = `Welcome, ${APPLICANT.name.split(' ')[0]}!`;
   document.getElementById('introExamNumber').textContent = APPLICANT.examNumber;
 
-  // Non-blocking background check if already submitted (won't block the user)
-  try {
-    db.collection('examResults').doc(APPLICANT.examNumber).get().then(function(doc){
-      if (doc.exists) {
-        document.getElementById('introState').style.display = 'none';
-        document.getElementById('doneState').style.display = 'block';
-        document.getElementById('doneExamNumber').textContent = APPLICANT.examNumber;
-      }
-    }).catch(function(err){ console.warn('Background check skipped:', err); });
-  } catch(err) { console.warn('Firebase check skipped:', err); }
-
-  document.getElementById('startExamBtn').addEventListener('click', function(){
+  document.getElementById('startExamBtn').addEventListener('click', () => {
     document.getElementById('introState').style.display = 'none';
     document.getElementById('examState').style.display = 'block';
     EXAM_QUESTIONS = buildPersonalExam();
     ANSWERS = [];
     renderQuestions();
     showQuestion(0);
+    startTimer(); // Begin 20-minute countdown
   });
+}
+
+/* ---------- Countdown Timer ---------- */
+function startTimer() {
+  TIMER_SECONDS_LEFT = TIMER_TOTAL;
+  updateTimerDisplay();
+
+  TIMER_INTERVAL = setInterval(function() {
+    TIMER_SECONDS_LEFT--;
+    updateTimerDisplay();
+
+    if (TIMER_SECONDS_LEFT <= 0) {
+      clearInterval(TIMER_INTERVAL);
+      triggerTimeUp();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (TIMER_INTERVAL) {
+    clearInterval(TIMER_INTERVAL);
+    TIMER_INTERVAL = null;
+  }
+}
+
+function updateTimerDisplay() {
+  const mins = Math.floor(TIMER_SECONDS_LEFT / 60);
+  const secs = TIMER_SECONDS_LEFT % 60;
+  const display = document.getElementById('timerDisplay');
+  const fill = document.getElementById('timerFill');
+  if (!display) return;
+
+  display.textContent = String(mins).padStart(2,'0') + ':' + String(secs).padStart(2,'0');
+  const pct = (TIMER_SECONDS_LEFT / TIMER_TOTAL) * 100;
+  if (fill) fill.style.width = pct + '%';
+
+  // Color stages
+  if (TIMER_SECONDS_LEFT <= 60) {
+    display.className = 'timer-display danger';
+    if (fill) fill.className = 'timer-fill danger';
+  } else if (TIMER_SECONDS_LEFT <= 120) {
+    display.className = 'timer-display warning';
+    if (fill) fill.className = 'timer-fill warning';
+  } else {
+    display.className = 'timer-display';
+    if (fill) fill.className = 'timer-fill';
+  }
+}
+
+function triggerTimeUp() {
+  // Open time-up modal
+  const modal = document.getElementById('timeupModal');
+  if (modal) modal.classList.add('open');
+
+  document.getElementById('timeupSubmitBtn').addEventListener('click', function() {
+    if (modal) modal.classList.remove('open');
+    forceSubmitExam();
+  });
+}
+
+function forceSubmitExam() {
+  // Fill all unanswered questions as -1 (wrong)
+  for (let i = 0; i < EXAM_QUESTIONS.length; i++) {
+    if (ANSWERS[i] === undefined) ANSWERS[i] = -1;
+  }
+  submitExam(true); // force=true skips the unanswered prompt
 }
 
 document.addEventListener('DOMContentLoaded', () => {
