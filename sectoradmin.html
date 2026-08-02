@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sector Admin – Talk House</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, doc, setDoc, getDoc, collection, addDoc,
+    onSnapshot, query, orderBy, getDocs, deleteDoc, updateDoc, serverTimestamp, where
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const cfg = {
+    apiKey:"AIzaSyCJEpqM7Xu7fIxKAwJJwNY-kmd6xNjjc5w",
+    authDomain:"agsf-a34f4.firebaseapp.com",
+    databaseURL:"https://agsf-a34f4-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"agsf-a34f4",
+    storageBucket:"agsf-a34f4.firebasestorage.app",
+    messagingSenderId:"1047176725753",
+    appId:"1:1047176725753:web:988c2ae4411392553a8e28",
+    measurementId:"G-RLHSFP6K4J"
+  };
+  const app = initializeApp(cfg);
+  const db  = getFirestore(app);
+  window._db=db;
+  window._fbDoc=doc; window._fbSetDoc=setDoc; window._fbGetDoc=getDoc;
+  window._fbCollection=collection; window._fbAddDoc=addDoc;
+  window._fbOnSnapshot=onSnapshot; window._fbQuery=query;
+  window._fbOrderBy=orderBy; window._fbGetDocs=getDocs;
+  window._fbDeleteDoc=deleteDoc; window._fbUpdateDoc=updateDoc;
+  window._fbServerTimestamp=serverTimestamp; window._fbWhere=where;
+  window._FB=true;
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+:root{
+  --bg:#0d1117;--bg2:#161b22;--bg3:#1c2330;--bg4:#21262d;
+  --green:#0a8f5a;--green2:#087a4d;--green-hi:#23d18b;
+  --border:#30363d;--text:#e6edf3;--text2:#848d97;--text3:#3d444d;
+  --red:#f85149;--gold:#d29922;--blue:#58a6ff;
+  --bubble-out:#0a8f5a;--bubble-in:#1c2330;
+  --sidebar:280px;--header:56px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Inter',Arial,sans-serif;background:var(--bg);color:var(--text)}
+
+/* ── LOGIN ── */
+#login-wrap{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px}
+.lcard{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:44px 36px 36px;width:100%;max-width:380px;box-shadow:0 0 60px rgba(10,143,90,.15)}
+.lcard-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;text-align:center}
+.lcard-sub{font-size:13px;color:var(--text2);margin-bottom:28px;text-align:center}
+.l-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.l-input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:12px 16px;border-radius:10px;font-size:14px;font-family:'Inter',Arial;outline:none;margin-bottom:14px;transition:border-color .2s}
+.l-input:focus{border-color:var(--green)}
+.l-btn{width:100%;padding:14px;background:var(--green);border:none;color:#fff;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;margin-top:4px;font-family:'Inter',Arial;transition:background .2s}
+.l-btn:hover{background:var(--green2)}
+.l-err{color:var(--red);font-size:12px;text-align:center;margin-top:10px;min-height:16px}
+.l-lock{font-size:44px;text-align:center;margin-bottom:16px}
+
+/* ── LAYOUT ── */
+#app{display:none;height:100%;position:relative}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;top:0;left:0;bottom:0;width:var(--sidebar);
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;z-index:50;
+}
+.sb-head{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.sb-title{font-size:14px;font-weight:700;color:var(--text)}
+.sb-subtitle{font-size:11px;color:var(--text2);margin-top:2px}
+.sb-search{position:relative;padding:10px 12px;border-bottom:1px solid var(--border)}
+.sb-search input{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:13px;font-family:'Inter',Arial;outline:none}
+.sb-search input::placeholder{color:var(--text3)}
+.sb-list{flex:1;overflow-y:auto}
+.sb-list::-webkit-scrollbar{width:3px}
+.sb-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.conv-item{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--bg3);transition:background .15s;position:relative}
+.conv-item:hover{background:var(--bg3)}
+.conv-item.active{background:rgba(10,143,90,.12);border-left:3px solid var(--green)}
+.conv-avatar{position:relative;flex-shrink:0}
+.conv-avatar img{width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;background:var(--bg3)}
+.conv-online{position:absolute;bottom:2px;right:2px;width:11px;height:11px;background:var(--green-hi);border-radius:50%;border:2px solid var(--bg2)}
+.conv-info{flex:1;min-width:0}
+.conv-name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.conv-preview{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.conv-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.conv-time{font-size:10px;color:var(--text2)}
+.unread-badge{background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
+.conv-empty{padding:40px 20px;text-align:center;color:var(--text3);font-size:13px}
+
+/* MAIN CHAT */
+.main-chat{margin-left:var(--sidebar);height:100%;display:flex;flex-direction:column;position:relative}
+
+/* Chat Header */
+.mc-header{
+  height:var(--header);background:var(--bg2);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:0 16px;flex-shrink:0;
+}
+.mc-avatar{position:relative;flex-shrink:0}
+.mc-avatar img{width:36px;height:36px;border-radius:50%;object-fit:cover;display:block}
+.mc-online{position:absolute;bottom:1px;right:1px;width:10px;height:10px;background:var(--green-hi);border-radius:50%;border:2px solid var(--bg2)}
+.mc-info{flex:1;min-width:0}
+.mc-name{font-size:15px;font-weight:700;color:var(--text)}
+.mc-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.mc-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(10,143,90,.15);color:var(--green-hi);font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;border:1px solid rgba(35,209,139,.2)}
+
+/* Messages */
+.mc-msgs{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.mc-msgs::-webkit-scrollbar{width:3px}
+.mc-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.mc-empty{margin:auto;text-align:center;color:var(--text3);font-size:14px;padding:40px}
+.mc-empty svg{width:48px;height:48px;fill:none;stroke:var(--text3);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:12px}
+
+/* Day separator */
+.day-sep{text-align:center;margin:10px 0 4px}
+.day-sep span{background:var(--bg3);color:var(--text2);font-size:11px;padding:3px 10px;border-radius:20px}
+
+/* Bubbles */
+.msg-row{display:flex;align-items:flex-end;gap:8px;max-width:100%}
+.msg-row.profile-out{flex-direction:row-reverse}
+.msg-row.user-in .msg-img{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0}
+.msg-row.profile-out .msg-img{display:none}
+.bubble-wrap{max-width:68%;position:relative}
+.bubble{
+  padding:9px 13px;border-radius:18px;font-size:13.5px;line-height:1.45;
+  word-break:break-word;position:relative;
+}
+.msg-row.profile-out .bubble{background:var(--bubble-out);color:#fff;border-bottom-right-radius:4px}
+.msg-row.user-in  .bubble{background:var(--bubble-in);color:var(--text);border-bottom-left-radius:4px;border:1px solid var(--border)}
+.bubble-del{opacity:.45;font-style:italic}
+.bubble-time{font-size:10px;color:var(--text2);margin-top:3px;text-align:right}
+.msg-row.profile-out .bubble-time{color:rgba(255,255,255,.55)}
+.bubble-reaction{font-size:15px;display:inline-block;margin-top:3px}
+.sender-label{font-size:10px;font-weight:600;margin-bottom:3px}
+.msg-row.user-in .sender-label{color:var(--blue)}
+.msg-row.profile-out .sender-label{color:var(--green-hi);text-align:right}
+
+/* Reaction bar (admin) */
+.reaction-bar{
+  display:none;position:absolute;bottom:calc(100% + 5px);
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:24px;padding:5px 8px;gap:4px;flex-wrap:nowrap;
+  z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.reaction-bar.show{display:flex}
+.msg-row.profile-out .reaction-bar{right:0}
+.msg-row.user-in  .reaction-bar{left:0}
+.react-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:2px 4px;border-radius:8px;transition:transform .15s}
+.react-btn:hover{transform:scale(1.2)}
+.del-btn-small{background:none;border:1px solid #444;color:var(--red);font-size:10px;font-weight:600;padding:4px 8px;border-radius:8px;cursor:pointer;margin-left:4px;white-space:nowrap}
+.del-btn-small:hover{background:rgba(248,81,73,.1)}
+
+/* Typing indicator */
+.typing-row{display:none;align-items:flex-end;gap:8px}
+.typing-row.show{display:flex}
+.typing-ind{display:flex;align-items:center;gap:4px;background:var(--bubble-in);border:1px solid var(--border);padding:10px 14px;border-radius:18px;border-bottom-left-radius:4px}
+.td{width:7px;height:7px;background:var(--text2);border-radius:50%;animation:td 1.4s infinite both}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+@keyframes td{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.1);opacity:1}}
+
+/* Input Bar (Sector Admin) */
+.mc-input-bar{
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:10px 14px;display:flex;align-items:flex-end;gap:10px;flex-shrink:0;
+}
+.profile-pill{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(10,143,90,.15);border:1px solid rgba(35,209,139,.25);
+  border-radius:20px;padding:4px 10px;font-size:12px;color:var(--green-hi);
+  font-weight:600;white-space:nowrap;flex-shrink:0;margin-bottom:6px;
+}
+.profile-pill img{width:20px;height:20px;border-radius:50%;object-fit:cover}
+.mc-textarea{
+  flex:1;background:var(--bg3);border:1px solid var(--border);
+  color:var(--text);padding:10px 14px;border-radius:12px;
+  font-size:14px;font-family:'Inter',Arial;outline:none;resize:none;
+  max-height:120px;overflow-y:auto;transition:border-color .2s;line-height:1.4;
+}
+.mc-textarea:focus{border-color:var(--green)}
+.mc-textarea::placeholder{color:var(--text3)}
+.mc-send-btn{
+  width:42px;height:42px;background:var(--green);border:none;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  flex-shrink:0;transition:background .2s;
+}
+.mc-send-btn:hover{background:var(--green2)}
+.mc-send-btn:disabled{background:var(--text3);cursor:not-allowed}
+.mc-send-btn svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* No chat selected */
+.no-chat{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:14px}
+.no-chat svg{width:64px;height:64px;fill:none;stroke:var(--text3);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.no-chat p{font-size:15px}
+
+/* Mobile overlay sidebar */
+@media(max-width:700px){
+  .sidebar{width:100%;right:0;transform:translateX(-100%);transition:transform .3s}
+  .sidebar.open{transform:translateX(0)}
+  .main-chat{margin-left:0}
+  .back-btn-mobile{display:flex!important}
+}
+.back-btn-mobile{display:none;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;color:var(--text);padding:6px;border-radius:8px;margin-right:4px}
+.back-btn-mobile svg{width:20px;height:20px;fill:none;stroke:var(--text);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+
+/* Toast */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--bg2);border:1px solid var(--green);color:var(--green-hi);padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9000;transition:transform .3s;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+#toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-wrap">
+  <div class="lcard">
+    <div class="l-lock">&#128172;</div>
+    <div class="lcard-title">Sector Admin</div>
+    <div class="lcard-sub">Talk House Operator Panel</div>
+    <label class="l-label">Password</label>
+    <input class="l-input" id="sa-pw" type="password" placeholder="Enter sector password" autocomplete="off"/>
+    <button class="l-btn" onclick="doLogin()">Enter Panel</button>
+    <div class="l-err" id="l-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- SIDEBAR — conversation list -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-title">&#128172; Active Conversations</div>
+      <div class="sb-subtitle" id="conv-count">Loading chats...</div>
+    </div>
+    <div class="sb-search">
+      <input id="sb-search" placeholder="Search by user or profile..." oninput="filterConvs()"/>
+    </div>
+    <div class="sb-list" id="sb-list">
+      <div class="conv-empty">Waiting for Firebase...</div>
+    </div>
+  </div>
+
+  <!-- MAIN CHAT AREA -->
+  <div class="main-chat">
+    <!-- Header -->
+    <div class="mc-header" id="mc-header">
+      <button class="back-btn-mobile" onclick="closeMobile()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="mc-avatar" id="mc-avatar" style="display:none">
+        <img id="mc-av-img" src="" alt=""/>
+        <span class="mc-online"></span>
+      </div>
+      <div class="mc-info">
+        <div class="mc-name" id="mc-name">Select a conversation</div>
+        <div class="mc-sub" id="mc-sub">Pick a chat from the left panel</div>
+      </div>
+      <div id="mc-badge-wrap" style="display:none">
+        <span class="mc-badge" id="mc-badge">Replying as profile</span>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="mc-msgs" id="mc-msgs">
+      <div class="no-chat">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <p>Select a conversation to start replying</p>
+      </div>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="mc-input-bar" id="mc-input-bar" style="display:none">
+      <div style="flex:1">
+        <div class="profile-pill" id="profile-pill">
+          <img id="pill-img" src="" alt=""/>
+          <span id="pill-name">Profile</span>
+          <span style="opacity:.6">&#9679; replying as</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end">
+          <textarea class="mc-textarea" id="sa-input" placeholder="Type reply as profile..." rows="1" maxlength="1000"></textarea>
+          <button class="mc-send-btn" id="sa-send" onclick="sendReply()" disabled>
+            <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+const SECTOR_PW = '1e2e3e#242';
+let allConvs = [];
+let filteredConvs = [];
+let activeChatId = null;
+let activeProfileIdx = null;
+let activeProfileName = '';
+let msgUnsubscribe = null;
+let longPressTimer = null;
+let activeReactionBar = null;
+
+/* ── LOGIN ── */
+function doLogin(){
+  const pw = document.getElementById('sa-pw').value;
+  const err = document.getElementById('l-err');
+  if(pw === SECTOR_PW){
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('app').style.display='block';
+    if(window._FB) init();
+    else document.addEventListener('firebase-ready', init);
+  } else {
+    err.textContent = 'Incorrect password.';
+    document.getElementById('sa-pw').value='';
+  }
+}
+document.getElementById('sa-pw').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+/* ── PROFILES ── */
+const profiles = [
+  {img:'image.jpg',   name:'Jake'},    {img:'image1.jpg',  name:'Madison'},
+  {img:'image2.jpg',  name:'Emily'},   {img:'image3.jpg',  name:'Lucas'},
+  {img:'image4.jpg',  name:'Sophia'},  {img:'image5.jpg',  name:'Aiden'},
+  {img:'image6.jpg',  name:'Olivia'},  {img:'image7.jpg',  name:'Noah'},
+  {img:'image8.jpg',  name:'Ava'},     {img:'image9.jpg',  name:'Liam'},
+  {img:'image10.jpg', name:'Isabella'},{img:'image11.jpg', name:'Mason'},
+  {img:'image12.jpg', name:'Mia'},     {img:'image13.jpg', name:'Ethan'},
+  {img:'image14.jpg', name:'Charlotte'},{img:'image15.jpg', name:'James'},
+  {img:'image16.jpg', name:'Amelia'}, {img:'image17.jpg', name:'Alexander'},
+  {img:'image18.jpg', name:'Harper'}, {img:'image19.jpg', name:'Benjamin'},
+  {img:'image20.jpg', name:'Evelyn'}, {img:'image21.jpg', name:'Daniel'},
+  {img:'image22.jpg', name:'Abigail'},{img:'image23.jpg', name:'Henry'},
+  {img:'image24.jpg', name:'Emily R.'},{img:'image25.jpg',name:'Samuel'},
+  {img:'image26.jpg', name:'Lily'},   {img:'image27.jpg', name:'Michael'},
+  {img:'image28.jpg', name:'Grace'},  {img:'image29.jpg', name:'William'},
+  {img:'image30.jpg', name:'Scarlett'},{img:'image31.jpg',name:'Joseph'},
+  {img:'image32.jpg', name:'Victoria'},{img:'image33.jpg',name:'David'},
+  {img:'image34.jpg', name:'Stella'}, {img:'image35.jpg', name:'Andrew'},
+  {img:'image36.jpg', name:'Chloe'},  {img:'image37.jpg', name:'Ryan'},
+  {img:'image38.jpg', name:'Penelope'},{img:'image39.jpg',name:'Nathan'},
+  {img:'image40.jpg', name:'Layla'},  {img:'image41.jpg', name:'Jonathan'},
+  {img:'image42.jpg', name:'Nora'},   {img:'image43.jpg', name:'Patrick'},
+  {img:'image44.jpg', name:'Zoey'},   {img:'image45.jpg', name:'Tyler'},
+  {img:'image46.jpg', name:'Hannah'}, {img:'image47.jpg', name:'Aaron'},
+  {img:'image48.jpg', name:'Naomi'},  {img:'image49.jpg', name:'Kevin'},
+];
+
+function getProfile(idx){ return profiles[parseInt(idx)] || {img:'',name:'Profile'}; }
+
+/* ── ENCRYPTION (matching chat.html) ─── */
+function encMsg(text, uid, pidx){
+  const key = 'TH_'+uid+'_p'+pidx;
+  let out='', kl=key.length;
+  for(let i=0;i<text.length;i++) out+=String.fromCharCode(text.charCodeAt(i)^key.charCodeAt(i%kl));
+  try{ return btoa(unescape(encodeURIComponent(out))); }catch(e){ return btoa(out); }
+}
+function decMsg(b64, uid, pidx){
+  const key = 'TH_'+uid+'_p'+pidx;
+  try{
+    const dec = decodeURIComponent(escape(atob(b64)));
+    let out='', kl=key.length;
+    for(let i=0;i<dec.length;i++) out+=String.fromCharCode(dec.charCodeAt(i)^key.charCodeAt(i%kl));
+    return out;
+  }catch(e){ return b64; }
+}
+
+/* ── INIT — LISTEN TO ALL CHAT METAS ─── */
+function init(){
+  window._fbOnSnapshot(
+    window._fbCollection(window._db,'chatMeta'),
+    snap=>{
+      allConvs=[];
+      snap.forEach(d=>{ allConvs.push({id:d.id,...d.data()}); });
+      allConvs.sort((a,b)=>(b.lastTs||0)-(a.lastTs||0));
+      filteredConvs=[...allConvs];
+      document.getElementById('conv-count').textContent=allConvs.length+' conversation(s)';
+      renderSidebar();
+    }
+  );
+}
+
+/* ── RENDER SIDEBAR ─────────────────── */
+function renderSidebar(){
+  const list = document.getElementById('sb-list');
+  if(!filteredConvs.length){ list.innerHTML='<div class="conv-empty">No conversations yet.</div>'; return; }
+  list.innerHTML = filteredConvs.map(c=>{
+    const p=getProfile(c.profileIdx);
+    const unread=c.unreadAdmin||0;
+    const preview=c.lastMsg?'(encrypted msg)':'No messages yet';
+    const t=c.lastTs?fmtRelTime(c.lastTs):'';
+    const active=c.id===activeChatId?'active':'';
+    return `<div class="conv-item ${active}" onclick="openConv('${c.id}',${c.profileIdx},'${esc(c.profileName||p.name)}','${esc(c.userId||'')}','${esc(c.userName||'')}')">
+      <div class="conv-avatar">
+        <img src="${p.img}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2244%22 height=%2244%22><rect fill=%22%23444%22 width=%2244%22 height=%2244%22 rx=%2222%22/></svg>'" alt="${p.name}"/>
+        <span class="conv-online"></span>
+      </div>
+      <div class="conv-info">
+        <div class="conv-name">${esc(c.userName||'Unknown User')}</div>
+        <div class="conv-preview">&#8594; ${esc(c.profileName||p.name)} &nbsp;${preview}</div>
+      </div>
+      <div class="conv-meta">
+        <span class="conv-time">${t}</span>
+        ${unread>0?`<span class="unread-badge">${unread}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterConvs(){
+  const q=document.getElementById('sb-search').value.toLowerCase();
+  filteredConvs = !q ? [...allConvs] : allConvs.filter(c=>
+    (c.userName||'').toLowerCase().includes(q)||
+    (c.profileName||'').toLowerCase().includes(q)||
+    (c.userPhone||'').includes(q)
+  );
+  renderSidebar();
+}
+
+/* ── OPEN A CONVERSATION ─────────────── */
+function openConv(chatId, pIdx, pName, userId, userName){
+  activeChatId=chatId;
+  activeProfileIdx=pIdx;
+  activeProfileName=pName;
+  const p=getProfile(pIdx);
+
+  // Header
+  document.getElementById('mc-avatar').style.display='block';
+  document.getElementById('mc-badge-wrap').style.display='block';
+  const avImg=document.getElementById('mc-av-img');
+  avImg.src=p.img;
+  avImg.onerror=function(){this.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36"><rect fill="%23555" width="36" height="36" rx="18"/></svg>'};
+  document.getElementById('mc-name').textContent=`${userName} &#8596; ${pName}`;
+  document.getElementById('mc-sub').textContent=`User ID: ${userId}`;
+  document.getElementById('mc-badge').textContent=`Replying as ${pName}`;
+
+  // Profile pill
+  document.getElementById('pill-img').src=p.img;
+  document.getElementById('pill-name').textContent=pName;
+  document.getElementById('mc-input-bar').style.display='block';
+
+  // Reset unread
+  window._fbSetDoc(window._fbDoc(window._db,'chatMeta',chatId),{unreadAdmin:0},{merge:true}).catch(()=>{});
+
+  // Update sidebar active state
+  renderSidebar();
+
+  // Listen to messages
+  if(msgUnsubscribe) msgUnsubscribe();
+  document.getElementById('mc-msgs').innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Loading messages...</div>';
+
+  const q=window._fbQuery(
+    window._fbCollection(window._db,'chats',chatId,'messages'),
+    window._fbOrderBy('ts','asc')
+  );
+  msgUnsubscribe=window._fbOnSnapshot(q,snap=>{
+    const msgs=[];
+    snap.forEach(d=>msgs.push({docId:d.id,...d.data()}));
+    renderMsgs(msgs, userId, pIdx);
+  });
+
+  // Mobile: show chat area
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+/* ── RENDER MESSAGES ─────────────────── */
+function renderMsgs(msgs, userId, pIdx){
+  const el=document.getElementById('mc-msgs');
+  if(!msgs.length){
+    el.innerHTML='<div class="mc-empty"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>No messages yet. User hasn\'t chatted.</p></div>';
+    return;
+  }
+
+  let lastDay='';
+  const frag=document.createDocumentFragment();
+
+  msgs.forEach(msg=>{
+    if(msg.sender==='admin_action') return; // skip action events
+    const ts=msg.ts||Date.now();
+    const d=new Date(ts);
+    const dayStr=d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'});
+    if(dayStr!==lastDay){
+      lastDay=dayStr;
+      const sep=document.createElement('div');
+      sep.className='day-sep';
+      sep.innerHTML=`<span>${dayStr}</span>`;
+      frag.appendChild(sep);
+    }
+    const isProfile=msg.sender==='profile';
+    const decText=decMsg(msg.text||'',userId,pIdx);
+    frag.appendChild(buildAdminBubble(msg, isProfile, decText, userId, pIdx));
+  });
+
+  el.innerHTML='';
+  el.appendChild(frag);
+  el.scrollTop=el.scrollHeight;
+}
+
+function buildAdminBubble(msg, isProfile, text, userId, pIdx){
+  const row=document.createElement('div');
+  row.className='msg-row '+(isProfile?'profile-out':'user-in');
+  row.dataset.id=msg.msgId||msg.docId;
+
+  const deleted=msg.deleted||false;
+  const timeStr=new Date(msg.ts||Date.now()).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  const p=getProfile(pIdx);
+
+  if(!isProfile){
+    const av=document.createElement('img');
+    av.className='msg-img';
+    av.src=p.img;
+    av.onerror=function(){this.style.display='none'};
+    row.appendChild(av);
+  }
+
+  const wrap=document.createElement('div');
+  wrap.className='bubble-wrap';
+
+  const senderLabel=document.createElement('div');
+  senderLabel.className='sender-label';
+  senderLabel.textContent=isProfile?p.name:(msg.userName||'User');
+  wrap.appendChild(senderLabel);
+
+  // Reaction bar
+  const rBar=document.createElement('div');
+  rBar.className='reaction-bar';
+  rBar.innerHTML=['❤️','😂','😮','😢','👍','🔥'].map(e=>`<button class="react-btn" onclick="adminReact('${msg.msgId||msg.docId}','${e}')">${e}</button>`).join('')+
+    `<button class="del-btn-small" onclick="adminDelete('${msg.msgId||msg.docId}','${msg.docId}')">Delete for all</button>`;
+
+  const bubble=document.createElement('div');
+  bubble.className='bubble'+(deleted?' bubble-del':'');
+  bubble.textContent=deleted?'Message deleted':text;
+  if(msg.reaction){
+    const r=document.createElement('span');
+    r.className='bubble-reaction';
+    r.textContent=msg.reaction;
+    bubble.appendChild(r);
+  }
+
+  const timeEl=document.createElement('div');
+  timeEl.className='bubble-time';
+  timeEl.textContent=timeStr+(isProfile?' ✓✓':'');
+
+  // Long press
+  function showBar(){
+    if(activeReactionBar&&activeReactionBar!==rBar) activeReactionBar.classList.remove('show');
+    rBar.classList.toggle('show');
+    activeReactionBar=rBar;
+  }
+  bubble.addEventListener('touchstart',()=>{longPressTimer=setTimeout(showBar,500);},{passive:true});
+  bubble.addEventListener('touchend',()=>{clearTimeout(longPressTimer);},{passive:true});
+  bubble.addEventListener('touchmove',()=>{clearTimeout(longPressTimer);},{passive:true});
+  bubble.addEventListener('contextmenu',e=>{e.preventDefault();showBar();});
+
+  wrap.appendChild(rBar);
+  wrap.appendChild(bubble);
+  wrap.appendChild(timeEl);
+  row.appendChild(wrap);
+  return row;
+}
+
+/* ── ADMIN REACTION ──────────────────── */
+function adminReact(msgId, emoji){
+  if(!activeChatId) return;
+  if(activeReactionBar){activeReactionBar.classList.remove('show');activeReactionBar=null;}
+  window._fbAddDoc(window._fbCollection(window._db,'chats',activeChatId,'messages'),{
+    msgId:'admin_action_'+Date.now(), sender:'admin_action',
+    action:'react', targetId:msgId, reaction:emoji, ts:Date.now(), chatId:activeChatId
+  }).catch(()=>{});
+  toast('Reaction added');
+}
+
+/* ── ADMIN DELETE ────────────────────── */
+function adminDelete(msgId, docId){
+  if(!activeChatId) return;
+  if(!confirm('Delete this message for everyone?')) return;
+  if(activeReactionBar){activeReactionBar.classList.remove('show');activeReactionBar=null;}
+  // Mark deleted in firebase
+  window._fbUpdateDoc(window._fbDoc(window._db,'chats',activeChatId,'messages',docId),{deleted:true}).catch(()=>{});
+  // Also send action event
+  window._fbAddDoc(window._fbCollection(window._db,'chats',activeChatId,'messages'),{
+    msgId:'admin_action_del_'+Date.now(), sender:'admin_action',
+    action:'delete', targetId:msgId, ts:Date.now(), chatId:activeChatId
+  }).catch(()=>{});
+  toast('Message deleted for everyone');
+}
+
+/* ── SEND REPLY AS PROFILE ───────────── */
+const saInput=document.getElementById('sa-input');
+const saBtn=document.getElementById('sa-send');
+saInput.addEventListener('input',function(){
+  saBtn.disabled=!this.value.trim();
+  this.style.height='auto';
+  this.style.height=Math.min(this.scrollHeight,120)+'px';
+});
+saInput.addEventListener('keydown',e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendReply();} });
+
+function sendReply(){
+  if(!activeChatId){ toast('No conversation selected'); return; }
+  const text=saInput.value.trim();
+  if(!text) return;
+
+  // We need userId for encryption key — get from active conv
+  const conv=allConvs.find(c=>c.id===activeChatId);
+  const userId=conv?conv.userId:'unknown';
+  const pIdx=conv?conv.profileIdx:activeProfileIdx;
+
+  const msgId='msg_'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  const encText=encMsg(text,userId,pIdx);
+
+  window._fbAddDoc(window._fbCollection(window._db,'chats',activeChatId,'messages'),{
+    chatId:activeChatId, msgId, sender:'profile',
+    text:encText, ts:Date.now(), deleted:false, reaction:null,
+    profileName:activeProfileName, profileIdx:pIdx
+  }).then(()=>{
+    window._fbSetDoc(window._fbDoc(window._db,'chatMeta',activeChatId),{
+      lastMsg:encText, lastTs:Date.now()
+    },{merge:true}).catch(()=>{});
+    saInput.value='';
+    saBtn.disabled=true;
+    saInput.style.height='auto';
+  }).catch(e=>toast('Error: '+e.message));
+}
+
+/* ── MOBILE BACK ─────────────────────── */
+function closeMobile(){
+  document.getElementById('sidebar').classList.add('open');
+}
+
+/* ── CLOSE REACTION BAR ──────────────── */
+document.addEventListener('click',()=>{
+  if(activeReactionBar){activeReactionBar.classList.remove('show');activeReactionBar=null;}
+});
+
+/* ── UTILS ───────────────────────────── */
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmtRelTime(ts){
+  const diff=Date.now()-ts;
+  const m=Math.floor(diff/60000);
+  if(m<1) return 'now';
+  if(m<60) return m+'m';
+  const h=Math.floor(m/60);
+  if(h<24) return h+'h';
+  return Math.floor(h/24)+'d';
+}
+let _tt;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>

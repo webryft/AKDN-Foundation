@@ -8,7 +8,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp }
+  import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp, getDoc, onSnapshot, query, orderBy, deleteDoc, updateDoc }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   const cfg = {
     apiKey:"AIzaSyCJEpqM7Xu7fIxKAwJJwNY-kmd6xNjjc5w",
@@ -22,13 +22,13 @@
   };
   const app = initializeApp(cfg);
   const db  = getFirestore(app);
-  window._db = db;
-  window._fbDoc = doc;
-  window._fbSetDoc = setDoc;
-  window._fbCollection = collection;
-  window._fbAddDoc = addDoc;
-  window._fbServerTimestamp = serverTimestamp;
-  window._FB = true;
+  window._db=db; window._fbDoc=doc; window._fbSetDoc=setDoc;
+  window._fbCollection=collection; window._fbAddDoc=addDoc;
+  window._fbServerTimestamp=serverTimestamp; window._fbGetDoc=getDoc;
+  window._fbOnSnapshot=onSnapshot; window._fbQuery=query;
+  window._fbOrderBy=orderBy; window._fbDeleteDoc=deleteDoc;
+  window._fbUpdateDoc=updateDoc;
+  window._FB=true;
   document.dispatchEvent(new Event('firebase-ready'));
 </script>
 
@@ -278,7 +278,7 @@ footer .footer-copy{color:rgba(255,255,255,.6);font-size:12px;margin-top:8px}
     <a href="#" onclick="openContactModal();return false">Contact Us</a>
     <a href="#privacy" id="privacy">Privacy Policy</a>
     <a href="#terms" id="terms">Terms & Conditions</a>
-    <a href="admin.html">Admin</a>
+
   </div>
   <div>For press or partnerships: <strong>www.akdnsf.com</strong></div>
   <div class="footer-copy">© <span id="footYear"></span> Talk House — All rights reserved</div>
@@ -404,28 +404,50 @@ function handleCardClick(idx){
 
 function openProfileChat(idx){
   const p = profiles[idx];
-  const icons = {whatsapp:'💬',telegram:'✈️',instagram:'📸',facebook:'👤',skype:'🎥'};
-  const links = {
-    whatsapp: `https://wa.me/${p.contact}?text=${encodeURIComponent('Hello from Talk House! I\'d love to connect.')}`,
-    telegram:  `https://t.me/${p.contact}`,
-    instagram: `https://instagram.com/${p.contact}`,
-    facebook:  `https://facebook.com/${p.contact}`,
-    skype:     `https://join.skype.com/invite/${p.contact}`
+  const extLinks = {
+    whatsapp:`https://wa.me/${p.contact}?text=${encodeURIComponent('Hello from Talk House!')}`,
+    telegram:`https://t.me/${p.contact}`,
+    instagram:`https://instagram.com/${p.contact}`,
+    facebook:`https://facebook.com/${p.contact}`,
+    skype:`https://join.skype.com/invite/${p.contact}`
   };
+  const extLabel = p.platform.charAt(0).toUpperCase()+p.platform.slice(1);
+  const f = flag(p.country);
   openModal(`
-    <h3>${icons[p.platform]||'💬'} Connect with ${p.name}</h3>
-    <div style="text-align:center;padding:12px 0">
-      <img src="${p.img}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--green)" onerror="this.style.display='none'"/>
-      <div style="margin:10px 0 4px;font-weight:700">${p.name}</div>
-      <div style="font-size:13px;color:#666">${flag(p.country)} ${p.country}</div>
-      <div style="font-size:13px;color:#555;margin-top:8px">${p.quote}</div>
-      <div style="margin-top:6px;font-size:12px;color:#888">Prefers: <strong>${p.platform}</strong></div>
+    <button class="modal-close-btn" onclick="closeModal()" style="position:absolute;top:12px;right:12px;width:28px;height:28px;background:#f0f0f0;border:none;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">&#10005;</button>
+    <div style="text-align:center;padding:8px 0 4px">
+      <div style="position:relative;display:inline-block">
+        <img src="${p.img}" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid var(--green);display:block" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2288%22 height=%2288%22><rect fill=%22%23ddd%22 width=%2288%22 height=%2288%22 rx=%2244%22/></svg>'"/>
+        <span style="position:absolute;bottom:4px;right:4px;width:14px;height:14px;background:#22c55e;border-radius:50%;border:2px solid #fff;display:block"></span>
+      </div>
+      <div style="margin:10px 0 2px;font-weight:700;font-size:17px">${p.name}</div>
+      <div style="font-size:13px;color:#666;margin-bottom:4px">${f} ${p.country}</div>
+      <div style="font-size:13px;color:#555;max-width:280px;margin:0 auto 8px;line-height:1.4">${p.quote}</div>
+      <span style="display:inline-block;background:#e8f5e9;color:var(--green);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">&#9679; Online</span>
     </div>
-    <div class="modal-actions">
-      <button class="btn-primary" onclick="window.open('${links[p.platform]}','_blank');closeModal()">Open ${p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</button>
-      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button onclick="closeModal();goToChat(${idx})" style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">
+        &#128172; Chat Now
+      </button>
+      <button onclick="openExtLink('${extLinks[p.platform]||''}','${extLabel}')" style="flex:1;padding:12px;background:#f0f0f0;color:#333;border:none;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer">
+        &#8599; ${extLabel}
+      </button>
     </div>
   `);
+}
+
+function goToChat(idx){
+  const user = JSON.parse(localStorage.getItem('th_user'));
+  if(!user){ openRegisterPrompt(); return; }
+  localStorage.setItem('th_chat_profile', String(idx));
+  localStorage.setItem('th_chat_user', JSON.stringify(user));
+  window.location.href = 'chat.html';
+}
+
+function openExtLink(url, label){
+  if(!url){ alert('This profile has not yet set up an external '+label+' link.\nPlease use the Chat Now button to connect.'); return; }
+  closeModal();
+  window.open(url,'_blank');
 }
 
 /* ── REGISTER PROMPT ─────────────────────── */
