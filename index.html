@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Talk House – Chat & Earn</title>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, collection, addDoc, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  const cfg = {
+    apiKey:"AIzaSyCJEpqM7Xu7fIxKAwJJwNY-kmd6xNjjc5w",
+    authDomain:"agsf-a34f4.firebaseapp.com",
+    databaseURL:"https://agsf-a34f4-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId:"agsf-a34f4",
+    storageBucket:"agsf-a34f4.firebasestorage.app",
+    messagingSenderId:"1047176725753",
+    appId:"1:1047176725753:web:988c2ae4411392553a8e28",
+    measurementId:"G-RLHSFP6K4J"
+  };
+  const app = initializeApp(cfg);
+  const db  = getFirestore(app);
+  window._db = db;
+  window._fbDoc = doc;
+  window._fbSetDoc = setDoc;
+  window._fbCollection = collection;
+  window._fbAddDoc = addDoc;
+  window._fbServerTimestamp = serverTimestamp;
+  window._FB = true;
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<style>
+:root{
+  --green:#0a8f5a;--green2:#087a4d;--green3:#065e3a;
+  --white:#fff;--light:#f4f4f4;--text:#111;--text2:#444;
+  --shadow:0 6px 24px rgba(0,0,0,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--green);color:var(--white);-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ── */
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;background:var(--green3);position:sticky;top:0;z-index:900;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none}
+.brand h2{margin:0;font-size:20px;color:#fff}
+.title-icon{width:26px;height:26px}
+
+/* Hamburger */
+.hamburger{display:flex;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none}
+.hamburger span{display:block;width:24px;height:2px;background:#fff;border-radius:2px;transition:.3s}
+.hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg)}
+
+/* Drawer */
+.drawer{
+  position:fixed;top:0;right:-280px;width:260px;height:100%;
+  background:var(--green3);box-shadow:-4px 0 20px rgba(0,0,0,.3);
+  z-index:1100;transition:right .3s cubic-bezier(.4,0,.2,1);
+  padding:70px 0 20px;
+}
+.drawer.open{right:0}
+.drawer a,.drawer button{
+  display:block;width:100%;padding:16px 28px;color:#fff;text-align:left;
+  text-decoration:none;font-weight:600;font-size:15px;background:none;border:none;
+  cursor:pointer;border-bottom:1px solid rgba(255,255,255,.1);transition:background .2s;
+}
+.drawer a:hover,.drawer button:hover{background:rgba(255,255,255,.1)}
+.drawer-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1050;
+  display:none;opacity:0;transition:opacity .3s;
+}
+.drawer-overlay.open{display:block;opacity:1}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:44px 20px 30px}
+.hero h1{max-width:880px;margin:0 auto;font-size:clamp(20px,4vw,30px);line-height:1.3}
+.hero p{max-width:740px;margin:16px auto;color:rgba(255,255,255,.92);font-size:15px;line-height:1.6}
+.btn-hero{
+  display:inline-block;margin-top:18px;padding:14px 32px;
+  background:#fff;color:var(--green);border-radius:8px;font-weight:700;font-size:15px;
+  cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.15);transition:transform .15s,box-shadow .15s;
+}
+.btn-hero:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+
+/* ── PROFILES GRID ── */
+.section-label{text-align:center;padding:20px 20px 8px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.cards-wrap{background:var(--light);padding:20px 16px 30px}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:14px;max-width:1400px;margin:0 auto;
+}
+@media(min-width:700px){.cards{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1100px){.cards{grid-template-columns:repeat(5,1fr)}}
+
+.card{
+  background:#fff;border-radius:12px;padding:16px 12px 14px;text-align:center;
+  cursor:pointer;color:var(--text);box-shadow:var(--shadow);
+  transition:transform .15s,box-shadow .15s;
+}
+.card:hover{transform:translateY(-4px);box-shadow:0 14px 32px rgba(0,0,0,.15)}
+.card img{width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--green);background:#eee}
+.card h4{margin:10px 0 4px;font-size:15px;color:var(--text)}
+.card p{font-size:12px;color:var(--text2);line-height:1.4}
+.card .tag{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;color:var(--green);background:rgba(10,143,90,.1);padding:3px 8px;border-radius:20px}
+
+.more-wrap{text-align:center;padding:18px}
+.btn-more{padding:11px 28px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer;transition:background .2s}
+.btn-more:hover{background:var(--green2)}
+
+/* ── MODALS ── */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center;
+  z-index:1200;padding:16px;
+}
+.modal-bg.open{display:flex}
+.modal{
+  background:#fff;color:var(--text);padding:24px;border-radius:14px;
+  width:100%;max-width:480px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 50px rgba(0,0,0,.3);
+}
+.modal h3{margin:0 0 16px;font-size:18px;color:var(--green)}
+.modal label{display:block;font-size:12px;font-weight:600;margin:10px 0 3px;color:#555}
+.modal input,.modal select,.modal textarea{
+  width:100%;padding:10px 12px;border:1px solid #ddd;border-radius:8px;
+  font-size:14px;font-family:Arial,sans-serif;color:var(--text);
+  transition:border-color .2s;
+}
+.modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:var(--green)}
+.modal .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.modal-actions button{padding:11px 18px;border:none;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;transition:.2s}
+.btn-primary{background:var(--green);color:#fff}
+.btn-primary:hover{background:var(--green2)}
+.btn-primary:disabled{background:#aaa;cursor:not-allowed}
+.btn-secondary{background:#e5e5e5;color:#333}
+.modal .err{color:#c00;font-size:12px;margin-top:6px;min-height:16px}
+
+/* Payment overlay (blocks site until paid) */
+.pay-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);
+  display:none;align-items:center;justify-content:center;
+  z-index:2000;padding:16px;
+}
+.pay-overlay.show{display:flex}
+.pay-box{
+  background:#fff;color:var(--text);padding:28px 24px;border-radius:16px;
+  max-width:400px;width:100%;text-align:center;
+}
+.pay-box h3{color:var(--green);margin-bottom:12px}
+.pay-box .amount{font-size:32px;font-weight:700;color:var(--green);margin:8px 0}
+.pay-box p{font-size:13px;color:#555;line-height:1.6;margin-bottom:16px}
+.pay-box .btn-pay{
+  display:block;width:100%;padding:14px;background:var(--green);color:#fff;
+  border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;
+  transition:background .2s;
+}
+.pay-box .btn-pay:hover{background:var(--green2)}
+
+/* Success popup */
+.success-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  display:none;align-items:center;justify-content:center;z-index:1500;
+}
+.success-overlay.show{display:flex}
+.success-box{background:#fff;color:var(--text);padding:28px;border-radius:14px;max-width:360px;width:90%;text-align:center}
+.success-box .checkmark{font-size:48px;margin-bottom:12px}
+.success-box h3{color:var(--green);margin-bottom:8px}
+.success-box p{font-size:13px;color:#555;margin-bottom:18px}
+.success-box button{padding:12px 28px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+
+/* Contact popup */
+.contact-modal{max-width:400px}
+.contact-modal textarea{height:90px;resize:vertical}
+
+/* Loader */
+.loader{
+  position:fixed;inset:0;background:var(--green);color:#fff;
+  display:none;align-items:center;justify-content:center;
+  z-index:3000;font-size:18px;flex-direction:column;gap:12px;
+}
+.loader.show{display:flex}
+.loader-spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── FOOTER ── */
+footer{background:var(--green3);color:rgba(255,255,255,.85);text-align:center;padding:28px 20px;font-size:13px;line-height:2}
+footer .footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;margin-bottom:10px}
+footer .footer-links a{color:rgba(255,255,255,.85);text-decoration:none;font-weight:600;transition:color .2s}
+footer .footer-links a:hover{color:#fff}
+footer .footer-copy{color:rgba(255,255,255,.6);font-size:12px;margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <a class="brand" href="index.html">
+    <h2>Talk House</h2>
+    <img src="icon.png" class="title-icon" alt="Talk House logo"/>
+  </a>
+  <button class="hamburger" id="hamburger" aria-label="Open menu">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<!-- DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<nav class="drawer" id="drawer" aria-label="Navigation">
+  <a href="index.html">🏠 Home</a>
+  <a href="about.html">ℹ️ About</a>
+  <button onclick="openContactModal()">📞 Contact Us</button>
+  <button onclick="openApplyForm()">✍️ Register</button>
+  <button onclick="openLoginModal()">🔑 Login</button>
+  <a href="#privacy">🔒 Privacy Policy</a>
+  <a href="#terms">📜 Terms & Conditions</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1>Meet people worldwide & earn through meaningful conversations</h1>
+  <p>Talk House connects you with curious, lonely, and interesting people from around the world. Register as a host — set your own hours and start earning today.</p>
+  <div class="btn-hero" onclick="openApplyForm()">Apply Now</div>
+</section>
+
+<!-- PROFILES -->
+<div class="section-label">People you can meet</div>
+<section class="cards-wrap">
+  <div class="cards" id="cardsGrid"></div>
+  <div class="more-wrap"><button class="btn-more" id="moreBtn" onclick="toggleMore()">Show More</button></div>
+</section>
+
+<!-- MODALS -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<!-- PAYMENT OVERLAY -->
+<div class="pay-overlay" id="payOverlay">
+  <div class="pay-box">
+    <div style="font-size:36px;margin-bottom:8px">🔐</div>
+    <h3>Complete Registration</h3>
+    <div class="amount">₦5,000</div>
+    <p>Your profile has been created! Pay the one-time registration fee to unlock full access and start meeting people.</p>
+    <button class="btn-pay" onclick="initiatePayment()">Pay ₦5,000 Now</button>
+    <p style="margin-top:12px;font-size:11px;color:#999">Secure payment via Paystack</p>
+  </div>
+</div>
+
+<!-- SUCCESS OVERLAY -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-box">
+    <div class="checkmark">🎉</div>
+    <h3>Welcome to Talk House!</h3>
+    <p>Your account is active. You can now connect with people and start earning.</p>
+    <button onclick="closeSuccess()">Start Exploring</button>
+  </div>
+</div>
+
+<!-- LOADER -->
+<div class="loader" id="loader">
+  <div class="loader-spinner"></div>
+  <span>Please wait...</span>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-links">
+    <a href="about.html">About</a>
+    <a href="#" onclick="openContactModal();return false">Contact Us</a>
+    <a href="#privacy" id="privacy">Privacy Policy</a>
+    <a href="#terms" id="terms">Terms & Conditions</a>
+    <a href="admin.html">Admin</a>
+  </div>
+  <div>For press or partnerships: <strong>https://webryft.github.io/TalkHouse/</strong></div>
+  <div class="footer-copy">© <span id="footYear"></span> Talk House — All rights reserved</div>
+</footer>
+
+<script>
+'use strict';
+
+/* ── DATA ─────────────────────────────────── */
+const PAYSTAKE_KEY = 'pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415';
+const REG_FEE = 5000;
+
+const profiles = [
+  {img:'image.jpg',   name:'Jake',      country:'Canada',    quote:'Need a friendly ear? I\'m here to listen.',     platform:'whatsapp', contact:'2349079525683'},
+  {img:'image1.jpg',  name:'Madison',   country:'Austria',   quote:'Turning small talk into big smiles.',            platform:'whatsapp', contact:'2349079525683'},
+  {img:'image2.jpg',  name:'Emily',     country:'USA',       quote:'A warm voice ready to chat anytime.',            platform:'telegram', contact:'emily_th'},
+  {img:'image3.jpg',  name:'Lucas',     country:'UK',        quote:'Deep talks and good vibes only.',                platform:'whatsapp', contact:'15813419686'},
+  {img:'image4.jpg',  name:'Sophia',    country:'Germany',   quote:'Seeking friendship and laughter.',               platform:'instagram',contact:'sophia.th'},
+  {img:'image5.jpg',  name:'Aiden',     country:'Australia', quote:'I enjoy honesty and great conversation.',        platform:'whatsapp', contact:'16197147330'},
+  {img:'image6.jpg',  name:'Olivia',    country:'France',    quote:'Companionship and kindness matter to me.',       platform:'skype',    contact:'olivia.th'},
+  {img:'image7.jpg',  name:'Noah',      country:'Italy',     quote:'Let\'s share ideas and grow together.',          platform:'whatsapp', contact:'2349079525683'},
+  {img:'image8.jpg',  name:'Ava',       country:'Spain',     quote:'Open to meaningful and fun chats.',              platform:'facebook', contact:'ava.talkhouse'},
+  {img:'image9.jpg',  name:'Liam',      country:'Brazil',    quote:'Looking for genuine connection.',                platform:'whatsapp', contact:'2349079525683'},
+  {img:'image10.jpg', name:'Isabella',  country:'Mexico',    quote:'I value love, laughter and respect.',            platform:'telegram', contact:'isabella_th'},
+  {img:'image11.jpg', name:'Mason',     country:'Japan',     quote:'Available for companionship and chat.',          platform:'whatsapp', contact:'2349079525683'},
+  {img:'image12.jpg', name:'Mia',       country:'South Korea',quote:'Seeking someone to vibe with.',                platform:'instagram',contact:'mia.th'},
+  {img:'image13.jpg', name:'Ethan',     country:'Netherlands',quote:'Here for great conversations and more.',        platform:'whatsapp', contact:'2349079525683'},
+  {img:'image14.jpg', name:'Charlotte', country:'Sweden',    quote:'Love me the way I am.',                          platform:'skype',    contact:'charlotte.th'},
+  {img:'image15.jpg', name:'James',     country:'Norway',    quote:'Friendship first, love later.',                  platform:'whatsapp', contact:'2349079525683'},
+  {img:'image16.jpg', name:'Amelia',    country:'Portugal',  quote:'I enjoy chatting with curious people.',          platform:'facebook', contact:'amelia.talkhouse'},
+  {img:'image17.jpg', name:'Alexander', country:'Greece',    quote:'Let\'s connect and share our stories.',          platform:'whatsapp', contact:'2349079525683'},
+  {img:'image18.jpg', name:'Harper',    country:'Poland',    quote:'Single and ready to meet good people.',          platform:'telegram', contact:'harper_th'},
+  {img:'image19.jpg', name:'Benjamin',  country:'Czech Rep.',quote:'I love deep talks and new perspectives.',        platform:'whatsapp', contact:'2349079525683'},
+  {img:'image20.jpg', name:'Evelyn',    country:'Hungary',   quote:'Warm, curious and always available.',            platform:'instagram',contact:'evelyn.th'},
+  {img:'image21.jpg', name:'Daniel',    country:'Romania',   quote:'Looking for friendship and connection.',         platform:'whatsapp', contact:'2349079525683'},
+  {img:'image22.jpg', name:'Abigail',   country:'Turkey',    quote:'I value honesty and good humour.',               platform:'skype',    contact:'abigail.th'},
+  {img:'image23.jpg', name:'Henry',     country:'Egypt',     quote:'Open to long conversations and new friends.',    platform:'whatsapp', contact:'2349079525683'},
+  {img:'image24.jpg', name:'Emily R.',  country:'Nigeria',   quote:'Seeking genuine connection worldwide.',          platform:'facebook', contact:'emilyr.talkhouse'},
+  {img:'image25.jpg', name:'Samuel',    country:'Ghana',     quote:'Ready to meet amazing people.',                  platform:'whatsapp', contact:'2349079525683'},
+  {img:'image26.jpg', name:'Lily',      country:'Kenya',     quote:'Friendly, warm and always smiling.',             platform:'telegram', contact:'lily_th'},
+  {img:'image27.jpg', name:'Michael',   country:'India',     quote:'I love learning from every conversation.',       platform:'whatsapp', contact:'2349079525683'},
+  {img:'image28.jpg', name:'Grace',     country:'Philippines',quote:'Looking for someone real and kind.',            platform:'instagram',contact:'grace.th'},
+  {img:'image29.jpg', name:'William',   country:'Thailand',  quote:'Curious about the world and its people.',        platform:'whatsapp', contact:'2349079525683'},
+  {img:'image30.jpg', name:'Scarlett',  country:'Vietnam',   quote:'Friendship, laughter and good energy.',         platform:'skype',    contact:'scarlett.th'},
+  {img:'image31.jpg', name:'Joseph',    country:'Indonesia', quote:'Let\'s build something meaningful together.',    platform:'whatsapp', contact:'2349079525683'},
+  {img:'image32.jpg', name:'Victoria',  country:'Malaysia',  quote:'Open, honest and ready to connect.',            platform:'facebook', contact:'victoria.th'},
+  {img:'image33.jpg', name:'David',     country:'Singapore', quote:'Looking for a partner in conversation.',         platform:'whatsapp', contact:'2349079525683'},
+  {img:'image34.jpg', name:'Stella',    country:'USA',       quote:'Good vibes and genuine talks only.',             platform:'telegram', contact:'stella_th'},
+  {img:'image35.jpg', name:'Andrew',    country:'Canada',    quote:'Here for meaningful chats and connection.',      platform:'whatsapp', contact:'2349079525683'},
+  {img:'image36.jpg', name:'Chloe',     country:'UK',        quote:'Let\'s explore ideas together.',                 platform:'instagram',contact:'chloe.th'},
+  {img:'image37.jpg', name:'Ryan',      country:'Ireland',   quote:'Open heart, open mind.',                         platform:'whatsapp', contact:'2349079525683'},
+  {img:'image38.jpg', name:'Penelope',  country:'New Zealand',quote:'Kindness is my love language.',                 platform:'skype',    contact:'penelope.th'},
+  {img:'image39.jpg', name:'Nathan',    country:'South Africa',quote:'Ready to meet you wherever you are.',          platform:'whatsapp', contact:'2349079525683'},
+  {img:'image40.jpg', name:'Layla',     country:'Morocco',   quote:'Warm, funny and full of stories.',               platform:'facebook', contact:'layla.th'},
+  {img:'image41.jpg', name:'Jonathan',  country:'Argentina', quote:'I cherish real conversations.',                  platform:'whatsapp', contact:'2349079525683'},
+  {img:'image42.jpg', name:'Nora',      country:'Chile',     quote:'Seeking authentic connection.',                  platform:'telegram', contact:'nora_th'},
+  {img:'image43.jpg', name:'Patrick',   country:'Colombia',  quote:'Life is better with good conversation.',         platform:'whatsapp', contact:'2349079525683'},
+  {img:'image44.jpg', name:'Zoey',      country:'Peru',      quote:'Looking for someone who truly listens.',         platform:'instagram',contact:'zoey.th'},
+  {img:'image45.jpg', name:'Tyler',     country:'Venezuela', quote:'Honest, warm and ready to connect.',             platform:'whatsapp', contact:'2349079525683'},
+  {img:'image46.jpg', name:'Hannah',    country:'Ecuador',   quote:'Friendship leads to the best adventures.',       platform:'skype',    contact:'hannah.th'},
+  {img:'image47.jpg', name:'Aaron',     country:'Bolivia',   quote:'Simple, genuine, and always kind.',              platform:'whatsapp', contact:'2349079525683'},
+  {img:'image48.jpg', name:'Naomi',     country:'Uruguay',   quote:'Here to make your day brighter.',                platform:'facebook', contact:'naomi.th'},
+  {img:'image49.jpg', name:'Kevin',     country:'Paraguay',  quote:'Let\'s talk — I\'m all ears.',                   platform:'whatsapp', contact:'2349079525683'},
+];
+
+/* ── COUNTRY FLAGS ───────────────────────── */
+const FLAGS = {
+  'Canada':'🇨🇦','Austria':'🇦🇹','USA':'🇺🇸','UK':'🇬🇧','Germany':'🇩🇪',
+  'Australia':'🇦🇺','France':'🇫🇷','Italy':'🇮🇹','Spain':'🇪🇸','Brazil':'🇧🇷',
+  'Mexico':'🇲🇽','Japan':'🇯🇵','South Korea':'🇰🇷','Netherlands':'🇳🇱',
+  'Sweden':'🇸🇪','Norway':'🇳🇴','Portugal':'🇵🇹','Greece':'🇬🇷','Poland':'🇵🇱',
+  'Czech Rep.':'🇨🇿','Hungary':'🇭🇺','Romania':'🇷🇴','Turkey':'🇹🇷','Egypt':'🇪🇬',
+  'Nigeria':'🇳🇬','Ghana':'🇬🇭','Kenya':'🇰🇪','India':'🇮🇳','Philippines':'🇵🇭',
+  'Thailand':'🇹🇭','Vietnam':'🇻🇳','Indonesia':'🇮🇩','Malaysia':'🇲🇾',
+  'Singapore':'🇸🇬','Ireland':'🇮🇪','New Zealand':'🇳🇿','South Africa':'🇿🇦',
+  'Morocco':'🇲🇦','Argentina':'🇦🇷','Chile':'🇨🇱','Colombia':'🇨🇴','Peru':'🇵🇪',
+  'Venezuela':'🇻🇪','Ecuador':'🇪🇨','Bolivia':'🇧🇴','Uruguay':'🇺🇾','Paraguay':'🇵🇾'
+};
+function flag(country){ return FLAGS[country] || '🌍'; }
+
+const INITIAL_SHOW = 4; // mobile 2+2, more = rest
+let showAll = false;
+let currentUser = JSON.parse(localStorage.getItem('th_user')) || null;
+let pendingRegData = null;
+
+/* ── DRAWER ──────────────────────────────── */
+function openDrawer(){
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.getElementById('hamburger').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.getElementById('hamburger').classList.remove('open');
+}
+document.getElementById('hamburger').addEventListener('click',function(){
+  document.getElementById('drawer').classList.contains('open') ? closeDrawer() : openDrawer();
+});
+
+/* ── CARDS ───────────────────────────────── */
+function renderCards(){
+  const grid = document.getElementById('cardsGrid');
+  const list = showAll ? profiles : profiles.slice(0, INITIAL_SHOW);
+  grid.innerHTML = list.map((p,i) => `
+    <div class="card" onclick="handleCardClick(${i})" role="button" tabindex="0" aria-label="View ${p.name}'s profile">
+      <img src="${p.img}" alt="${p.name}" onerror="this.src='data:image/svg+xml,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\'><rect fill=\\'%23ccc\\' width=\\'80\\' height=\\'80\\' rx=\\'40\\'/></svg>'"/>
+      <h4>${p.name}</h4>
+      <p>${p.quote}</p>
+      <div class="tag">${flag(p.country)} ${p.country}</div>
+    </div>`).join('');
+  document.getElementById('moreBtn').textContent = showAll ? 'Show Less' : 'Show More';
+}
+function toggleMore(){ showAll = !showAll; renderCards(); }
+
+function handleCardClick(idx){
+  if(!currentUser || !currentUser.paid){
+    openRegisterPrompt();
+  } else {
+    openProfileChat(idx);
+  }
+}
+
+function openProfileChat(idx){
+  const p = profiles[idx];
+  const icons = {whatsapp:'💬',telegram:'✈️',instagram:'📸',facebook:'👤',skype:'🎥'};
+  const links = {
+    whatsapp: `https://wa.me/${p.contact}?text=${encodeURIComponent('Hello from Talk House! I\'d love to connect.')}`,
+    telegram:  `https://t.me/${p.contact}`,
+    instagram: `https://instagram.com/${p.contact}`,
+    facebook:  `https://facebook.com/${p.contact}`,
+    skype:     `https://join.skype.com/invite/${p.contact}`
+  };
+  openModal(`
+    <h3>${icons[p.platform]||'💬'} Connect with ${p.name}</h3>
+    <div style="text-align:center;padding:12px 0">
+      <img src="${p.img}" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--green)" onerror="this.style.display='none'"/>
+      <div style="margin:10px 0 4px;font-weight:700">${p.name}</div>
+      <div style="font-size:13px;color:#666">${flag(p.country)} ${p.country}</div>
+      <div style="font-size:13px;color:#555;margin-top:8px">${p.quote}</div>
+      <div style="margin-top:6px;font-size:12px;color:#888">Prefers: <strong>${p.platform}</strong></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="window.open('${links[p.platform]}','_blank');closeModal()">Open ${p.platform.charAt(0).toUpperCase()+p.platform.slice(1)}</button>
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
+    </div>
+  `);
+}
+
+/* ── REGISTER PROMPT ─────────────────────── */
+function openRegisterPrompt(){
+  openModal(`
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:44px;margin-bottom:12px">👋</div>
+      <h3 style="margin-bottom:10px">Join Talk House</h3>
+      <p style="color:#555;font-size:14px;line-height:1.6;margin-bottom:20px">
+        Create your free account to start meeting people, make friends, and connect with partners worldwide.
+      </p>
+      <div class="modal-actions" style="justify-content:center">
+        <button class="btn-primary" onclick="closeModal();openApplyForm()">Create Account</button>
+        <button class="btn-secondary" onclick="closeModal();openLoginModal()">Already have an account</button>
+      </div>
+    </div>
+  `);
+}
+
+/* ── REGISTRATION FORM ───────────────────── */
+function openApplyForm(){
+  openModal(`
+    <h3>✍️ Create Your Account</h3>
+    <div class="row2">
+      <div>
+        <label>First Name *</label>
+        <input id="f-fname" placeholder="First name"/>
+      </div>
+      <div>
+        <label>Last Name *</label>
+        <input id="f-lname" placeholder="Last name"/>
+      </div>
+    </div>
+    <label>Phone Number *</label>
+    <input id="f-phone" type="tel" placeholder="+2348012345678"/>
+    <label>Country *</label>
+    <input id="f-country" placeholder="Your country"/>
+    <div class="row2">
+      <div>
+        <label>Sex *</label>
+        <select id="f-sex">
+          <option value="">Select</option>
+          <option>Male</option>
+          <option>Female</option>
+          <option>Non-binary</option>
+          <option>Prefer not to say</option>
+        </select>
+      </div>
+      <div>
+        <label>Date of Birth *</label>
+        <input id="f-dob" type="date" max="${new Date(Date.now()-18*365.25*24*3600*1000).toISOString().split('T')[0]}"/>
+      </div>
+    </div>
+    <label>Marital Status *</label>
+    <select id="f-marital">
+      <option value="">Select</option>
+      <option>Single</option>
+      <option>Married</option>
+      <option>Divorced</option>
+      <option>Widowed</option>
+      <option>In a relationship</option>
+    </select>
+    <label>Interested In *</label>
+    <select id="f-interest">
+      <option value="">Select</option>
+      <option>Men</option>
+      <option>Women</option>
+      <option>Both (Bisexual)</option>
+      <option>Non-binary people</option>
+      <option>Everyone</option>
+    </select>
+    <label>Sexual Orientation *</label>
+    <select id="f-orient">
+      <option value="">Select</option>
+      <option>Straight</option>
+      <option>Gay</option>
+      <option>Lesbian</option>
+      <option>Bisexual</option>
+      <option>Prefer not to say</option>
+    </select>
+    <label>Password *</label>
+    <input id="f-pw" type="password" placeholder="Create a password"/>
+    <label>Pet Name (for password recovery) *</label>
+    <input id="f-pet" placeholder="e.g. Lucky, Fluffy"/>
+    <div class="err" id="reg-err"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" id="regSubmitBtn" onclick="submitRegistration()" disabled>Create Account</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+  // Live validation
+  const ids = ['f-fname','f-lname','f-phone','f-country','f-sex','f-dob','f-marital','f-interest','f-orient','f-pw','f-pet'];
+  ids.forEach(id => document.getElementById(id).addEventListener('input', validateReg));
+  ids.forEach(id => document.getElementById(id).addEventListener('change', validateReg));
+  validateReg();
+}
+
+function validateReg(){
+  const ids = ['f-fname','f-lname','f-phone','f-country','f-sex','f-dob','f-marital','f-interest','f-orient','f-pw','f-pet'];
+  const ok = ids.every(id => { const el=document.getElementById(id); return el && el.value.trim(); });
+  const btn = document.getElementById('regSubmitBtn');
+  if(btn) btn.disabled = !ok;
+}
+
+function submitRegistration(){
+  const fname   = document.getElementById('f-fname').value.trim();
+  const lname   = document.getElementById('f-lname').value.trim();
+  const phone   = document.getElementById('f-phone').value.trim();
+  const country = document.getElementById('f-country').value.trim();
+  const sex     = document.getElementById('f-sex').value;
+  const dob     = document.getElementById('f-dob').value;
+  const marital = document.getElementById('f-marital').value;
+  const interest= document.getElementById('f-interest').value;
+  const orient  = document.getElementById('f-orient').value;
+  const pw      = document.getElementById('f-pw').value;
+  const pet     = document.getElementById('f-pet').value.trim();
+  const err     = document.getElementById('reg-err');
+
+  if(pw.length < 6){ err.textContent = 'Password must be at least 6 characters.'; return; }
+
+  const uid = 'th_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  const regData = {
+    uid, fname, lname, phone, country, sex, dob, marital, interest, orient,
+    petName: pet, pw,
+    paid: false,
+    paymentStatus: 'pending',
+    registeredAt: new Date().toISOString(),
+    logs: [{type:'registered', time: new Date().toISOString()}]
+  };
+
+  pendingRegData = regData;
+
+  // Save to localStorage immediately
+  localStorage.setItem('th_user', JSON.stringify(regData));
+
+  // Save to Firebase (3-min window)
+  if(window._FB){
+    window._fbSetDoc(window._fbDoc(window._db,'users', uid), {
+      ...regData,
+      pw: '[protected]', // don't store plain pw in firebase
+      petName: '[protected]',
+      createdAt: new Date().toISOString(),
+      source: 'index.html'
+    }).catch(()=>{});
+
+    // Also add to admin snapshot (expires in 3 mins — stored as short-TTL doc)
+    window._fbSetDoc(window._fbDoc(window._db,'registrations', uid), {
+      uid, fname, lname, phone, country, sex, dob, marital,
+      paid: false, paymentStatus:'pending',
+      registeredAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 3*60*1000).toISOString()
+    }).catch(()=>{}); 
+  }
+
+  closeModal();
+  // Show payment overlay
+  document.getElementById('payOverlay').classList.add('show');
+}
+
+/* ── PAYSTACK ────────────────────────────── */
+function initiatePayment(){
+  if(!pendingRegData && currentUser){ pendingRegData = currentUser; }
+  if(!pendingRegData){ alert('Please register first.'); return; }
+
+  const script = document.createElement('script');
+  script.src = 'https://js.paystack.co/v1/inline.js';
+  script.onload = function(){
+    const handler = window.PaystackPop.setup({
+      key: PAYSTAKE_KEY,
+      email: (pendingRegData.phone||'user') + '@talkhouse.app',
+      amount: REG_FEE * 100,
+      currency: 'NGN',
+      ref: 'TH_' + Date.now(),
+      metadata: { uid: pendingRegData.uid, name: pendingRegData.fname+' '+pendingRegData.lname },
+      callback: function(response){
+        paymentSuccess(response);
+      },
+      onClose: function(){
+        // user closed without paying — keep overlay
+      }
+    });
+    handler.openIframe();
+  };
+  document.head.appendChild(script);
+}
+
+function paymentSuccess(resp){
+  document.getElementById('payOverlay').classList.remove('show');
+  if(pendingRegData){
+    pendingRegData.paid = true;
+    pendingRegData.paymentStatus = 'paid';
+    pendingRegData.paymentRef = resp.reference;
+    pendingRegData.paidAt = new Date().toISOString();
+    currentUser = pendingRegData;
+    localStorage.setItem('th_user', JSON.stringify(currentUser));
+
+    // Update Firebase
+    if(window._FB){
+      window._fbSetDoc(window._fbDoc(window._db,'users', pendingRegData.uid), {
+        paid: true, paymentStatus:'paid', paymentRef: resp.reference, paidAt: new Date().toISOString()
+      }, {merge:true}).catch(()=>{});
+      window._fbSetDoc(window._fbDoc(window._db,'registrations', pendingRegData.uid), {
+        paid: true, paymentStatus:'paid', paymentRef: resp.reference, paidAt: new Date().toISOString()
+      }, {merge:true}).catch(()=>{});
+    }
+  }
+  pendingRegData = null;
+  document.getElementById('successOverlay').classList.add('show');
+}
+
+function closeSuccess(){
+  document.getElementById('successOverlay').classList.remove('show');
+  renderCards();
+}
+
+/* ── LOGIN ───────────────────────────────── */
+function openLoginModal(){
+  openModal(`
+    <h3>🔑 Login</h3>
+    <label>Phone Number</label>
+    <input id="l-phone" type="tel" placeholder="+2348012345678"/>
+    <label>Password</label>
+    <input id="l-pw" type="password" placeholder="Your password"/>
+    <div class="err" id="login-err"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="doLogin()">Login</button>
+      <button class="btn-secondary" onclick="closeModal();openForgotModal()">Forgot Password?</button>
+    </div>
+    <p style="text-align:center;margin-top:12px;font-size:13px;color:#666">No account? <a href="#" onclick="closeModal();openApplyForm();return false" style="color:var(--green);font-weight:700">Register here</a></p>
+  `);
+  document.getElementById('l-pw').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+}
+
+function doLogin(){
+  const phone = document.getElementById('l-phone').value.trim();
+  const pw    = document.getElementById('l-pw').value;
+  const err   = document.getElementById('login-err');
+  const stored = JSON.parse(localStorage.getItem('th_user'));
+  if(stored && stored.phone === phone && stored.pw === pw){
+    currentUser = stored;
+    closeModal();
+    if(!currentUser.paid){
+      pendingRegData = currentUser;
+      document.getElementById('payOverlay').classList.add('show');
+    }
+  } else {
+    err.textContent = 'Incorrect phone number or password.';
+  }
+}
+
+function openForgotModal(){
+  openModal(`
+    <h3>🔒 Recover Password</h3>
+    <p style="color:#555;font-size:13px;margin-bottom:12px">Enter your phone number and pet name to recover your password.</p>
+    <label>Phone Number</label>
+    <input id="fp-phone" type="tel" placeholder="+2348012345678"/>
+    <label>Pet Name</label>
+    <input id="fp-pet" placeholder="Your pet name"/>
+    <div class="err" id="fp-err"></div>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="doForgot()">Recover</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+function doForgot(){
+  const phone = document.getElementById('fp-phone').value.trim();
+  const pet   = document.getElementById('fp-pet').value.trim().toLowerCase();
+  const err   = document.getElementById('fp-err');
+  const stored = JSON.parse(localStorage.getItem('th_user'));
+  if(stored && stored.phone === phone && stored.petName.toLowerCase() === pet){
+    err.style.color = 'green';
+    err.textContent = `Your password is: ${stored.pw}`;
+  } else {
+    err.style.color = 'red';
+    err.textContent = 'No match found. Check your phone number and pet name.';
+  }
+}
+
+/* ── CONTACT MODAL ───────────────────────── */
+function openContactModal(){
+  closeDrawer();
+  openModal(`
+    <h3>📞 Contact Us</h3>
+    <p style="color:#555;font-size:13px;margin-bottom:14px">Fill in the form below and we\'ll get back to you shortly.</p>
+    <label>Your Name *</label>
+    <input id="c-name" placeholder="Full name"/>
+    <label>Phone Number *</label>
+    <input id="c-phone" type="tel" placeholder="+2348012345678"/>
+    <label>Message *</label>
+    <textarea id="c-msg" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;font-size:14px;height:90px;resize:vertical;font-family:Arial" placeholder="Write your message here..."></textarea>
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="sendContact()">Send Message</button>
+      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    </div>
+  `);
+}
+
+function sendContact(){
+  const name = document.getElementById('c-name').value.trim();
+  const phone= document.getElementById('c-phone').value.trim();
+  const msg  = document.getElementById('c-msg').value.trim();
+  if(!name||!phone||!msg){ alert('Please fill all fields.'); return; }
+  const subject = encodeURIComponent(`Talk House Contact: ${name}`);
+  const body    = encodeURIComponent(`Name: ${name}\nPhone: ${phone}\n\nMessage:\n${msg}`);
+  window.open(`mailto:aladdincharlotte@gmail.com?subject=${subject}&body=${body}`, '_blank');
+  closeModal();
+}
+
+/* ── MODAL HELPERS ───────────────────────── */
+function openModal(html){
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modalBg').classList.remove('open');
+}
+document.getElementById('modalBg').addEventListener('click', function(e){
+  if(e.target === this) closeModal();
+});
+document.addEventListener('keydown', e => { if(e.key==='Escape'){ closeModal(); closeDrawer(); }});
+
+/* ── INIT ────────────────────────────────── */
+renderCards();
+document.getElementById('footYear').textContent = new Date().getFullYear();
+
+// If returning user with pending payment
+if(currentUser && !currentUser.paid){
+  pendingRegData = currentUser;
+  document.getElementById('payOverlay').classList.add('show');
+}
+</script>
+</body>
+</html>
