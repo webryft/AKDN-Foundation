@@ -314,7 +314,7 @@ function renderSidebar(){
   el.innerHTML=filtConvs.map(c=>{
     const p=getP(c.profileIdx);
     const u=c.unreadAdmin||0;
-    return `<div class="conv-item${c.id===activeChatId?' active':''}" onclick="openConv('${c.id}',${c.profileIdx||0},'${esc(c.profileName||p.name)}','${esc(c.userId||'')}','${esc(c.userName||'User')}')">
+    return `<div class="conv-item${c.id===activeChatId?' active':''}" onclick="openConv('${c.id}',${c.profileIdx||0},'${esc(c.profileName||p.name)}','${esc(c.userId||'')}','${esc(c.userName||'User')}','${esc(c.userPhone||'')}','${esc(c.userEmail||'')}')">
       <div class="conv-av">
         <img src="${p.img}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2242%22 height=%2242%22><rect fill=%22%23555%22 width=%2242%22 height=%2242%22 rx=%2221%22/></svg>'" alt="${p.name}"/>
         <span class="conv-online"></span>
@@ -333,12 +333,12 @@ function renderSidebar(){
 
 function filterConvs(){
   const q=document.getElementById('sb-srch').value.toLowerCase();
-  filtConvs=!q?[...allConvs]:allConvs.filter(c=>(c.userName||'').toLowerCase().includes(q)||(c.profileName||'').toLowerCase().includes(q)||(c.userPhone||'').includes(q));
+  filtConvs=!q?[...allConvs]:allConvs.filter(c=>(c.userName||'').toLowerCase().includes(q)||(c.profileName||'').toLowerCase().includes(q)||(c.userPhone||'').includes(q)||(c.userEmail||'').toLowerCase().includes(q));
   renderSidebar();
 }
 
 /* ── OPEN CONV ── */
-function openConv(chatId,pIdx,pName,userId,userName){
+function openConv(chatId,pIdx,pName,userId,userName,userPhone,userEmail){
   activeChatId=chatId;activePIdx=pIdx;activePName=pName;activeUserId=userId;
   const p=getP(pIdx);
 
@@ -348,7 +348,7 @@ function openConv(chatId,pIdx,pName,userId,userName){
   const avImg=document.getElementById('mc-av-img');
   avImg.src=p.img;avImg.onerror=()=>{avImg.src='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34"><rect fill="%23555" width="34" height="34" rx="17"/></svg>';};
   document.getElementById('mc-name').textContent=`${userName} → ${pName}`;
-  document.getElementById('mc-sub').textContent=`User: ${userId}`;
+  document.getElementById('mc-sub').textContent=[userPhone,userEmail].filter(Boolean).join(' · ')||`User: ${userId}`;
   document.getElementById('mc-badge').textContent=`Replying as ${pName}`;
   document.getElementById('pill-img').src=p.img;
   document.getElementById('pill-name').textContent=pName;

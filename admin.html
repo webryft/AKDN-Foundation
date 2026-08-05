@@ -446,7 +446,7 @@ function renderTable(users){
     var sClass = isDisabled?'sb-disabled':(isPaid?'sb-paid':'sb-pending');
     var sTxt   = isDisabled?'⛔ Disabled':(isPaid?'✅ Paid':'⏳ Pending');
     return '<tr>'+
-      '<td><div class="u-email">'+(d.phone||'—')+'</div><div class="u-name">'+(d.fname||'')+' '+(d.lname||'')+'</div></td>'+
+      '<td><div class="u-email">'+(d.phone||'—')+'</div><div class="u-name">'+(d.fname||'')+' '+(d.lname||'')+'</div><div style="font-size:11px;color:var(--text3)">'+(d.email||'')+'</div></td>'+
       '<td style="font-size:12px;color:var(--text2)">'+(d.country||'—')+'</td>'+
       '<td style="font-size:12px;color:var(--text2)">'+(d.sex||'—')+'</td>'+
       '<td style="font-size:11px;color:var(--text3)">'+(d.registeredAt?fmtDate(d.registeredAt):'—')+'</td>'+
@@ -476,6 +476,7 @@ function openDetail(uid){
   document.getElementById('detail-body').innerHTML =
     row('Full Name', (d.fname||'')+(d.lname?' '+d.lname:''), 'v-cyan')+
     row('Phone', d.phone||'—')+
+    row('Email', d.email||'—')+
     row('Country', d.country||'—')+
     row('Sex', d.sex||'—')+
     row('Date of Birth', d.dob||'—')+
@@ -506,6 +507,7 @@ function openEdit(uid){
       <div><label class="edit-label">First Name</label><input class="m-input" id="e-fname" value="${esc(d.fname||'')}"/></div>
       <div><label class="edit-label">Last Name</label><input class="m-input" id="e-lname" value="${esc(d.lname||'')}"/></div>
       <div><label class="edit-label">Phone</label><input class="m-input" id="e-phone" value="${esc(d.phone||'')}"/></div>
+      <div><label class="edit-label">Email</label><input class="m-input" id="e-email" type="email" value="${esc(d.email||'')}"/></div>
       <div><label class="edit-label">Country</label><input class="m-input" id="e-country" value="${esc(d.country||'')}"/></div>
       <div><label class="edit-label">Payment Status</label>
         <select class="m-input" id="e-pay">
@@ -531,6 +533,7 @@ async function saveEdit(){
     fname:   document.getElementById('e-fname').value.trim(),
     lname:   document.getElementById('e-lname').value.trim(),
     phone:   document.getElementById('e-phone').value.trim(),
+    email:   document.getElementById('e-email').value.trim(),
     country: document.getElementById('e-country').value.trim(),
     paid:    isPaid,
     paymentStatus: isPaid?'paid':'pending',
