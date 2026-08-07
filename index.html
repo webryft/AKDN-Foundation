@@ -304,11 +304,14 @@ footer{background:var(--green3);color:rgba(255,255,255,.8);text-align:center;pad
   <button class="drawer-item" onclick="closeDrawer();openContactModal()">
     <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.38 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.78a16 16 0 0 0 6 6l.86-.86a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Contact Us
   </button>
-  <button class="drawer-item" onclick="closeDrawer();openApplyForm()">
+  <button class="drawer-item" id="drawerRegisterBtn" onclick="closeDrawer();openApplyForm()">
     <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>Register
   </button>
   <button class="drawer-item" id="drawerLoginBtn" onclick="closeDrawer();openLoginModal()">
     <svg viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>Login
+  </button>
+  <button class="drawer-item" id="drawerLogoutBtn" onclick="closeDrawer();doLogout()" style="display:none">
+    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
   </button>
   <button class="drawer-item" onclick="closeDrawer();openPrivacyModal()">
     <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Privacy Policy
@@ -322,7 +325,7 @@ footer{background:var(--green3);color:rgba(255,255,255,.8);text-align:center;pad
 <section class="hero">
   <h1>Meet people worldwide &amp; earn through meaningful conversations</h1>
   <p>Talk House connects you with curious, friendly people from around the world. Register as a host, set your hours, and start earning today.</p>
-  <button class="btn-hero" onclick="openApplyForm()">
+  <button class="btn-hero" id="heroApplyBtn" onclick="openApplyForm()">
     <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
     Apply Now
   </button>
@@ -348,11 +351,11 @@ footer{background:var(--green3);color:rgba(255,255,255,.8);text-align:center;pad
       <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
     </div>
     <h3>Complete Registration</h3>
-    <div class="pay-amount">&#8358;5,000</div>
+    <div class="pay-amount">&#8358;2,000</div>
     <p>Your profile has been saved. Pay the one-time registration fee to unlock full access and start meeting people.</p>
     <button class="btn-pay" onclick="initiatePayment()">
       <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-      Pay &#8358;5,000 Now
+      Pay &#8358;2,000 Now
     </button>
     <p style="margin-top:10px;font-size:11px;color:#aaa">Secured by Paystack</p>
   </div>
@@ -392,7 +395,7 @@ footer{background:var(--green3);color:rgba(255,255,255,.8);text-align:center;pad
 'use strict';
 
 const PAYSTAKE_KEY='pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415';
-const REG_FEE=5000;
+const REG_FEE=2000;
 
 /* ── ALL COUNTRIES ── */
 const COUNTRIES=['Afghanistan','Albania','Algeria','Andorra','Angola','Antigua and Barbuda','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cabo Verde','Cambodia','Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Comoros','Congo','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominica','Dominican Republic','Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Eswatini','Ethiopia','Fiji','Finland','France','Gabon','Gambia','Georgia','Germany','Ghana','Greece','Grenada','Guatemala','Guinea','Guinea-Bissau','Guyana','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Ivory Coast','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kiribati','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Marshall Islands','Mauritania','Mauritius','Mexico','Micronesia','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nauru','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palau','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saint Kitts and Nevis','Saint Lucia','Saint Vincent','Samoa','San Marino','Saudi Arabia','Senegal','Serbia','Seychelles','Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria','Taiwan','Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tonga','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Tuvalu','Uganda','Ukraine','United Arab Emirates','United Kingdom','Uruguay','USA','Uzbekistan','Vanuatu','Vatican City','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'];
@@ -507,6 +510,9 @@ function updateHeaderAccount(){
   const btn=document.getElementById('acctBtn');
   const nm=document.getElementById('acctName');
   const loginBtn=document.getElementById('drawerLoginBtn');
+  const registerBtn=document.getElementById('drawerRegisterBtn');
+  const logoutBtn=document.getElementById('drawerLogoutBtn');
+  const heroApplyBtn=document.getElementById('heroApplyBtn');
   if(currentUser){
     btn.style.display='flex';
     nm.textContent=currentUser.fname||'Account';
@@ -517,9 +523,15 @@ function updateHeaderAccount(){
         : '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';
     }
     if(loginBtn)loginBtn.style.display='none';
+    if(registerBtn)registerBtn.style.display='none';
+    if(heroApplyBtn)heroApplyBtn.style.display='none';
+    if(logoutBtn)logoutBtn.style.display='flex';
   } else {
     btn.style.display='none';
     if(loginBtn)loginBtn.style.display='flex';
+    if(registerBtn)registerBtn.style.display='flex';
+    if(heroApplyBtn)heroApplyBtn.style.display='flex';
+    if(logoutBtn)logoutBtn.style.display='none';
   }
 }
 
@@ -1036,7 +1048,7 @@ function openTermsModal(){
         <h4>1. Acceptance of Terms</h4>
         <p>By registering on Talk House, you confirm you are at least 18 years of age and agree to be bound by these Terms. If you do not agree, do not use this platform.</p>
         <h4>2. Registration Fee &amp; Non-Refund Policy</h4>
-        <p>A one-time registration fee of <strong>&#8358;5,000</strong> is required to activate your account. By completing payment, you explicitly acknowledge and agree that:</p>
+        <p>A one-time registration fee of <strong>&#8358;2,000</strong> is required to activate your account. By completing payment, you explicitly acknowledge and agree that:</p>
         <ul>
           <li>The registration fee is <strong>strictly non-refundable</strong> under any circumstance whatsoever.</li>
           <li>No refund will be issued for change of mind, account inactivity, dissatisfaction, or suspension due to policy violations.</li>
