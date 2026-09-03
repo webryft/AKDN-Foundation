@@ -140,6 +140,7 @@ tbody tr:last-child td{border-bottom:none;}
       <button class="tab-btn" id="tab-wd-btn" onclick="switchTab('wd')">📤 Withdrawal Requests <span class="cnt" id="tab-wd-cnt">0</span></button>
       <button class="tab-btn" id="tab-ref-btn" onclick="switchTab('ref')">🔗 Referral Queue <span class="cnt" id="tab-ref-cnt">0</span></button>
       <button class="tab-btn" id="tab-users-btn" onclick="switchTab('users')">👥 Registered Users <span class="cnt" id="tab-users-cnt">0</span></button>
+      <button class="tab-btn" id="tab-broadcast-btn" onclick="switchTab('broadcast')">📢 Broadcast <span class="cnt" id="tab-broadcast-cnt">0</span></button>
       <button class="tab-btn" id="tab-settings-btn" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
 
@@ -205,6 +206,31 @@ tbody tr:last-child td{border-bottom:none;}
       </div>
       <div class="empty-state" id="users-empty" style="display:none;">No users yet.</div>
       <div class="loading-state" id="users-loading"><div class="ld-ring"></div>Loading users…</div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="panel" id="panel-broadcast">
+      <div class="panel-head">
+        <div><div class="panel-title">Broadcast</div><div class="panel-sub">Sends a notification to every user's bell icon on SavePoint. They'll see the title first, then the full message when they tap it.</div></div>
+      </div>
+      <div class="settings-box" style="max-width:520px;">
+        <div class="edit-field">
+          <label>Title</label>
+          <input type="text" id="bc-title" placeholder="e.g. Scheduled maintenance tonight"/>
+        </div>
+        <div class="edit-field">
+          <label>Message</label>
+          <textarea id="bc-message" rows="5" placeholder="Full notification message…" style="width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:10px 12px;font-size:.86rem;outline:none;font-family:var(--body);resize:vertical;"></textarea>
+        </div>
+        <button class="fulfill-btn" style="width:100%;" onclick="sendBroadcast()">Send Broadcast</button>
+      </div>
+      <div class="table-wrap" style="margin-top:6px;">
+        <table>
+          <thead><tr><th>Title</th><th>Message</th><th>Sent</th><th></th></tr></thead>
+          <tbody id="broadcast-body"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="broadcast-empty" style="display:none;">No broadcasts sent yet.</div>
     </div>
 
     <!-- SETTINGS -->
@@ -341,6 +367,11 @@ function initAdmin(){
     renderReferrals();renderStats();
   },err=>{console.error(err);document.getElementById('ref-loading').textContent='Could not load referral queue.';});
 
+  dbFS.collection('sp_broadcasts').orderBy('createdAt','desc').onSnapshot(snap=>{
+    BROADCASTS=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderBroadcasts();
+  },err=>console.error('broadcast listener error:',err));
+
   dbFS.collection('sp_settings').doc('config').get().then(doc=>{
     if(doc.exists&&doc.data().referralReward!=null){REFERRAL_REWARD=Number(doc.data().referralReward);}
     document.getElementById('set-reward').value=REFERRAL_REWARD;
@@ -373,7 +404,7 @@ function renderStats(){
 }
 
 function switchTab(t){
-  ['save','wd','ref','users','settings'].forEach(x=>{
+  ['save','wd','ref','users','broadcast','settings'].forEach(x=>{
     const panel=document.getElementById('panel-'+x);const btn=document.getElementById('tab-'+x+'-btn');
     if(panel)panel.classList.toggle('on',x===t);
     if(btn)btn.classList.toggle('on',x===t);
@@ -505,6 +536,38 @@ async function saveSettings(){
     renderReferrals();
     showToast('✅ Referral reward amount updated');
   }catch(e){console.error(e);showToast('Could not save setting.');}
+}
+
+/* ---------- BROADCAST ---------- */
+let BROADCASTS=[];
+function renderBroadcasts(){
+  const body=document.getElementById('broadcast-body');
+  document.getElementById('broadcast-empty').style.display=BROADCASTS.length?'none':'block';
+  document.getElementById('tab-broadcast-cnt').textContent=BROADCASTS.length;
+  body.innerHTML=BROADCASTS.map(b=>`
+    <tr>
+      <td class="cell-name">${esc(b.title||'—')}</td>
+      <td class="cell-sub" style="white-space:normal;max-width:320px;">${esc((b.message||'').slice(0,120))}${(b.message||'').length>120?'…':''}</td>
+      <td>${fmtDate(b.createdAt)}</td>
+      <td><button class="st-btn" style="border-color:var(--red);color:var(--red);" onclick="deleteBroadcast('${b.id}')">Delete</button></td>
+    </tr>`).join('');
+}
+async function sendBroadcast(){
+  const title=document.getElementById('bc-title').value.trim();
+  const message=document.getElementById('bc-message').value.trim();
+  if(!title||!message){showToast('Enter both a title and a message.');return;}
+  try{
+    await dbFS.collection('sp_broadcasts').add({title,message,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    document.getElementById('bc-title').value='';
+    document.getElementById('bc-message').value='';
+    showToast('✅ Broadcast sent — users will see it in their notification bell.');
+  }catch(e){console.error(e);showToast('Could not send broadcast.');}
+}
+async function deleteBroadcast(id){
+  try{
+    await dbFS.collection('sp_broadcasts').doc(id).delete();
+    showToast('Broadcast deleted.');
+  }catch(e){console.error(e);showToast('Could not delete broadcast.');}
 }
 
 /* ---------- USERS ---------- */
