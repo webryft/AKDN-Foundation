@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SavePoint — Admin Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+:root{--green:#178a4c;--green2:#0f6e3b;--green-dim:rgba(23,138,76,0.12);--green-glow:rgba(23,138,76,0.30);--bg:#fff;--bg2:#f6fbf8;--bg3:#eaf6ee;--dark:#0f1712;--dark2:#16281c;--ink:#1c2620;--muted:#5c6b62;--muted2:#93a49a;--border:#e3ece6;--border2:#cfdbd3;--red:#c0392b;--red-dim:rgba(192,57,43,0.10);--display:'Syne',sans-serif;--body:'Inter',sans-serif;--r:14px;--rsm:9px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg2);color:var(--ink);font-family:var(--body);}
+::-webkit-scrollbar{width:8px;height:8px;}::-webkit-scrollbar-track{background:#f5f5f5;}::-webkit-scrollbar-thumb{background:#ddd;border-radius:4px;}
+button{font-family:var(--body);cursor:pointer;}
+a{text-decoration:none;color:inherit;}
+
+#gate{position:fixed;inset:0;z-index:999;background:var(--dark);display:flex;align-items:center;justify-content:center;padding:20px;}
+.gate-box{background:#fff;border-radius:18px;padding:34px 28px;width:100%;max-width:360px;box-shadow:0 24px 80px rgba(0,0,0,0.4);text-align:center;}
+.gate-logo{font-family:var(--display);font-size:1.3rem;font-weight:800;color:var(--dark);margin-bottom:4px;}
+.gate-logo b{color:var(--green);}
+.gate-sub{font-size:.78rem;color:var(--muted);margin-bottom:20px;}
+.gate-box input{width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:12px 13px;font-size:.9rem;outline:none;margin-bottom:10px;transition:border-color .2s;}
+.gate-box input:focus{border-color:var(--green);}
+.gate-box button{width:100%;background:var(--green);color:#fff;font-weight:700;font-size:.88rem;padding:12px;border:none;border-radius:var(--rsm);transition:background .2s;}
+.gate-box button:hover{background:var(--green2);}
+.gate-err{font-size:.76rem;color:var(--red);margin-top:8px;display:none;}
+.gate-err.on{display:block;}
+
+#app{display:none;}
+#app.on{display:block;}
+nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,3vw,40px);height:64px;background:rgba(255,255,255,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(14px);}
+.nav-logo{font-family:var(--display);font-size:1.15rem;font-weight:800;color:var(--dark);display:flex;align-items:center;gap:8px;}
+.nav-logo b{color:var(--green);}
+.nav-tag{font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green2);background:var(--green-dim);padding:3px 10px;border-radius:20px;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.live-dot{display:flex;align-items:center;gap:6px;font-size:.7rem;color:var(--muted);}
+.live-dot span{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+.logout-btn{font-size:.76rem;font-weight:600;padding:7px 16px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;color:var(--ink);transition:all .2s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+
+main{padding:clamp(16px,3vw,40px);max-width:1400px;margin:0 auto;}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:30px;}
+.stat-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:20px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;background:var(--green-dim);}
+.stat-ic{font-size:1.3rem;margin-bottom:10px;}
+.stat-v{font-family:var(--display);font-size:1.7rem;font-weight:800;color:var(--dark);letter-spacing:-.02em;position:relative;}
+.stat-l{font-size:.68rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:4px;position:relative;}
+.stat-card.hl .stat-v{color:var(--green2);}
+
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+.tab-btn{font-size:.82rem;font-weight:600;padding:9px 18px;border-radius:20px;border:1.5px solid var(--border2);background:#fff;color:var(--muted);transition:all .2s;display:flex;align-items:center;gap:7px;}
+.tab-btn .cnt{background:var(--bg3);color:var(--muted);font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:20px;}
+.tab-btn.on{background:var(--dark);color:#fff;border-color:var(--dark);}
+.tab-btn.on .cnt{background:var(--green);color:#fff;}
+
+.panel{display:none;background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.panel.on{display:block;}
+.panel-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.panel-title{font-family:var(--display);font-size:1rem;font-weight:800;color:var(--dark);}
+.panel-sub{font-size:.76rem;color:var(--muted);margin-top:2px;}
+.search-box{background:var(--bg2);border:1.5px solid var(--border2);border-radius:20px;padding:8px 15px;font-size:.8rem;outline:none;min-width:200px;}
+.search-box:focus{border-color:var(--green);}
+
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:680px;}
+thead th{text-align:left;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);padding:11px 16px;border-bottom:1.5px solid var(--border);background:var(--bg2);white-space:nowrap;}
+tbody td{padding:13px 16px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+tbody tr:hover{background:var(--bg2);}
+tbody tr:last-child td{border-bottom:none;}
+.cell-name{font-weight:700;color:var(--dark);}
+.cell-sub{font-size:.72rem;color:var(--muted);margin-top:1px;}
+.pill{display:inline-block;font-size:.68rem;font-weight:700;padding:3px 11px;border-radius:20px;letter-spacing:.03em;}
+.pill.gold{background:var(--green-dim);color:var(--green2);}
+.pill.green{background:var(--green-dim);color:var(--green);}
+.pill.muted{background:var(--bg3);color:var(--muted);}
+.status-row{display:flex;gap:6px;flex-wrap:wrap;}
+.st-btn{font-size:.7rem;font-weight:700;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border2);background:#fff;color:var(--muted);transition:all .18s;}
+.edit-field{margin-bottom:12px;}
+.edit-field label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+.edit-field input{width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:10px 12px;font-size:.86rem;outline:none;font-family:var(--body);}
+.edit-field input:focus{border-color:var(--green);}
+.st-btn.pending.active{background:rgba(23,138,76,0.15);border-color:var(--green);color:var(--green2);}
+.st-btn.settled.active{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+.st-btn:hover{border-color:var(--green);}
+.fulfill-btn{font-size:.7rem;font-weight:700;padding:6px 14px;border-radius:20px;border:none;background:var(--green);color:#fff;transition:background .18s;}
+.fulfill-btn:hover{background:var(--green2);}
+.fulfill-btn:disabled{background:var(--green);opacity:.7;cursor:default;}
+.empty-state{padding:50px 20px;text-align:center;color:var(--muted2);font-size:.86rem;}
+.loading-state{padding:50px 20px;text-align:center;color:var(--muted2);font-size:.86rem;}
+.ld-ring{width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);z-index:800;background:var(--dark);color:#fff;font-size:.8rem;padding:9px 20px;border-radius:30px;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.22);}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+.settings-box{padding:22px;max-width:420px;}
+.note{background:var(--green-dim);border:1px solid rgba(23,138,76,0.25);border-radius:var(--rsm);padding:12px 14px;font-size:.78rem;color:var(--green2);line-height:1.6;margin-top:10px;}
+@media(max-width:640px){table{min-width:560px;}.panel-head{align-items:flex-start;}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">Save<b>Point</b> Admin</div>
+    <div class="gate-sub">Restricted access — staff only.</div>
+    <input type="password" id="gate-pw" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')checkGate()"/>
+    <button onclick="checkGate()">Enter Dashboard</button>
+    <div class="gate-err" id="gate-err">Incorrect password.</div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="app">
+  <nav>
+    <div class="nav-logo">Save<b>Point</b><span class="nav-tag">Admin</span></div>
+    <div class="nav-right">
+      <div class="live-dot"><span></span>Live</div>
+      <button class="logout-btn" onclick="location.reload()">Sign Out</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="stats-grid">
+      <div class="stat-card hl"><div class="stat-ic">👥</div><div class="stat-v" id="s-users">0</div><div class="stat-l">Registered Users</div></div>
+      <div class="stat-card hl"><div class="stat-ic">🏦</div><div class="stat-v" id="s-balances">₦0</div><div class="stat-l">Total User Balances</div></div>
+      <div class="stat-card"><div class="stat-ic">💳</div><div class="stat-v" id="s-save-pending">0</div><div class="stat-l">Wallet Fundings (via Paystack)</div></div>
+      <div class="stat-card"><div class="stat-ic">📤</div><div class="stat-v" id="s-wd-pending">0</div><div class="stat-l">Pending Withdrawals</div></div>
+      <div class="stat-card"><div class="stat-ic">🔗</div><div class="stat-v" id="s-ref-pending">0</div><div class="stat-l">Pending Referrals</div></div>
+      <div class="stat-card"><div class="stat-ic">✅</div><div class="stat-v" id="s-saved-total">₦0</div><div class="stat-l">Total Funded via Paystack</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn on" id="tab-save-btn" onclick="switchTab('save')">💳 Wallet Fundings <span class="cnt" id="tab-save-cnt">0</span></button>
+      <button class="tab-btn" id="tab-wd-btn" onclick="switchTab('wd')">📤 Withdrawal Requests <span class="cnt" id="tab-wd-cnt">0</span></button>
+      <button class="tab-btn" id="tab-ref-btn" onclick="switchTab('ref')">🔗 Referral Queue <span class="cnt" id="tab-ref-cnt">0</span></button>
+      <button class="tab-btn" id="tab-users-btn" onclick="switchTab('users')">👥 Registered Users <span class="cnt" id="tab-users-cnt">0</span></button>
+      <button class="tab-btn" id="tab-settings-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+    </div>
+
+    <!-- WALLET FUNDINGS -->
+    <div class="panel on" id="panel-save">
+      <div class="panel-head">
+        <div><div class="panel-title">Wallet Fundings</div><div class="panel-sub">Paid via Paystack and credited to the user's balance automatically. This is a read-only ledger — nothing here needs your approval.</div></div>
+        <input class="search-box" id="search-save" placeholder="Search name, phone, ref…" oninput="renderSaves()"/>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Phone / Contact</th><th>Amount</th><th>Paystack Ref</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="save-body"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="save-empty" style="display:none;">No wallet fundings yet.</div>
+      <div class="loading-state" id="save-loading"><div class="ld-ring"></div>Loading wallet fundings…</div>
+    </div>
+
+    <!-- WITHDRAWAL REQUESTS -->
+    <div class="panel" id="panel-wd">
+      <div class="panel-head">
+        <div><div class="panel-title">Withdrawal Requests</div><div class="panel-sub">Review and pay out manually via your own bank transfer or payment channel, then mark as paid here.</div></div>
+        <input class="search-box" id="search-wd" placeholder="Search name, phone, bank…" oninput="renderWithdrawals()"/>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Phone</th><th>Amount</th><th>Bank Details</th><th>Requested</th><th>Decision</th></tr></thead>
+          <tbody id="wd-body"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="wd-empty" style="display:none;">No withdrawal requests yet.</div>
+      <div class="loading-state" id="wd-loading"><div class="ld-ring"></div>Loading withdrawal requests…</div>
+    </div>
+
+    <!-- REFERRAL QUEUE -->
+    <div class="panel" id="panel-ref">
+      <div class="panel-head">
+        <div><div class="panel-title">Referral Queue</div><div class="panel-sub">New signups that came in via a referral code — approve once you've verified the referral is genuine, to credit the referrer's fixed reward.</div></div>
+        <input class="search-box" id="search-ref" placeholder="Search phone…" oninput="renderReferrals()"/>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Referrer</th><th>New User</th><th>Reward</th><th>Requested</th><th>Decision</th></tr></thead>
+          <tbody id="ref-body"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="ref-empty" style="display:none;">No referrals yet.</div>
+      <div class="loading-state" id="ref-loading"><div class="ld-ring"></div>Loading referral queue…</div>
+    </div>
+
+    <!-- USERS -->
+    <div class="panel" id="panel-users">
+      <div class="panel-head">
+        <div><div class="panel-title">Registered Users</div><div class="panel-sub">Everyone who created a SavePoint account.</div></div>
+        <input class="search-box" id="search-users" placeholder="Search name, email, phone…" oninput="renderUsers()"/>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Balance</th><th>Rewards Earned</th><th>Referrals</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="users-body"></tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="users-empty" style="display:none;">No users yet.</div>
+      <div class="loading-state" id="users-loading"><div class="ld-ring"></div>Loading users…</div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="panel" id="panel-settings">
+      <div class="panel-head">
+        <div><div class="panel-title">Settings</div><div class="panel-sub">Controls the fixed referral reward amount used when approving the referral queue.</div></div>
+      </div>
+      <div class="settings-box">
+        <div class="edit-field">
+          <label>Referral Reward Amount (₦)</label>
+          <input type="number" id="set-reward" placeholder="e.g. 500"/>
+        </div>
+        <button class="fulfill-btn" style="width:100%;" onclick="saveSettings()">Save Setting</button>
+        <div class="note">This is a fixed amount credited per verified referral — it never changes based on a user's balance or how long they've been saving.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- DELETE ACCOUNT CONFIRM MODAL -->
+<div id="del-modal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:26px 24px;width:100%;max-width:360px;margin:16px;box-shadow:0 24px 70px rgba(0,0,0,0.3);">
+    <div style="font-family:var(--display);font-size:1.05rem;font-weight:800;color:var(--dark);margin-bottom:4px;">Delete Account</div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:16px;">This permanently deletes <b id="del-target-name" style="color:var(--dark);"></b>'s account (<span id="del-target-phone"></span>). This cannot be undone. Enter your admin password to confirm.</div>
+    <input type="password" id="del-pw" placeholder="Admin password" style="width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:11px 13px;font-size:.86rem;outline:none;margin-bottom:8px;" onkeydown="if(event.key==='Enter')confirmDeleteUser()"/>
+    <div id="del-err" style="display:none;font-size:.74rem;color:var(--red);margin-bottom:8px;">Incorrect admin password.</div>
+    <button class="fulfill-btn" style="width:100%;background:var(--red);margin-top:4px;" onclick="confirmDeleteUser()">Delete Permanently</button>
+    <button class="st-btn" style="width:100%;margin-top:8px;" onclick="closeDeleteModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- EDIT ACCESS PASSWORD GATE -->
+<div id="editpw-modal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:26px 24px;width:100%;max-width:360px;margin:16px;box-shadow:0 24px 70px rgba(0,0,0,0.3);">
+    <div style="font-family:var(--display);font-size:1.05rem;font-weight:800;color:var(--dark);margin-bottom:4px;">Confirm Admin Access</div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:16px;">Enter your admin password to edit <b id="editpw-target-name" style="color:var(--dark);"></b>'s account.</div>
+    <input type="password" id="editpw-input" placeholder="Admin password" style="width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:11px 13px;font-size:.86rem;outline:none;margin-bottom:8px;" onkeydown="if(event.key==='Enter')confirmEditAccess()"/>
+    <div id="editpw-err" style="display:none;font-size:.74rem;color:var(--red);margin-bottom:8px;">Incorrect admin password.</div>
+    <button class="fulfill-btn" style="width:100%;margin-top:4px;" onclick="confirmEditAccess()">Continue</button>
+    <button class="st-btn" style="width:100%;margin-top:8px;" onclick="closeEditPwModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div id="edit-user-modal" style="display:none;position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;overflow-y:auto;padding:20px;">
+  <div style="background:#fff;border-radius:16px;padding:26px 24px;width:100%;max-width:420px;box-shadow:0 24px 70px rgba(0,0,0,0.3);">
+    <div style="font-family:var(--display);font-size:1.05rem;font-weight:800;color:var(--dark);margin-bottom:2px;">Edit User Account</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:16px;">Account ID: <b id="eu-phone" style="color:var(--dark);"></b></div>
+    <div style="display:flex;gap:10px;margin-bottom:14px;">
+      <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;">
+        <div style="font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--green2);" id="eu-save-count">0</div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Save Requests</div>
+      </div>
+      <div style="flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;text-align:center;">
+        <div style="font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--green2);" id="eu-wd-count">0</div>
+        <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Withdrawals</div>
+      </div>
+    </div>
+    <div class="edit-field"><label>Full Name</label><input type="text" id="eu-name"/></div>
+    <div class="edit-field"><label>Email Address</label><input type="email" id="eu-email"/></div>
+    <div class="edit-field"><label>Account Password</label><input type="text" id="eu-pw"/></div>
+    <div class="edit-field"><label>Balance (₦)</label><input type="number" id="eu-balance"/></div>
+    <div class="edit-field"><label>Rewards Earned (₦)</label><input type="number" id="eu-rewards"/></div>
+    <div id="eu-err" style="display:none;font-size:.76rem;color:var(--red);margin:4px 0 8px;"></div>
+    <button class="fulfill-btn" style="width:100%;margin-top:6px;" onclick="saveUserEdit()">Save Changes</button>
+    <button class="st-btn" style="width:100%;margin-top:8px;" onclick="closeEditUserModal()">Cancel</button>
+  </div>
+</div>
+
+<script>
+/* ============ ADMIN GATE ============
+   This is a lightweight client-side gate for convenience only — it does NOT
+   secure your data. Real protection must come from Firestore Security Rules
+   on the sp_users / sp_fundRequests / sp_withdrawRequests / sp_referralQueue
+   collections (restrict writes to authenticated admin accounts). Change
+   ADMIN_PASSWORD below and, ideally, replace this gate with real Firebase Auth. */
+const ADMIN_PASSWORD='savepoint2026';
+function checkGate(){
+  const v=document.getElementById('gate-pw').value;
+  if(v===ADMIN_PASSWORD){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('app').classList.add('on');
+    sessionStorage.setItem('sp_admin_ok','1');
+    initAdmin();
+  }else{
+    document.getElementById('gate-err').classList.add('on');
+  }
+}
+if(sessionStorage.getItem('sp_admin_ok')==='1'){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('app').classList.add('on');
+  window.addEventListener('DOMContentLoaded',initAdmin);
+}
+
+/* ============ FIREBASE (same project, sp_ collections only) ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyDg1lBxQaMcvkg7aJ5cet0c1WoUSzjum9U",
+  authDomain: "savepoint-929a9.firebaseapp.com",
+  projectId: "savepoint-929a9",
+  storageBucket: "savepoint-929a9.firebasestorage.app",
+  messagingSenderId: "762038420721",
+  appId: "1:762038420721:web:d84821b6950e7a72c39550"
+};
+firebase.initializeApp(firebaseConfig);
+const dbFS=firebase.firestore();
+
+let USERS=[],SAVES=[],WITHDRAWALS=[],REFERRALS=[];
+let REFERRAL_REWARD=500;
+let started=false;
+function initAdmin(){
+  if(started)return;started=true;
+
+  dbFS.collection('sp_users').orderBy('createdAt','desc').onSnapshot(snap=>{
+    USERS=snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('users-loading').style.display='none';
+    renderUsers();renderStats();
+  },err=>{console.error(err);document.getElementById('users-loading').textContent='Could not load users.';});
+
+  dbFS.collection('sp_fundRequests').orderBy('createdAt','desc').onSnapshot(snap=>{
+    SAVES=snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('save-loading').style.display='none';
+    renderSaves();renderStats();
+  },err=>{console.error(err);document.getElementById('save-loading').textContent='Could not load wallet fundings.';});
+
+  dbFS.collection('sp_withdrawRequests').orderBy('createdAt','desc').onSnapshot(snap=>{
+    WITHDRAWALS=snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('wd-loading').style.display='none';
+    renderWithdrawals();renderStats();
+  },err=>{console.error(err);document.getElementById('wd-loading').textContent='Could not load withdrawal requests.';});
+
+  dbFS.collection('sp_referralQueue').orderBy('createdAt','desc').onSnapshot(snap=>{
+    REFERRALS=snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('ref-loading').style.display='none';
+    renderReferrals();renderStats();
+  },err=>{console.error(err);document.getElementById('ref-loading').textContent='Could not load referral queue.';});
+
+  dbFS.collection('sp_settings').doc('config').get().then(doc=>{
+    if(doc.exists&&doc.data().referralReward!=null){REFERRAL_REWARD=Number(doc.data().referralReward);}
+    document.getElementById('set-reward').value=REFERRAL_REWARD;
+  }).catch(e=>console.error(e));
+}
+
+function fmtDate(ts){
+  try{
+    if(!ts)return '—';
+    const d=ts.toDate?ts.toDate():new Date(ts);
+    return d.toLocaleDateString('en-NG',{day:'2-digit',month:'short',year:'numeric'})+' · '+d.toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){return '—';}
+}
+function fmtMoney(n){return '₦'+(Number(n||0)).toLocaleString('en-NG');}
+function esc(s){return (s||'').toString().replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+
+function renderStats(){
+  document.getElementById('s-users').textContent=USERS.length;
+  const totalBalances=USERS.reduce((sum,u)=>sum+(Number(u.balance)||0),0);
+  document.getElementById('s-balances').textContent=fmtMoney(totalBalances);
+  document.getElementById('s-save-pending').textContent=SAVES.length;
+  document.getElementById('s-wd-pending').textContent=WITHDRAWALS.filter(w=>w.status==='pending').length;
+  document.getElementById('s-ref-pending').textContent=REFERRALS.filter(r=>r.status==='pending').length;
+  const savedTotal=SAVES.reduce((sum,s)=>sum+(Number(s.amount)||0),0);
+  document.getElementById('s-saved-total').textContent=fmtMoney(savedTotal);
+  document.getElementById('tab-save-cnt').textContent=SAVES.length;
+  document.getElementById('tab-wd-cnt').textContent=WITHDRAWALS.length;
+  document.getElementById('tab-ref-cnt').textContent=REFERRALS.length;
+  document.getElementById('tab-users-cnt').textContent=USERS.length;
+}
+
+function switchTab(t){
+  ['save','wd','ref','users','settings'].forEach(x=>{
+    const panel=document.getElementById('panel-'+x);const btn=document.getElementById('tab-'+x+'-btn');
+    if(panel)panel.classList.toggle('on',x===t);
+    if(btn)btn.classList.toggle('on',x===t);
+  });
+}
+
+/* ---------- SAVE REQUESTS ---------- */
+function renderSaves(){
+  const q=(document.getElementById('search-save').value||'').toLowerCase();
+  const body=document.getElementById('save-body');
+  const rows=SAVES.filter(s=>!q||[s.name,s.phone,s.paystackRef].join(' ').toLowerCase().includes(q));
+  document.getElementById('save-empty').style.display=rows.length?'none':'block';
+  body.innerHTML=rows.map(s=>`
+    <tr>
+      <td class="cell-name">${esc(s.name||'—')}</td>
+      <td>${esc(s.phone||'—')}</td>
+      <td>${fmtMoney(s.amount)}</td>
+      <td class="cell-sub">${esc(s.paystackRef||'—')}</td>
+      <td>${fmtDate(s.createdAt)}</td>
+      <td><span class="pill green">Funded ✓</span></td>
+    </tr>`).join('');
+}
+
+/* ---------- WITHDRAWAL REQUESTS ---------- */
+function renderWithdrawals(){
+  const q=(document.getElementById('search-wd').value||'').toLowerCase();
+  const body=document.getElementById('wd-body');
+  const rows=WITHDRAWALS.filter(w=>!q||[w.name,w.phone,w.bank,w.acct].join(' ').toLowerCase().includes(q));
+  document.getElementById('wd-empty').style.display=rows.length?'none':'block';
+  body.innerHTML=rows.map(w=>`
+    <tr>
+      <td class="cell-name">${esc(w.name||'—')}</td>
+      <td>${esc(w.phone||'—')}</td>
+      <td>${fmtMoney(w.amount)}</td>
+      <td><div class="cell-name">${esc(w.bank||'—')}</div><div class="cell-sub">${esc(w.acct||'')} · ${esc(w.acctname||'')}</div></td>
+      <td>${fmtDate(w.createdAt)}</td>
+      <td>${wdStatusHtml(w)}</td>
+    </tr>`).join('');
+}
+function wdStatusHtml(w){
+  if(w.status==='approved')return `<button class="st-btn settled active" disabled>Paid ✓</button>`;
+  if(w.status==='declined')return `<button class="st-btn" style="border-color:var(--red);color:var(--red);" disabled>Declined</button>`;
+  return `<div class="status-row">
+    <button class="st-btn settled" onclick="decideWithdrawal('${w.id}','approved')">Mark Paid</button>
+    <button class="st-btn" style="border-color:var(--red);color:var(--red);" onclick="decideWithdrawal('${w.id}','declined')">Decline</button>
+  </div>`;
+}
+async function decideWithdrawal(id,decision){
+  const w=WITHDRAWALS.find(x=>x.id===id);
+  if(!w||w.status!=='pending')return;
+  try{
+    if(decision==='approved'){
+      let insufficient=false;
+      await dbFS.runTransaction(async(tx)=>{
+        const uRef=dbFS.collection('sp_users').doc(w.uid);
+        const uSnap=await tx.get(uRef);
+        const cur=(uSnap.data()||{}).balance||0;
+        if(cur<Number(w.amount||0)){insufficient=true;return;}
+        tx.update(uRef,{balance:cur-Number(w.amount||0)});
+        tx.update(dbFS.collection('sp_withdrawRequests').doc(id),{status:'approved',decidedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      });
+      if(insufficient){showToast('⚠️ User balance is lower than this request — check before paying out.');return;}
+      showToast('✅ Marked as paid — remember to actually send the transfer via your bank/payment channel first');
+    }else{
+      await dbFS.collection('sp_withdrawRequests').doc(id).update({status:'declined',decidedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      showToast('Withdrawal declined');
+    }
+  }catch(e){console.error(e);showToast('Could not process this request.');}
+}
+
+/* ---------- REFERRAL QUEUE ---------- */
+function userLabel(uid){
+  const u=USERS.find(x=>x.uid===uid||x.id===uid);
+  if(!u)return esc(uid||'—');
+  return esc(u.name||'—')+' <span class="cell-sub">('+esc(u.phone||u.email||uid)+')</span>';
+}
+function renderReferrals(){
+  const q=(document.getElementById('search-ref').value||'').toLowerCase();
+  const body=document.getElementById('ref-body');
+  const rows=REFERRALS.filter(r=>!q||[r.referrerUid,r.newUserUid].join(' ').toLowerCase().includes(q));
+  document.getElementById('ref-empty').style.display=rows.length?'none':'block';
+  body.innerHTML=rows.map(r=>`
+    <tr>
+      <td class="cell-name">${userLabel(r.referrerUid)}</td>
+      <td class="cell-name">${userLabel(r.newUserUid)}</td>
+      <td>${fmtMoney(REFERRAL_REWARD)}</td>
+      <td>${fmtDate(r.createdAt)}</td>
+      <td>${refStatusHtml(r)}</td>
+    </tr>`).join('');
+}
+function refStatusHtml(r){
+  if(r.status==='approved')return `<button class="st-btn settled active" disabled>Rewarded ✓</button>`;
+  if(r.status==='declined')return `<button class="st-btn" style="border-color:var(--red);color:var(--red);" disabled>Declined</button>`;
+  return `<div class="status-row">
+    <button class="st-btn settled" onclick="decideReferral('${r.id}','approved')">Verify &amp; Reward</button>
+    <button class="st-btn" style="border-color:var(--red);color:var(--red);" onclick="decideReferral('${r.id}','declined')">Decline</button>
+  </div>`;
+}
+async function decideReferral(id,decision){
+  const r=REFERRALS.find(x=>x.id===id);
+  if(!r||r.status!=='pending')return;
+  try{
+    if(decision==='approved'){
+      await dbFS.runTransaction(async(tx)=>{
+        const uRef=dbFS.collection('sp_users').doc(r.referrerUid);
+        const uSnap=await tx.get(uRef);
+        const data=uSnap.data()||{};
+        const curBal=data.balance||0;
+        const curRewards=data.rewards||0;
+        const curCount=data.referralCount||0;
+        tx.update(uRef,{balance:curBal+REFERRAL_REWARD,rewards:curRewards+REFERRAL_REWARD,referralCount:curCount+1});
+        tx.update(dbFS.collection('sp_referralQueue').doc(id),{status:'approved',rewardPaid:REFERRAL_REWARD,decidedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      });
+      showToast('✅ Referral verified — reward credited');
+    }else{
+      await dbFS.collection('sp_referralQueue').doc(id).update({status:'declined',decidedAt:firebase.firestore.FieldValue.serverTimestamp()});
+      showToast('Referral declined');
+    }
+  }catch(e){console.error(e);showToast('Could not process this referral.');}
+}
+
+/* ---------- SETTINGS ---------- */
+async function saveSettings(){
+  const val=Number(document.getElementById('set-reward').value);
+  if(!val||val<=0){showToast('Enter a valid reward amount.');return;}
+  try{
+    await dbFS.collection('sp_settings').doc('config').set({referralReward:val},{merge:true});
+    REFERRAL_REWARD=val;
+    renderReferrals();
+    showToast('✅ Referral reward amount updated');
+  }catch(e){console.error(e);showToast('Could not save setting.');}
+}
+
+/* ---------- USERS ---------- */
+function renderUsers(){
+  const q=(document.getElementById('search-users').value||'').toLowerCase();
+  const body=document.getElementById('users-body');
+  const rows=USERS.filter(u=>!q||[u.name,u.email,u.phone].join(' ').toLowerCase().includes(q));
+  document.getElementById('users-empty').style.display=rows.length?'none':'block';
+  body.innerHTML=rows.map(u=>`
+    <tr>
+      <td class="cell-name">${esc(u.name||'—')}</td>
+      <td>${esc(u.email||'—')}</td>
+      <td>${esc(u.phone||'—')}</td>
+      <td>${fmtMoney(u.balance)}</td>
+      <td>${fmtMoney(u.rewards)}</td>
+      <td>${u.referralCount||0}</td>
+      <td>${fmtDate(u.createdAt)}</td>
+      <td>
+        <button class="st-btn" onclick="openEditModal('${esc(u.uid||u.id)}','${esc(u.name||'this user')}')">Edit</button>
+        <button class="st-btn" style="border-color:var(--red);color:var(--red);margin-left:6px;" onclick="openDeleteModal('${esc(u.uid||u.id)}','${esc(u.name||'this user')}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+let editTargetPhone='';
+function openEditModal(phone,name){
+  editTargetPhone=phone;
+  document.getElementById('editpw-target-name').textContent=name;
+  document.getElementById('editpw-input').value='';
+  document.getElementById('editpw-err').style.display='none';
+  document.getElementById('editpw-modal').style.display='flex';
+}
+function closeEditPwModal(){document.getElementById('editpw-modal').style.display='none';}
+function confirmEditAccess(){
+  const pw=document.getElementById('editpw-input').value;
+  if(pw!==ADMIN_PASSWORD){document.getElementById('editpw-err').style.display='block';return;}
+  closeEditPwModal();
+  openEditUserModal(editTargetPhone);
+}
+function openEditUserModal(phone){
+  const u=USERS.find(x=>x.uid===phone||x.id===phone);
+  if(!u){showToast('User not found.');return;}
+  document.getElementById('eu-phone').textContent=phone;
+  document.getElementById('eu-name').value=u.name||'';
+  document.getElementById('eu-email').value=u.email||'';
+  document.getElementById('eu-pw').value=u.pw||'';
+  document.getElementById('eu-balance').value=u.balance||0;
+  document.getElementById('eu-rewards').value=u.rewards||0;
+  document.getElementById('eu-err').style.display='none';
+  const saveCount=SAVES.filter(s=>s.uid===phone).length;
+  const wdCount=WITHDRAWALS.filter(w=>w.uid===phone).length;
+  document.getElementById('eu-save-count').textContent=saveCount;
+  document.getElementById('eu-wd-count').textContent=wdCount;
+  document.getElementById('edit-user-modal').style.display='flex';
+}
+function closeEditUserModal(){document.getElementById('edit-user-modal').style.display='none';editTargetPhone='';}
+async function saveUserEdit(){
+  const name=document.getElementById('eu-name').value.trim();
+  const email=document.getElementById('eu-email').value.trim();
+  const pw=document.getElementById('eu-pw').value;
+  const balance=parseFloat(document.getElementById('eu-balance').value);
+  const rewards=parseFloat(document.getElementById('eu-rewards').value);
+  const errEl=document.getElementById('eu-err');
+  if(!name){errEl.textContent='Name cannot be empty.';errEl.style.display='block';return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){errEl.textContent='Enter a valid email address.';errEl.style.display='block';return;}
+  if(!pw||pw.length<6){errEl.textContent='Password must be at least 6 characters.';errEl.style.display='block';return;}
+  if(isNaN(balance)||balance<0){errEl.textContent='Balance must be a valid number.';errEl.style.display='block';return;}
+  if(isNaN(rewards)||rewards<0){errEl.textContent='Rewards must be a valid number.';errEl.style.display='block';return;}
+  errEl.style.display='none';
+  try{
+    await dbFS.collection('sp_users').doc(editTargetPhone).update({name,email,pw,balance,rewards});
+    showToast('✅ Account updated');
+    closeEditUserModal();
+  }catch(e){console.error(e);errEl.textContent='Could not save changes. Please try again.';errEl.style.display='block';}
+}
+let delTargetPhone='';
+function openDeleteModal(phone,name){
+  delTargetPhone=phone;
+  document.getElementById('del-target-name').textContent=name;
+  document.getElementById('del-target-phone').textContent=phone;
+  document.getElementById('del-pw').value='';
+  document.getElementById('del-err').style.display='none';
+  document.getElementById('del-modal').style.display='flex';
+}
+function closeDeleteModal(){document.getElementById('del-modal').style.display='none';delTargetPhone='';}
+async function confirmDeleteUser(){
+  const pw=document.getElementById('del-pw').value;
+  if(pw!==ADMIN_PASSWORD){document.getElementById('del-err').style.display='block';return;}
+  if(!delTargetPhone)return;
+  try{
+    await dbFS.collection('sp_users').doc(delTargetPhone).delete();
+    showToast('✅ Account deleted');
+    closeDeleteModal();
+  }catch(e){console.error(e);showToast('Could not delete this account.');}
+}
+
+let _tt;
+function showToast(msg,dur=2600){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('on'),dur);}
+</script>
+</body>
+</html>

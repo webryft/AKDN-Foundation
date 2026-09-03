@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>SavePoint — Save Steadily, Earn Through Real Referrals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
+<style>
+:root{
+  --green:#178a4c;--green2:#0f6e3b;--green-dim:rgba(23,138,76,0.10);--green-glow:rgba(23,138,76,0.25);
+  --bg:#ffffff;--bg2:#f5faf6;--bg3:#eaf6ee;
+  --dark:#0f1712;--ink:#1c2620;--muted:#5c6b62;--muted2:#93a49a;
+  --border:#e3ece6;--border2:#cfdbd3;
+  --red:#c0392b;--red-dim:rgba(192,57,43,0.10);
+  --display:'Syne',sans-serif;--body:'Inter',sans-serif;
+  --r:14px;--rsm:9px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);overflow-x:hidden;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:#f2f2f2;}::-webkit-scrollbar-thumb{background:#cfdbd3;border-radius:3px;}
+img{display:block;max-width:100%;}
+button{font-family:var(--body);cursor:pointer;}
+a{text-decoration:none;color:inherit;}
+
+/* ---------- nav ---------- */
+nav{position:fixed;top:0;left:0;right:0;z-index:400;height:66px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,4vw,54px);background:rgba(255,255,255,0.97);border-bottom:1px solid var(--border);backdrop-filter:blur(14px);transition:box-shadow .3s;}
+nav.scrolled{box-shadow:0 2px 22px rgba(0,0,0,0.06);}
+.nav-logo{font-family:var(--display);font-size:1.25rem;font-weight:800;color:var(--dark);letter-spacing:-0.03em;cursor:pointer;display:flex;align-items:center;}
+.navdot{width:8px;height:8px;border-radius:50%;background:var(--green);margin-left:3px;box-shadow:0 0 0 3px var(--green-dim);}
+.nav-right{display:flex;align-items:center;gap:9px;}
+.nbtn{font-size:0.8rem;font-weight:600;padding:8px 17px;border-radius:30px;border:none;transition:all .2s;-webkit-tap-highlight-color:transparent;}
+.nbtn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--border2);}
+.nbtn-ghost:hover{background:var(--bg2);border-color:var(--green);}
+.nbtn-fill{background:var(--green);color:#fff;box-shadow:0 2px 10px var(--green-glow);}
+.nbtn-fill:hover{background:var(--green2);transform:translateY(-1px);}
+.hbg{display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:38px;height:38px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s;}
+.hbg:hover{background:var(--bg3);}
+.hbg span{display:block;width:20px;height:2px;background:var(--dark);border-radius:2px;}
+@media(max-width:640px){.nav-right .nbtn-ghost.desk-only{display:none;}.hbg{display:flex;}}
+
+/* ---------- hero ---------- */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px clamp(16px,6vw,100px) 60px;background:linear-gradient(160deg,#f5faf6 0%,#fff 55%,#eaf6ee 100%);position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-80px;right:-80px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(23,138,76,0.12),transparent 70%);pointer-events:none;}
+.hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(23,138,76,0.08),transparent 70%);pointer-events:none;}
+.hbadge{display:inline-flex;align-items:center;gap:8px;background:var(--green-dim);border:1px solid rgba(23,138,76,0.3);color:var(--green2);font-size:0.72rem;font-weight:700;padding:5px 16px;border-radius:30px;margin-bottom:26px;}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
+.hero-h1{font-family:var(--display);font-size:clamp(1.6rem,4vw,2.6rem);font-weight:800;line-height:1.16;letter-spacing:-0.03em;color:var(--dark);margin-bottom:22px;max-width:820px;}
+.hero-h1 span{background:linear-gradient(135deg,var(--green),var(--green2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{font-size:clamp(1rem,2.5vw,1.14rem);color:var(--muted);max-width:560px;line-height:1.72;margin-bottom:42px;}
+.hero-btns{display:flex;gap:13px;flex-wrap:wrap;justify-content:center;margin-bottom:54px;}
+.btn-p{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#fff;font-weight:700;font-size:0.9rem;padding:14px 30px;border-radius:30px;border:none;transition:all .25s;box-shadow:0 4px 20px var(--green-glow);}
+.btn-p:hover{background:var(--green2);transform:translateY(-2px);}
+.btn-o{display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--dark);font-weight:600;font-size:0.9rem;padding:13px 28px;border-radius:30px;border:2px solid var(--border2);transition:all .25s;}
+.btn-o:hover{border-color:var(--green);color:var(--green2);background:var(--green-dim);}
+.hero-notes{display:flex;gap:clamp(20px,5vw,46px);flex-wrap:wrap;justify-content:center;max-width:760px;}
+.hnote{text-align:left;display:flex;gap:10px;align-items:flex-start;max-width:220px;}
+.hnote .ic{font-size:1.05rem;line-height:1;margin-top:2px;}
+.hnote b{display:block;font-family:var(--display);font-size:0.86rem;font-weight:700;color:var(--dark);margin-bottom:2px;}
+.hnote span{font-size:0.76rem;color:var(--muted);line-height:1.5;}
+
+/* ---------- sections ---------- */
+.sec{padding:clamp(60px,8vw,104px) clamp(14px,5vw,78px);}
+.sec-lbl{font-size:0.7rem;font-weight:700;letter-spacing:.14em;color:var(--green2);text-transform:uppercase;margin-bottom:10px;}
+.sec-h2{font-family:var(--display);font-size:clamp(1.7rem,4vw,2.6rem);font-weight:800;letter-spacing:-0.03em;color:var(--dark);margin-bottom:10px;line-height:1.16;}
+.sec-sub{color:var(--muted);font-size:0.96rem;line-height:1.66;max-width:540px;}
+.divider{height:1px;background:var(--border);}
+.how-sec{background:var(--bg2);}
+.how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:44px;}
+.how-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:26px 22px;transition:border-color .25s,box-shadow .25s,transform .2s;}
+.how-card:hover{border-color:rgba(23,138,76,0.4);box-shadow:0 8px 26px rgba(23,138,76,0.1);transform:translateY(-2px);}
+.how-n{font-family:var(--display);font-size:0.78rem;font-weight:800;color:var(--green);background:var(--green-dim);width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;}
+.how-h{font-family:var(--display);font-size:1.02rem;font-weight:700;color:var(--dark);margin-bottom:8px;}
+.how-p{font-size:0.86rem;color:var(--muted);line-height:1.6;}
+
+.feats{display:grid;grid-template-columns:repeat(auto-fit,minmax(258px,1fr));gap:17px;margin-top:40px;}
+.feat{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:24px 20px;transition:border-color .25s,box-shadow .25s;}
+.feat:hover{border-color:rgba(23,138,76,0.4);box-shadow:0 4px 18px rgba(23,138,76,0.1);}
+.feat-ic{width:42px;height:42px;border-radius:10px;background:var(--green-dim);display:flex;align-items:center;justify-content:center;font-size:1.2rem;margin-bottom:14px;}
+.feat-h{font-family:var(--display);font-size:0.96rem;font-weight:700;color:var(--dark);margin-bottom:6px;}
+.feat-p{font-size:0.83rem;color:var(--muted);line-height:1.62;}
+
+.honesty-sec{background:var(--dark);color:#fff;border-radius:24px;margin:0 clamp(14px,5vw,78px) 0;padding:clamp(40px,6vw,64px);}
+.honesty-sec .sec-lbl{color:#8fd8ab;}
+.honesty-sec .sec-h2{color:#fff;}
+.honesty-sec .sec-sub{color:#c9d6ce;}
+.honesty-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:34px;}
+.honesty-item{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--r);padding:18px;}
+.honesty-item b{display:block;font-family:var(--display);font-size:0.9rem;margin-bottom:6px;color:#eafff2;}
+.honesty-item span{font-size:0.82rem;color:#b9c9c0;line-height:1.6;}
+
+.faq-sec{background:var(--bg2);}
+.faq-list{max-width:720px;margin-top:36px;}
+.faq-item{background:#fff;border:1.5px solid var(--border);border-radius:var(--rsm);margin-bottom:10px;overflow:hidden;}
+.faq-q{padding:16px 20px;font-weight:700;font-size:0.88rem;color:var(--dark);display:flex;justify-content:space-between;align-items:center;cursor:pointer;}
+.faq-q .arrow{transition:transform .25s;color:var(--muted2);}
+.faq-item.on .faq-q .arrow{transform:rotate(180deg);}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.faq-item.on .faq-a{max-height:220px;}
+.faq-a p{padding:0 20px 16px;font-size:0.84rem;color:var(--muted);line-height:1.65;}
+
+footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;}
+.foot-logo{font-family:var(--display);font-weight:800;color:var(--dark);}
+.foot-links{display:flex;gap:18px;flex-wrap:wrap;}
+.foot-links a{font-size:0.8rem;color:var(--muted);}
+.foot-links a:hover{color:var(--green2);}
+.foot-note{font-size:0.72rem;color:var(--muted2);width:100%;}
+
+/* ---------- auth / dashboard shared ---------- */
+#dimmer{position:fixed;inset:0;background:rgba(15,23,18,0.55);backdrop-filter:blur(3px);z-index:500;opacity:0;pointer-events:none;transition:opacity .25s;}
+#dimmer.on{opacity:1;pointer-events:auto;}
+.mw{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;pointer-events:none;transition:opacity .25s;}
+.mw.on{opacity:1;pointer-events:auto;}
+.mcard{background:#fff;border-radius:20px;width:100%;max-width:400px;padding:30px 26px;box-shadow:0 30px 90px rgba(0,0,0,0.25);max-height:88vh;overflow-y:auto;transform:translateY(14px);transition:transform .25s;}
+.mw.on .mcard{transform:translateY(0);}
+.m-title{font-family:var(--display);font-size:1.2rem;font-weight:800;color:var(--dark);margin-bottom:4px;}
+.m-sub{font-size:0.8rem;color:var(--muted);margin-bottom:20px;}
+.field{margin-bottom:13px;}
+.field label{display:block;font-size:0.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--rsm);padding:11px 13px;font-size:0.88rem;outline:none;font-family:var(--body);transition:border-color .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green);}
+.field-err{font-size:0.72rem;color:var(--red);margin-top:4px;display:none;}
+.field-err.on{display:block;}
+.m-btn{width:100%;background:var(--green);color:#fff;font-weight:700;font-size:0.88rem;padding:12px;border:none;border-radius:var(--rsm);margin-top:6px;transition:background .2s;}
+.m-btn:hover{background:var(--green2);}
+.m-btn.ghost{background:transparent;border:1.5px solid var(--border2);color:var(--ink);}
+.m-switch{text-align:center;font-size:0.8rem;color:var(--muted);margin-top:16px;}
+.m-switch b{color:var(--green2);cursor:pointer;}
+.g-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:var(--ink);font-weight:600;font-size:0.86rem;padding:11px;border:1.5px solid var(--border2);border-radius:var(--rsm);transition:all .2s;margin-bottom:14px;}
+.g-btn:hover{border-color:var(--green);background:var(--bg2);}
+.g-btn svg{width:18px;height:18px;}
+.m-divider{display:flex;align-items:center;gap:10px;margin:4px 0 14px;color:var(--muted2);font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;}
+.m-divider::before,.m-divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.m-close{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:var(--muted);border:none;}
+.m-close:hover{background:var(--bg3);}
+.mcard{position:relative;}
+
+/* ---------- dashboard ---------- */
+#dash{display:none;}
+#dash.on{display:block;}
+.dash-nav{position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(14px,3vw,40px);height:64px;background:#fff;border-bottom:1px solid var(--border);}
+.dash-logout{font-size:0.78rem;font-weight:600;padding:8px 16px;border-radius:20px;border:1.5px solid var(--border2);background:transparent;}
+.dash-logout:hover{border-color:var(--red);color:var(--red);}
+.dash-main{max-width:960px;margin:0 auto;padding:clamp(20px,3vw,40px) clamp(14px,3vw,24px) 60px;}
+.bal-card{background:linear-gradient(135deg,var(--dark),#16281c);color:#fff;border-radius:20px;padding:28px 26px;margin-bottom:20px;position:relative;overflow:hidden;}
+.bal-card::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(23,138,76,0.25);}
+.bal-lbl{font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:#a9c2b1;margin-bottom:8px;position:relative;}
+.bal-amt{font-family:var(--display);font-size:clamp(1.9rem,5vw,2.6rem);font-weight:800;letter-spacing:-0.02em;position:relative;}
+.bal-sub{font-size:0.78rem;color:#c9d6ce;margin-top:6px;position:relative;}
+.bal-actions{display:flex;gap:10px;margin-top:20px;position:relative;flex-wrap:wrap;}
+.bal-actions button{flex:1;min-width:130px;padding:11px;border-radius:12px;font-weight:700;font-size:0.84rem;border:none;}
+.act-save{background:#fff;color:var(--dark);}
+.act-save:hover{background:#eafff2;}
+.act-wd{background:rgba(255,255,255,0.12);color:#fff;border:1.5px solid rgba(255,255,255,0.25) !important;}
+.act-wd:hover{background:rgba(255,255,255,0.2);}
+
+.dcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px;}
+.dcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);padding:18px;}
+.dcard-lbl{font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.dcard-v{font-family:var(--display);font-size:1.3rem;font-weight:800;color:var(--dark);}
+.ref-box{background:var(--bg2);border:1.5px dashed var(--border2);border-radius:var(--rsm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;}
+.ref-code{font-family:var(--display);font-weight:800;color:var(--green2);font-size:0.95rem;letter-spacing:.03em;}
+.ref-copy{font-size:0.72rem;font-weight:700;color:var(--green2);background:var(--green-dim);border:none;padding:6px 12px;border-radius:20px;}
+
+.dash-sec-h{font-family:var(--display);font-size:1.02rem;font-weight:700;color:var(--dark);margin:26px 0 12px;}
+.tx-list{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;}
+.tx-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border);gap:10px;}
+.tx-row:last-child{border-bottom:none;}
+.tx-l b{font-size:0.86rem;color:var(--dark);display:block;}
+.tx-l span{font-size:0.74rem;color:var(--muted);}
+.tx-r{text-align:right;}
+.tx-amt{font-family:var(--display);font-weight:700;font-size:0.9rem;}
+.tx-amt.pos{color:var(--green2);}
+.tx-amt.neg{color:var(--red);}
+.tx-pill{font-size:0.64rem;font-weight:700;padding:2px 9px;border-radius:20px;margin-top:3px;display:inline-block;}
+.tx-pill.pending{background:rgba(217,150,10,0.12);color:#b5790a;}
+.tx-pill.approved{background:var(--green-dim);color:var(--green2);}
+.tx-pill.rejected{background:var(--red-dim);color:var(--red);}
+.empty-tx{padding:40px 20px;text-align:center;color:var(--muted2);font-size:0.84rem;}
+
+.note-box{background:var(--green-dim);border:1px solid rgba(23,138,76,0.25);border-radius:var(--rsm);padding:12px 14px;font-size:0.78rem;color:var(--green2);line-height:1.6;margin-top:14px;}
+
+/* ---------- loader / toast ---------- */
+#loader{position:fixed;inset:0;background:rgba(255,255,255,0.85);backdrop-filter:blur(4px);z-index:900;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
+#loader.on{display:flex;}
+.ld-ring{width:36px;height:36px;border:3.5px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#ld-txt{font-family:var(--display);font-weight:700;font-size:0.9rem;color:var(--dark);}
+#ld-sub{font-size:0.76rem;color:var(--muted);}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);z-index:950;background:var(--dark);color:#fff;font-size:0.8rem;padding:10px 22px;border-radius:18px;opacity:0;pointer-events:none;transition:all .3s;max-width:min(92vw,480px);text-align:center;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,0.22);white-space:normal;}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+@media(max-width:560px){.hero-btns{flex-direction:column;width:100%;}.btn-p,.btn-o{justify-content:center;}}
+</style>
+</head>
+<body>
+
+<nav id="mainnav">
+  <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">SavePoint<span class="navdot"></span></div>
+  <div class="nav-right">
+    <button class="nbtn nbtn-ghost desk-only" onclick="openM('m-login')">Log in</button>
+    <button class="nbtn nbtn-fill" onclick="openM('m-signup')">Get started</button>
+  </div>
+</nav>
+
+<!-- ================= MARKETING SITE ================= -->
+<div id="site">
+
+<section class="hero">
+  <div class="hbadge"><span class="pulse"></span> Simple saving, honest rewards</div>
+  <h1 class="hero-h1">Save your money, and earn <span>real rewards</span> for growing the community</h1>
+  <p class="hero-sub">SavePoint helps you set money aside toward your own goals, and rewards you when you bring people who join. No promises about your savings multiplying on their own — just a clear, honest way to save and to be paid for genuine referrals.</p>
+  <div class="hero-btns">
+    <button class="btn-p" onclick="openM('m-signup')">Create free account</button>
+    <button class="btn-o" onclick="document.getElementById('how-sec').scrollIntoView({behavior:'smooth'})">See how it works</button>
+  </div>
+  <div class="hero-notes">
+    <div class="hnote"><span class="ic">🔒</span><div><b>Fund instantly via Paystack</b><span>Pay by card, transfer or USSD — your balance updates the moment payment clears.</span></div></div>
+    <div class="hnote"><span class="ic">🤝</span><div><b>Rewards from real referrals</b><span>Earn a fixed bonus when someone genuinely joins through you.</span></div></div>
+    <div class="hnote"><span class="ic">✅</span><div><b>Withdrawals reviewed, not guessed</b><span>Every withdrawal request is checked and paid out by our team.</span></div></div>
+  </div>
+</section>
+
+<section class="sec how-sec" id="how-sec">
+  <div class="sec-lbl">How it works</div>
+  <h2 class="sec-h2">Three honest steps</h2>
+  <p class="sec-sub">No jargon, no fine print designed to confuse you — this is exactly what happens when you use SavePoint.</p>
+  <div class="how-grid">
+    <div class="how-card">
+      <div class="how-n">1</div>
+      <div class="how-h">Fund your wallet</div>
+      <div class="how-p">Pay securely with Paystack — card, bank transfer or USSD. Your balance updates instantly, with a full record of every transaction.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-n">2</div>
+      <div class="how-h">Share your referral code</div>
+      <div class="how-p">Every account gets a unique referral code. When someone signs up and verifies their account using your code, you earn a fixed referral reward — paid from what the platform actually earns, not from other users' savings.</div>
+    </div>
+    <div class="how-card">
+      <div class="how-n">3</div>
+      <div class="how-h">Withdraw when you're ready</div>
+      <div class="how-p">Request a withdrawal any time. Our team reviews and pays out requests directly — there's no automated formula deciding whether you're "allowed" to get your own money.</div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="feat-sec">
+  <div class="sec-lbl">What's on SavePoint</div>
+  <h2 class="sec-h2">Built around two things</h2>
+  <p class="sec-sub">Saving and referral rewards — nothing else competing for your attention.</p>
+  <div class="feats">
+    <div class="feat">
+      <div class="feat-ic">💰</div>
+      <div class="feat-h">Personal savings tracker</div>
+      <div class="feat-p">Set money aside and watch your balance grow from what you actually put in. Full history of every save request, always visible on your dashboard.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">🔗</div>
+      <div class="feat-h">Referral rewards</div>
+      <div class="feat-p">Get a personal referral code the moment you sign up. Each verified referral earns you a fixed bonus, credited to your balance once confirmed.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">📤</div>
+      <div class="feat-h">Reviewed withdrawals</div>
+      <div class="feat-p">Submit a withdrawal request with your payout details. Our team verifies and processes it — you can track its status right from your dashboard.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-ic">📊</div>
+      <div class="feat-h">Clear transaction history</div>
+      <div class="feat-p">Every save, reward, and withdrawal is logged with a status, so you always know exactly what's happened with your account.</div>
+    </div>
+  </div>
+</section>
+
+<div style="padding:0 clamp(14px,5vw,78px);">
+<section class="sec honesty-sec">
+  <div class="sec-lbl">Why we don't promise daily interest</div>
+  <h2 class="sec-h2">We'd rather be honest than exciting</h2>
+  <p class="sec-sub">A lot of "savings" platforms promise your balance will grow automatically every day, no matter what. We don't do that — here's why, plainly.</p>
+  <div class="honesty-grid">
+    <div class="honesty-item"><b>No guaranteed daily returns</b><span>Real money doesn't grow on its own just for sitting in an account. Any platform promising a fixed daily percentage is paying old users with new users' deposits — that always collapses eventually.</span></div>
+    <div class="honesty-item"><b>Rewards are earned, not promised</b><span>You're only credited a referral bonus once a real referral is verified — not on a timer, not based on your balance size.</span></div>
+    <div class="honesty-item"><b>Withdrawals are reviewed by people</b><span>Every withdrawal is checked by our team before payout. It may take a little longer than an instant auto-approval — but it means your money is actually there.</span></div>
+  </div>
+</section>
+</div>
+
+<section class="sec faq-sec">
+  <div class="sec-lbl">Questions</div>
+  <h2 class="sec-h2">Good to know</h2>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">Does my saved balance earn interest automatically? <span class="arrow">▾</span></div>
+      <div class="faq-a"><p>No. Your savings balance only changes when you add money, when a verified referral reward is credited, or when a withdrawal is processed. We don't apply any automatic daily growth.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How do referral rewards work? <span class="arrow">▾</span></div>
+      <div class="faq-a"><p>You get a personal referral code when you sign up. When someone creates and verifies an account using your code, you receive a fixed reward credited to your balance — not a percentage of anything.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">How long do withdrawals take? <span class="arrow">▾</span></div>
+      <div class="faq-a"><p>Withdrawal requests are reviewed manually by our team before payout. You'll see the status change from "Pending" to "Approved" on your dashboard once it's processed.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="foot-logo">SavePoint</div>
+  <div class="foot-links">
+    <a href="#how-sec">How it works</a>
+    <a href="#feat-sec">Features</a>
+    <a href="javascript:void(0)" onclick="openM('m-login')">Log in</a>
+  </div>
+  <div class="foot-note">SavePoint is a savings and referral-rewards platform. We do not offer investment returns or guaranteed daily interest.</div>
+</footer>
+
+</div>
+<!-- ================= /MARKETING SITE ================= -->
+
+<!-- ================= DASHBOARD ================= -->
+<div id="dash">
+  <div class="dash-nav">
+    <div class="nav-logo">SavePoint<span class="navdot"></span></div>
+    <button class="dash-logout" onclick="doLogout()">Log out</button>
+  </div>
+  <div class="dash-main">
+    <div class="bal-card">
+      <div class="bal-lbl">Your balance</div>
+      <div class="bal-amt" id="d-balance">₦0</div>
+      <div class="bal-sub" id="d-welcome">Welcome back</div>
+      <div class="bal-actions">
+        <button class="act-save" onclick="openM('m-save')">+ Fund wallet</button>
+        <button class="act-wd" onclick="openM('m-withdraw')">Withdraw</button>
+      </div>
+    </div>
+
+    <div class="dcards">
+      <div class="dcard">
+        <div class="dcard-lbl">Referral rewards earned</div>
+        <div class="dcard-v" id="d-rewards">₦0</div>
+      </div>
+      <div class="dcard">
+        <div class="dcard-lbl">Verified referrals</div>
+        <div class="dcard-v" id="d-refcount">0</div>
+      </div>
+      <div class="dcard">
+        <div class="dcard-lbl">Your referral code</div>
+        <div class="ref-box">
+          <span class="ref-code" id="d-refcode">—</span>
+          <button class="ref-copy" onclick="copyRefCode()">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-box">Referral rewards are credited by our team once a referral is verified — usually within 24–48 hours. Your balance never changes automatically on its own.</div>
+
+    <div class="dash-sec-h">Recent activity</div>
+    <div class="tx-list" id="d-tx-list">
+      <div class="empty-tx">No activity yet — save some money or share your referral code to get started.</div>
+    </div>
+  </div>
+</div>
+<!-- ================= /DASHBOARD ================= -->
+
+<div id="dimmer" onclick="closeDimmer()"></div>
+
+<!-- ---------- signup modal ---------- -->
+<div class="mw" id="m-signup">
+  <div class="mcard">
+    <button class="m-close" onclick="closeM('m-signup')">✕</button>
+    <div class="m-title">Create your account</div>
+    <div class="m-sub">Start saving and earning referral rewards.</div>
+    <button class="g-btn" onclick="signInWithGoogle()"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.2l-6.6-5.6C29.6 34.8 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.6C41.9 36.6 44 30.9 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg> Continue with Google</button>
+    <div class="m-divider">or sign up with phone</div>
+    <div class="field"><label>Full name</label><input id="su-name" placeholder="e.g. Ada Obi"/><div class="field-err" id="su-name-err">Enter your full name.</div></div>
+    <div class="field"><label>Phone number</label><input id="su-phone" placeholder="080XXXXXXXX"/><div class="field-err" id="su-phone-err">Enter a valid phone number.</div></div>
+    <div class="field"><label>Email</label><input id="su-email" type="email" placeholder="you@email.com"/><div class="field-err" id="su-email-err">Enter a valid email.</div></div>
+    <div class="field"><label>Password</label><input id="su-pw" type="password" placeholder="At least 6 characters"/><div class="field-err" id="su-pw-err">Password must be at least 6 characters.</div></div>
+    <div class="field"><label>Referral code (optional)</label><input id="su-ref" placeholder="Code from the person who invited you"/></div>
+    <button class="m-btn" onclick="doSignup()">Create account</button>
+    <div class="m-switch">Already have an account? <b onclick="switchM('m-signup','m-login')">Log in</b></div>
+  </div>
+</div>
+
+<!-- ---------- login modal ---------- -->
+<div class="mw" id="m-login">
+  <div class="mcard">
+    <button class="m-close" onclick="closeM('m-login')">✕</button>
+    <div class="m-title">Welcome back</div>
+    <div class="m-sub">Log in to your SavePoint account.</div>
+    <button class="g-btn" onclick="signInWithGoogle()"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.2l-6.6-5.6C29.6 34.8 26.9 36 24 36c-5.3 0-9.7-3.3-11.3-8l-6.6 5.1C9.6 39.6 16.3 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.2 5.7l6.6 5.6C41.9 36.6 44 30.9 44 24c0-1.2-.1-2.3-.4-3.5z"/></svg> Continue with Google</button>
+    <div class="m-divider">or log in with phone</div>
+    <div class="field"><label>Phone number</label><input id="li-phone" placeholder="080XXXXXXXX"/><div class="field-err" id="li-phone-err">Enter your phone number.</div></div>
+    <div class="field"><label>Password</label><input id="li-pw" type="password" placeholder="Your password"/><div class="field-err" id="li-pw-err">Incorrect phone number or password.</div></div>
+    <button class="m-btn" onclick="doLogin()">Log in</button>
+    <div class="m-switch"><b onclick="switchM('m-login','m-forgot')">Forgot password?</b></div>
+    <div class="m-switch">New here? <b onclick="switchM('m-login','m-signup')">Create an account</b></div>
+  </div>
+</div>
+
+<!-- ---------- forgot password modal ---------- -->
+<div class="mw" id="m-forgot">
+  <div class="mcard">
+    <button class="m-close" onclick="closeM('m-forgot')">✕</button>
+    <div class="m-title" id="fp-title">Reset password</div>
+    <div class="m-sub" id="fp-sub">Enter your registered phone number to continue.</div>
+    <div id="fp-s1">
+      <div class="field"><label>Phone number</label><input id="fp-ph" placeholder="080XXXXXXXX"/></div>
+      <button class="m-btn" onclick="fpStep1()">Send verification code</button>
+    </div>
+    <div id="fp-s1b" style="display:none;">
+      <div class="field"><label>6-digit code</label><input id="fp-otp" placeholder="XXXXXX"/><div class="field-err" id="fp-otp-err">Incorrect or expired code.</div></div>
+      <button class="m-btn" onclick="fpVerifyOtp()">Verify code</button>
+    </div>
+    <div id="fp-s2" style="display:none;">
+      <div class="field"><label>New password</label><input id="fp-npw" type="password" placeholder="At least 6 characters"/><div class="field-err" id="fp-pw-err">Password must be at least 6 characters.</div></div>
+      <button class="m-btn" onclick="fpStep2()">Update password</button>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- save modal ---------- -->
+<div class="mw" id="m-save">
+  <div class="mcard">
+    <button class="m-close" onclick="closeM('m-save')">✕</button>
+    <div class="m-title">Fund your wallet</div>
+    <div class="m-sub">Pay securely with card, bank transfer or USSD via Paystack — your balance updates instantly.</div>
+    <div class="field"><label>Amount (₦)</label><input id="sv-amt" type="number" placeholder="e.g. 5000"/><div class="field-err" id="sv-amt-err">Enter a valid amount.</div></div>
+    <button class="m-btn" onclick="doSave()">Pay with Paystack</button>
+    <div class="note-box">Your balance is credited automatically the moment your payment is confirmed.</div>
+  </div>
+</div>
+
+<!-- ---------- withdraw modal ---------- -->
+<div class="mw" id="m-withdraw">
+  <div class="mcard">
+    <button class="m-close" onclick="closeM('m-withdraw')">✕</button>
+    <div class="m-title">Request a withdrawal</div>
+    <div class="m-sub">We'll review this and pay out to the account you provide.</div>
+    <div class="field"><label>Amount (₦)</label><input id="wd-amt" type="number" placeholder="e.g. 5000"/><div class="field-err" id="wd-amt-err">Enter a valid amount within your balance.</div></div>
+    <div class="field"><label>Bank name</label><input id="wd-bank" placeholder="e.g. GTBank"/></div>
+    <div class="field"><label>Account number</label><input id="wd-acct" placeholder="10-digit account number"/></div>
+    <div class="field"><label>Account name</label><input id="wd-acctname" placeholder="Name on the account"/></div>
+    <button class="m-btn" onclick="doWithdraw()">Submit withdrawal request</button>
+    <div class="note-box">Withdrawals are reviewed and paid out manually by our team, usually within 24–48 hours.</div>
+  </div>
+</div>
+
+<div id="loader"><div class="ld-ring"></div><div id="ld-txt">Processing</div><div id="ld-sub">Please wait…</div></div>
+<div id="toast"></div>
+
+<script>
+/* ---------- firebase (separate SavePoint collections — does not touch UnlimData's data) ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyDg1lBxQaMcvkg7aJ5cet0c1WoUSzjum9U",
+  authDomain: "savepoint-929a9.firebaseapp.com",
+  projectId: "savepoint-929a9",
+  storageBucket: "savepoint-929a9.firebasestorage.app",
+  messagingSenderId: "762038420721",
+  appId: "1:762038420721:web:d84821b6950e7a72c39550"
+};
+
+firebase.initializeApp(firebaseConfig);
+const dbFS=firebase.firestore();
+const fbAuth=firebase.auth();
+const googleProvider=new firebase.auth.GoogleAuthProvider();
+
+/* PAYSTACK — live public key. Only the PUBLIC key belongs in client code; never put a secret key here. */
+const PAYSTACK_PUBLIC_KEY='pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415';
+
+/* Every account is keyed by a unique "uid" — the phone number for phone/password signups,
+   or the Firebase Auth uid for Google sign-ins. This lets both methods share one users table. */
+async function fsGetUser(uid){try{const d=await dbFS.collection('sp_users').doc(uid).get();return d.exists?d.data():null;}catch(e){console.error(e);return null;}}
+async function fsCreateUser(u){await dbFS.collection('sp_users').doc(u.uid).set(u);}
+async function fsUpdateUser(uid,fields){await dbFS.collection('sp_users').doc(uid).update(fields);}
+async function fsAddFundRequest(r){await dbFS.collection('sp_fundRequests').add(r);}
+async function fsAddWithdrawRequest(r){await dbFS.collection('sp_withdrawRequests').add(r);}
+
+let user=null;
+function genRefCode(name){return (name||'USER').replace(/[^a-zA-Z]/g,'').slice(0,4).toUpperCase()+Math.floor(1000+Math.random()*9000);}
+function fmtN(n){return '₦'+Number(n||0).toLocaleString();}
+
+/* ---------- nav scroll ---------- */
+window.addEventListener('scroll',()=>{document.getElementById('mainnav').classList.toggle('scrolled',window.scrollY>10);});
+
+/* ---------- faq ---------- */
+function toggleFaq(el){el.parentElement.classList.toggle('on');}
+
+/* ---------- modal plumbing ---------- */
+function openM(id){document.getElementById(id).classList.add('on');document.getElementById('dimmer').classList.add('on');}
+function closeM(id){document.getElementById(id).classList.remove('on');if(!document.querySelectorAll('.mw.on').length)document.getElementById('dimmer').classList.remove('on');}
+function switchM(a,b){closeM(a);setTimeout(()=>openM(b),180);}
+function closeDimmer(){document.querySelectorAll('.mw.on').forEach(m=>closeM(m.id));}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDimmer();});
+
+function showLoader(t,s){document.getElementById('ld-txt').textContent=t||'Processing';document.getElementById('ld-sub').textContent=s||'Please wait…';document.getElementById('loader').classList.add('on');}
+function hideLoader(){document.getElementById('loader').classList.remove('on');}
+let _tt;
+function showToast(msg,dur=3200){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove('on'),dur);}
+
+/* ---------- signup ---------- */
+async function doSignup(){
+  const name=document.getElementById('su-name').value.trim();
+  const phone=document.getElementById('su-phone').value.trim();
+  const email=document.getElementById('su-email').value.trim();
+  const pw=document.getElementById('su-pw').value;
+  const refInput=document.getElementById('su-ref').value.trim().toUpperCase();
+  let ok=true;
+  toggleErr('su-name-err',!name); if(!name)ok=false;
+  toggleErr('su-phone-err',!/^0\d{10}$/.test(phone)); if(!/^0\d{10}$/.test(phone))ok=false;
+  toggleErr('su-email-err',!/^\S+@\S+\.\S+$/.test(email)); if(!/^\S+@\S+\.\S+$/.test(email))ok=false;
+  toggleErr('su-pw-err',pw.length<6); if(pw.length<6)ok=false;
+  if(!ok)return;
+  showLoader('Creating account…','Just a moment…');
+  try{
+    const existing=await fsGetUser(phone);
+    if(existing){hideLoader();showToast('An account with this phone number already exists.');return;}
+    const refCode=genRefCode(name);
+    const newUser={uid:phone,name,phone,email,pw,authMethod:'password',refCode,referredBy:refInput||null,balance:0,rewards:0,referralCount:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    await fsCreateUser(newUser);
+    await queueReferralIfAny(refInput,phone);
+    user=newUser;
+    hideLoader();
+    closeM('m-signup');
+    showToast('🎉 Account created! Referral rewards are credited once verified by our team.');
+    enterDashboard();
+  }catch(e){hideLoader();console.error('doSignup error:',e);showToast(explainError(e),6000);}
+}
+async function queueReferralIfAny(refInput,newUid){
+  if(!refInput)return;
+  const refSnap=await dbFS.collection('sp_users').where('refCode','==',refInput).limit(1).get();
+  if(!refSnap.empty){
+    const refDoc=refSnap.docs[0];
+    if(refDoc.id!==newUid){
+      await dbFS.collection('sp_referralQueue').add({referrerUid:refDoc.id,newUserUid:newUid,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    }
+  }
+}
+
+/* ---------- login ---------- */
+async function doLogin(){
+  const phone=document.getElementById('li-phone').value.trim();
+  const pw=document.getElementById('li-pw').value;
+  toggleErr('li-phone-err',!phone);
+  if(!phone)return;
+  showLoader('Logging in…','Just a moment…');
+  try{
+    const u=await fsGetUser(phone);
+    hideLoader();
+    if(!u||u.pw!==pw){toggleErr('li-pw-err',true);return;}
+    toggleErr('li-pw-err',false);
+    user=u;
+    closeM('m-login');
+    enterDashboard();
+  }catch(e){hideLoader();console.error('doLogin error:',e);showToast(explainError(e),6000);}
+}
+
+/* ---------- google sign-in ---------- */
+async function signInWithGoogle(){
+  showLoader('Connecting to Google…','Just a moment…');
+  try{
+    const result=await fbAuth.signInWithPopup(googleProvider);
+    const gu=result.user;
+    let u=await fsGetUser(gu.uid);
+    if(!u){
+      const refInput=(document.getElementById('su-ref')&&document.getElementById('su-ref').value.trim().toUpperCase())||'';
+      const refCode=genRefCode(gu.displayName||'USER');
+      u={uid:gu.uid,name:gu.displayName||'SavePoint User',phone:'',email:gu.email||'',pw:null,authMethod:'google',refCode,referredBy:refInput||null,balance:0,rewards:0,referralCount:0,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+      await fsCreateUser(u);
+      await queueReferralIfAny(refInput,gu.uid);
+      showToast('🎉 Account created with Google!');
+    }
+    user=u;
+    hideLoader();
+    closeM('m-signup');closeM('m-login');
+    enterDashboard();
+  }catch(e){hideLoader();console.error('signInWithGoogle error:',e);showToast(explainError(e),6000);}
+}
+
+function toggleErr(id,on){const el=document.getElementById(id);if(!el)return;el.classList.toggle('on',!!on);}
+
+/* Surfaces the REAL Firebase error instead of a generic message, so problems can be
+   diagnosed from the toast alone, without opening the browser console. */
+function explainError(e){
+  const code=(e&&e.code)||'';
+  if(code==='permission-denied'||code==='firestore/permission-denied')
+    return 'Firestore rules are blocking this write. Open Firebase Console → Firestore Database → Rules and allow read/write, then Publish.';
+  if(code==='unavailable')
+    return 'Could not reach Firestore. Check your internet connection and that the Firestore database has been created for this project.';
+  if(code==='auth/unauthorized-domain')
+    return "This domain isn't authorized for sign-in. Add it under Firebase Console → Authentication → Settings → Authorized domains.";
+  if(code==='auth/popup-blocked')
+    return 'Your browser blocked the Google sign-in popup. Allow popups for this site and try again.';
+  if(code==='auth/popup-closed-by-user')
+    return 'The Google sign-in window was closed before finishing.';
+  if(code==='auth/operation-not-allowed')
+    return "Google sign-in isn't enabled yet. Go to Firebase Console → Authentication → Sign-in method → enable Google.";
+  if(code==='auth/network-request-failed')
+    return 'Network error reaching Firebase Auth. Check your connection.';
+  if(code)return code+': '+(e.message||'');
+  return (e&&e.message)?e.message:'Unknown error — check the browser console (F12) for details.';
+}
+
+/* ---------- forgot password (reuses OTP email flow) ---------- */
+let fpPhone='',fpEmail='',fpVerified=false;
+function maskEmail(e){const[a,b]=e.split('@');return a.slice(0,2)+'***@'+b;}
+async function fpStep1(){
+  const ph=document.getElementById('fp-ph').value.trim();
+  if(!/^0\d{10}$/.test(ph)){showToast('Enter a valid phone number.');return;}
+  showLoader('Looking up account…','Just a moment…');
+  const u=await fsGetUser(ph);
+  if(!u){hideLoader();showToast('No account found with this phone number.');return;}
+  fpPhone=ph;fpEmail=u.email;
+  const code=Math.floor(100000+Math.random()*900000).toString();
+  const expiresAt=Date.now()+10*60*1000;
+  showLoader('Sending code…','Delivering to your email…');
+  try{
+    await dbFS.collection('sp_passwordResets').doc(ph).set({code,expiresAt,verified:false,email:u.email,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    if(window.emailjs){await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_OTP_TEMPLATE_ID,{to_email:u.email,to_name:u.name,otp_code:code});}
+  }catch(e){hideLoader();console.error(e);showToast('Could not send the verification email.');return;}
+  hideLoader();
+  document.getElementById('fp-s1').style.display='none';
+  document.getElementById('fp-s1b').style.display='block';
+  document.getElementById('fp-title').textContent='Enter verification code';
+  document.getElementById('fp-sub').textContent='We sent a 6-digit code to '+maskEmail(fpEmail)+'.';
+  showToast('📧 Verification code sent to '+maskEmail(fpEmail));
+}
+async function fpVerifyOtp(){
+  const code=document.getElementById('fp-otp').value.trim();
+  if(!code)return;
+  showLoader('Verifying…','Just a moment…');
+  try{
+    const doc=await dbFS.collection('sp_passwordResets').doc(fpPhone).get();
+    const data=doc.exists?doc.data():null;
+    hideLoader();
+    if(!data||data.code!==code||Date.now()>data.expiresAt){toggleErr('fp-otp-err',true);return;}
+    toggleErr('fp-otp-err',false);
+    fpVerified=true;
+    document.getElementById('fp-s1b').style.display='none';
+    document.getElementById('fp-s2').style.display='block';
+    document.getElementById('fp-title').textContent='Set new password';
+    document.getElementById('fp-sub').textContent='Choose a new password for '+fpPhone+'.';
+  }catch(e){hideLoader();console.error(e);toggleErr('fp-otp-err',true);}
+}
+async function fpStep2(){
+  if(!fpVerified)return;
+  const pw=document.getElementById('fp-npw').value;
+  if(pw.length<6){toggleErr('fp-pw-err',true);return;}
+  toggleErr('fp-pw-err',false);
+  showLoader('Updating password…','Just a moment…');
+  try{
+    await fsUpdateUser(fpPhone,{pw});
+    await dbFS.collection('sp_passwordResets').doc(fpPhone).delete();
+  }catch(e){console.error(e);}
+  hideLoader();
+  closeM('m-forgot');
+  fpVerified=false;
+  document.getElementById('fp-s1').style.display='block';
+  document.getElementById('fp-s1b').style.display='none';
+  document.getElementById('fp-s2').style.display='none';
+  document.getElementById('fp-title').textContent='Reset password';
+  document.getElementById('fp-sub').textContent='Enter your registered phone number to continue.';
+  document.getElementById('fp-ph').value='';document.getElementById('fp-otp').value='';document.getElementById('fp-npw').value='';
+  showToast('✅ Password updated. Please log in.');
+}
+
+/* ---------- dashboard ---------- */
+function enterDashboard(){
+  document.getElementById('site').style.display='none';
+  document.getElementById('mainnav').style.display='none';
+  document.getElementById('dash').classList.add('on');
+  refreshDashboard();
+}
+function doLogout(){
+  user=null;
+  document.getElementById('dash').classList.remove('on');
+  document.getElementById('site').style.display='';
+  document.getElementById('mainnav').style.display='';
+  window.scrollTo({top:0});
+}
+async function refreshDashboard(){
+  if(!user)return;
+  document.getElementById('d-welcome').textContent='Welcome back, '+user.name.split(' ')[0];
+  document.getElementById('d-balance').textContent=fmtN(user.balance);
+  document.getElementById('d-rewards').textContent=fmtN(user.rewards);
+  document.getElementById('d-refcount').textContent=user.referralCount||0;
+  document.getElementById('d-refcode').textContent=user.refCode;
+  try{
+    const[funds,withdraws]=await Promise.all([
+      dbFS.collection('sp_fundRequests').where('uid','==',user.uid).limit(30).get(),
+      dbFS.collection('sp_withdrawRequests').where('uid','==',user.uid).limit(30).get()
+    ]);
+    const items=[];
+    funds.forEach(d=>{const v=d.data();items.push({type:'Wallet funding',amt:v.amount,status:v.status||'approved',pos:true,ts:v.createdAt});});
+    withdraws.forEach(d=>{const v=d.data();items.push({type:'Withdrawal',amt:v.amount,status:v.status||'pending',pos:false,ts:v.createdAt});});
+    items.sort((a,b)=>(b.ts&&b.ts.seconds||0)-(a.ts&&a.ts.seconds||0));
+    const list=document.getElementById('d-tx-list');
+    if(!items.length){list.innerHTML='<div class="empty-tx">No activity yet — save some money or share your referral code to get started.</div>';return;}
+    list.innerHTML=items.slice(0,15).map(it=>`
+      <div class="tx-row">
+        <div class="tx-l"><b>${it.type}</b><span>${it.ts&&it.ts.seconds?new Date(it.ts.seconds*1000).toLocaleDateString():'Just now'}</span></div>
+        <div class="tx-r">
+          <div class="tx-amt ${it.pos?'pos':'neg'}">${it.pos?'+':'-'}${fmtN(it.amt)}</div>
+          <span class="tx-pill ${it.status}">${it.status.charAt(0).toUpperCase()+it.status.slice(1)}</span>
+        </div>
+      </div>`).join('');
+  }catch(e){console.error(e);}
+}
+function copyRefCode(){
+  navigator.clipboard.writeText(user.refCode).then(()=>showToast('Referral code copied!'));
+}
+
+/* ---------- fund wallet via Paystack ---------- */
+function doSave(){
+  const amt=Number(document.getElementById('sv-amt').value);
+  if(!amt||amt<=0){toggleErr('sv-amt-err',true);return;}
+  toggleErr('sv-amt-err',false);
+  if(!user.email){showToast('Your account needs an email on file to pay with Paystack.');return;}
+  if(!window.PaystackPop){showToast('Payment gateway failed to load — check your connection and try again.');return;}
+  const reference='SP-'+Date.now()+'-'+Math.floor(1000+Math.random()*9000);
+  const handler=PaystackPop.setup({
+    key:PAYSTACK_PUBLIC_KEY,
+    email:user.email,
+    amount:Math.round(amt*100), // kobo
+    currency:'NGN',
+    ref:reference,
+    metadata:{uid:user.uid,name:user.name},
+    callback:function(response){ creditWalletAfterPayment(amt,response.reference); },
+    onClose:function(){ showToast('Payment window closed — no charge was made.'); }
+  });
+  handler.openIframe();
+}
+async function creditWalletAfterPayment(amt,reference){
+  showLoader('Confirming payment…','Crediting your wallet…');
+  try{
+    await dbFS.runTransaction(async(tx)=>{
+      const uRef=dbFS.collection('sp_users').doc(user.uid);
+      const uSnap=await tx.get(uRef);
+      const cur=(uSnap.data()||{}).balance||0;
+      tx.update(uRef,{balance:cur+amt});
+    });
+    user.balance=(user.balance||0)+amt;
+    await fsAddFundRequest({uid:user.uid,phone:user.phone||'',name:user.name,amount:amt,paystackRef:reference,status:'approved',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  }catch(e){
+    console.error(e);
+    hideLoader();
+    showToast('Payment went through but crediting failed — contact support with reference '+reference);
+    return;
+  }
+  hideLoader();
+  closeM('m-save');
+  document.getElementById('sv-amt').value='';
+  showToast('✅ Wallet funded — '+fmtN(amt)+' added to your balance!');
+  refreshDashboard();
+}
+
+/* ---------- withdrawal request ---------- */
+async function doWithdraw(){
+  const amt=Number(document.getElementById('wd-amt').value);
+  const bank=document.getElementById('wd-bank').value.trim();
+  const acct=document.getElementById('wd-acct').value.trim();
+  const acctname=document.getElementById('wd-acctname').value.trim();
+  if(!amt||amt<=0||amt>user.balance){toggleErr('wd-amt-err',true);return;}
+  toggleErr('wd-amt-err',false);
+  if(!bank||!acct||!acctname){showToast('Please fill in all bank details.');return;}
+  showLoader('Submitting…','Sending your withdrawal request…');
+  try{
+    await fsAddWithdrawRequest({uid:user.uid,phone:user.phone||'',name:user.name,amount:amt,bank,acct,acctname,status:'pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  }catch(e){console.error(e);}
+  hideLoader();
+  closeM('m-withdraw');
+  document.getElementById('wd-amt').value='';document.getElementById('wd-bank').value='';document.getElementById('wd-acct').value='';document.getElementById('wd-acctname').value='';
+  showToast('✅ Withdrawal request submitted for review.');
+  refreshDashboard();
+}
+</script>
+</body>
+</html>
