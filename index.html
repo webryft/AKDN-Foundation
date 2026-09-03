@@ -44,7 +44,7 @@ nav.scrolled{box-shadow:0 2px 22px rgba(0,0,0,0.06);}
 .hbg{display:none;flex-direction:column;align-items:center;justify-content:center;gap:5px;width:38px;height:38px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s;}
 .hbg:hover{background:var(--bg3);}
 .hbg span{display:block;width:20px;height:2px;background:var(--dark);border-radius:2px;}
-@media(max-width:640px){.nav-right .nbtn-ghost.desk-only{display:none;}.hbg{display:flex;}}
+@media(max-width:640px){.nbtn{padding:8px 13px;font-size:.76rem;}}
 
 /* ---------- hero ---------- */
 .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:100px clamp(16px,6vw,100px) 60px;background:linear-gradient(160deg,#f5faf6 0%,#fff 55%,#eaf6ee 100%);position:relative;overflow:hidden;}
@@ -155,6 +155,8 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
 .bal-lbl{font-size:0.72rem;letter-spacing:.1em;text-transform:uppercase;color:#a9c2b1;margin-bottom:8px;position:relative;}
 .bal-amt{font-family:var(--display);font-size:clamp(1.9rem,5vw,2.6rem);font-weight:800;letter-spacing:-0.02em;position:relative;}
 .bal-sub{font-size:0.78rem;color:#c9d6ce;margin-top:6px;position:relative;}
+.bal-reward-line{font-size:0.74rem;color:#9fd9b4;margin-top:4px;position:relative;}
+.bal-reward-line span{font-weight:700;color:#c5f2d6;}
 .bal-actions{display:flex;gap:10px;margin-top:20px;position:relative;flex-wrap:wrap;}
 .bal-actions button{flex:1;min-width:130px;padding:11px;border-radius:12px;font-weight:700;font-size:0.84rem;border:none;}
 .act-save{background:#fff;color:var(--dark);}
@@ -205,7 +207,7 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
 <nav id="mainnav">
   <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">SavePoint<span class="navdot"></span></div>
   <div class="nav-right">
-    <button class="nbtn nbtn-ghost desk-only" onclick="openM('m-login')">Log in</button>
+    <button class="nbtn nbtn-ghost" onclick="openM('m-login')">Log in</button>
     <button class="nbtn nbtn-fill" onclick="openM('m-signup')">Get started</button>
   </div>
 </nav>
@@ -227,6 +229,17 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
     <div class="hnote"><span class="ic">✅</span><div><b>Withdrawals reviewed, not guessed</b><span>Every withdrawal request is checked and paid out by our team.</span></div></div>
   </div>
 </section>
+
+<!-- ================= GOOGLE ADS SLOT =================
+     Paste your Google AdSense <ins class="adsbygoogle">...</ins> unit code
+     (and the matching <script async src="...adsbygoogle.js?client=ca-pub-XXXX">
+     tag in <head>, if not already added) inside the div below. Left empty
+     on purpose — nothing renders here until you add your own ad unit. -->
+<div id="ad-slot-top" style="max-width:1100px;margin:0 auto;padding:0 clamp(14px,5vw,78px);">
+  <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script> -->
+</div>
+<!-- ================= /GOOGLE ADS SLOT ================= -->
 
 <section class="sec how-sec" id="how-sec">
   <div class="sec-lbl">How it works</div>
@@ -333,7 +346,8 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
   <div class="dash-main">
     <div class="bal-card">
       <div class="bal-lbl">Your balance</div>
-      <div class="bal-amt" id="d-balance">₦0</div>
+      <div class="bal-amt" id="d-balance">₦0.00</div>
+      <div class="bal-reward-line">+ <span id="d-rewards">₦0.00</span> from referral rewards</div>
       <div class="bal-sub" id="d-welcome">Welcome back</div>
       <div class="bal-actions">
         <button class="act-save" onclick="openM('m-save')">+ Fund wallet</button>
@@ -342,10 +356,6 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
     </div>
 
     <div class="dcards">
-      <div class="dcard">
-        <div class="dcard-lbl">Referral rewards earned</div>
-        <div class="dcard-v" id="d-rewards">₦0</div>
-      </div>
       <div class="dcard">
         <div class="dcard-lbl">Verified referrals</div>
         <div class="dcard-v" id="d-refcount">0</div>
@@ -359,17 +369,18 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
       </div>
     </div>
 
-    <div class="note-box">Referral rewards are credited by our team once a referral is verified — usually within 24–48 hours. Your balance never changes automatically on its own.</div>
+    <div class="note-box">Referral rewards are credited by our team once a referral is verified — usually within 24–48 hours. Your balance never changes automatically on its own; it only moves when you fund it, when a referral is verified, or when a withdrawal is paid out.</div>
 
-    <div class="dash-sec-h">Recent activity</div>
+    <div class="dash-sec-h">Transaction history</div>
     <div class="tx-list" id="d-tx-list">
-      <div class="empty-tx">No activity yet — save some money or share your referral code to get started.</div>
+      <div class="empty-tx">No activity yet — fund your wallet or share your referral code to get started.</div>
     </div>
   </div>
 </div>
 <!-- ================= /DASHBOARD ================= -->
 
 <div id="dimmer" onclick="closeDimmer()"></div>
+
 
 <!-- ---------- signup modal ---------- -->
 <div class="mw" id="m-signup">
@@ -432,7 +443,7 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
     <button class="m-close" onclick="closeM('m-save')">✕</button>
     <div class="m-title">Fund your wallet</div>
     <div class="m-sub">Pay securely with card, bank transfer or USSD via Paystack — your balance updates instantly.</div>
-    <div class="field"><label>Amount (₦)</label><input id="sv-amt" type="number" placeholder="e.g. 5000"/><div class="field-err" id="sv-amt-err">Enter a valid amount.</div></div>
+    <div class="field"><label>Amount (₦) — minimum ₦10,000.00</label><input id="sv-amt" type="text" inputmode="decimal" placeholder="e.g. 10,000"/><div class="field-err" id="sv-amt-err">Minimum funding amount is ₦10,000.00.</div></div>
     <button class="m-btn" onclick="doSave()">Pay with Paystack</button>
     <div class="note-box">Your balance is credited automatically the moment your payment is confirmed.</div>
   </div>
@@ -444,7 +455,7 @@ footer{padding:40px clamp(14px,5vw,78px) 30px;border-top:1px solid var(--border)
     <button class="m-close" onclick="closeM('m-withdraw')">✕</button>
     <div class="m-title">Request a withdrawal</div>
     <div class="m-sub">We'll review this and pay out to the account you provide.</div>
-    <div class="field"><label>Amount (₦)</label><input id="wd-amt" type="number" placeholder="e.g. 5000"/><div class="field-err" id="wd-amt-err">Enter a valid amount within your balance.</div></div>
+    <div class="field"><label>Amount (₦)</label><input id="wd-amt" type="text" inputmode="decimal" placeholder="e.g. 5,000"/><div class="field-err" id="wd-amt-err">Enter a valid amount within your balance.</div></div>
     <div class="field"><label>Bank name</label><input id="wd-bank" placeholder="e.g. GTBank"/></div>
     <div class="field"><label>Account number</label><input id="wd-acct" placeholder="10-digit account number"/></div>
     <div class="field"><label>Account name</label><input id="wd-acctname" placeholder="Name on the account"/></div>
@@ -485,7 +496,24 @@ async function fsAddWithdrawRequest(r){await dbFS.collection('sp_withdrawRequest
 
 let user=null;
 function genRefCode(name){return (name||'USER').replace(/[^a-zA-Z]/g,'').slice(0,4).toUpperCase()+Math.floor(1000+Math.random()*9000);}
-function fmtN(n){return '₦'+Number(n||0).toLocaleString();}
+function fmtN(n){return '₦'+Number(n||0).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});}
+/* Live comma-formatting for amount inputs — user types digits, sees ₦-style grouping as they go. */
+function attachAmountFormatting(inputId){
+  const el=document.getElementById(inputId);
+  if(!el)return;
+  el.addEventListener('input',function(){
+    let raw=el.value.replace(/[^0-9.]/g,'');
+    const parts=raw.split('.');
+    if(parts.length>2)raw=parts[0]+'.'+parts.slice(1).join('');
+    const [intPart,decPart]=raw.split('.');
+    const withCommas=intPart?Number(intPart).toLocaleString('en-US'):'';
+    el.value=decPart!==undefined?withCommas+'.'+decPart:withCommas;
+  });
+}
+function rawAmount(inputId){
+  const v=(document.getElementById(inputId).value||'').replace(/,/g,'');
+  return Number(v)||0;
+}
 
 /* ---------- nav scroll ---------- */
 window.addEventListener('scroll',()=>{document.getElementById('mainnav').classList.toggle('scrolled',window.scrollY>10);});
@@ -527,6 +555,7 @@ async function doSignup(){
     await fsCreateUser(newUser);
     await queueReferralIfAny(refInput,phone);
     user=newUser;
+    persistSession(user.uid);
     hideLoader();
     closeM('m-signup');
     showToast('🎉 Account created! Referral rewards are credited once verified by our team.');
@@ -557,6 +586,7 @@ async function doLogin(){
     if(!u||u.pw!==pw){toggleErr('li-pw-err',true);return;}
     toggleErr('li-pw-err',false);
     user=u;
+    persistSession(user.uid);
     closeM('m-login');
     enterDashboard();
   }catch(e){hideLoader();console.error('doLogin error:',e);showToast(explainError(e),6000);}
@@ -578,6 +608,7 @@ async function signInWithGoogle(){
       showToast('🎉 Account created with Google!');
     }
     user=u;
+    persistSession(user.uid);
     hideLoader();
     closeM('m-signup');closeM('m-login');
     enterDashboard();
@@ -680,6 +711,7 @@ function enterDashboard(){
 }
 function doLogout(){
   user=null;
+  clearSession();
   document.getElementById('dash').classList.remove('on');
   document.getElementById('site').style.display='';
   document.getElementById('mainnav').style.display='';
@@ -693,16 +725,18 @@ async function refreshDashboard(){
   document.getElementById('d-refcount').textContent=user.referralCount||0;
   document.getElementById('d-refcode').textContent=user.refCode;
   try{
-    const[funds,withdraws]=await Promise.all([
+    const[funds,withdraws,referrals]=await Promise.all([
       dbFS.collection('sp_fundRequests').where('uid','==',user.uid).limit(30).get(),
-      dbFS.collection('sp_withdrawRequests').where('uid','==',user.uid).limit(30).get()
+      dbFS.collection('sp_withdrawRequests').where('uid','==',user.uid).limit(30).get(),
+      dbFS.collection('sp_referralQueue').where('referrerUid','==',user.uid).limit(30).get()
     ]);
     const items=[];
     funds.forEach(d=>{const v=d.data();items.push({type:'Wallet funding',amt:v.amount,status:v.status||'approved',pos:true,ts:v.createdAt});});
     withdraws.forEach(d=>{const v=d.data();items.push({type:'Withdrawal',amt:v.amount,status:v.status||'pending',pos:false,ts:v.createdAt});});
+    referrals.forEach(d=>{const v=d.data();if(v.status!=='approved')return;items.push({type:'Referral reward',amt:v.rewardPaid||0,status:'approved',pos:true,ts:v.decidedAt||v.createdAt});});
     items.sort((a,b)=>(b.ts&&b.ts.seconds||0)-(a.ts&&a.ts.seconds||0));
     const list=document.getElementById('d-tx-list');
-    if(!items.length){list.innerHTML='<div class="empty-tx">No activity yet — save some money or share your referral code to get started.</div>';return;}
+    if(!items.length){list.innerHTML='<div class="empty-tx">No activity yet — fund your wallet or share your referral code to get started.</div>';return;}
     list.innerHTML=items.slice(0,15).map(it=>`
       <div class="tx-row">
         <div class="tx-l"><b>${it.type}</b><span>${it.ts&&it.ts.seconds?new Date(it.ts.seconds*1000).toLocaleDateString():'Just now'}</span></div>
@@ -717,10 +751,11 @@ function copyRefCode(){
   navigator.clipboard.writeText(user.refCode).then(()=>showToast('Referral code copied!'));
 }
 
+const MIN_FUNDING=10000;
 /* ---------- fund wallet via Paystack ---------- */
 function doSave(){
-  const amt=Number(document.getElementById('sv-amt').value);
-  if(!amt||amt<=0){toggleErr('sv-amt-err',true);return;}
+  const amt=rawAmount('sv-amt');
+  if(!amt||amt<MIN_FUNDING){toggleErr('sv-amt-err',true);return;}
   toggleErr('sv-amt-err',false);
   if(!user.email){showToast('Your account needs an email on file to pay with Paystack.');return;}
   if(!window.PaystackPop){showToast('Payment gateway failed to load — check your connection and try again.');return;}
@@ -763,7 +798,7 @@ async function creditWalletAfterPayment(amt,reference){
 
 /* ---------- withdrawal request ---------- */
 async function doWithdraw(){
-  const amt=Number(document.getElementById('wd-amt').value);
+  const amt=rawAmount('wd-amt');
   const bank=document.getElementById('wd-bank').value.trim();
   const acct=document.getElementById('wd-acct').value.trim();
   const acctname=document.getElementById('wd-acctname').value.trim();
@@ -780,6 +815,24 @@ async function doWithdraw(){
   showToast('✅ Withdrawal request submitted for review.');
   refreshDashboard();
 }
+
+/* ---------- persistent login (stay signed in until explicit logout) ---------- */
+function persistSession(uid){ localStorage.setItem('sp_uid',uid); }
+function clearSession(){ localStorage.removeItem('sp_uid'); }
+async function restoreSession(){
+  const savedUid=localStorage.getItem('sp_uid');
+  if(!savedUid)return;
+  try{
+    const u=await fsGetUser(savedUid);
+    if(u){ user=u; enterDashboard(); }
+    else{ clearSession(); }
+  }catch(e){ console.error('restoreSession error:',e); }
+}
+
+/* ---------- init on page load ---------- */
+attachAmountFormatting('sv-amt');
+attachAmountFormatting('wd-amt');
+restoreSession();
 </script>
 </body>
 </html>
