@@ -957,7 +957,7 @@ footer{ border-top:1px solid var(--border); background:var(--bg-alt); margin-top
    Stream, Mux, Bunny Stream) and point FILE_BASE_URL at that origin.
 ============================================================ */
 const FILE_BASE_URL = ""; // e.g. "https://cdn.example.com/videos/"
-function videoFileName(id){ return "video" + String(id).padStart(0,"0") + ".mp4"; }
+function videoFileName(id){ return "video" + String(id).padStart(3,"0") + ".mp4"; }
 
 const PAYSTACK_PUBLIC_KEY = "pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415";
 const PREMIUM_AMOUNT_KOBO = 200000; // NGN 2,000.00
@@ -971,9 +971,9 @@ const PREMIUM_AMOUNT_KOBO = 200000; // NGN 2,000.00
    your real tag from Google Ad Manager / AdSense for Video to serve
    your own paid ads.
 ============================================================ */
-const ADSENSE_CLIENT = "ca-pub-3899764771871192"; // your AdSense publisher ID
-const ADSENSE_SLOT    = "1567165828";              // your AdSense ad unit slot ID
-const AD_TAG_URL = "https://pubads.g.doubleclick.net/gampad/ads?iu=/21775744923/external/single_ad_samples&sz=640x480&cust_params=sample_ct%3Dlinear&ciu_szs=300x250%2C728x90&gdfp_req=1&output=vast&unviewed_position_start=1&env=vp&impl=s&correlator=";
+const ADSENSE_CLIENT = "ca-pub-389976477187114492"; // your AdSense publisher ID
+const ADSENSE_SLOT    = "156716544828";              // your AdSense ad unit slot ID
+const AD_TAG_URL = "https://pubads.g.doubleclick.net/gampad/ads?iu=/2177574495523/external/single_ad_samples&sz=640x480&cust_params=sample_ct%3Dlinear&ciu_szs=300x250%2C728x90&gdfp_req=1&output=vast&unviewed_position_start=1&env=vp&impl=s&correlator=";
 
 /* ---------- fallback thumbnail art (used only if a real video frame can't be captured) ---------- */
 const PALETTES = [
