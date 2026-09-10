@@ -957,7 +957,7 @@ footer{ border-top:1px solid var(--border); background:var(--bg-alt); margin-top
    Stream, Mux, Bunny Stream) and point FILE_BASE_URL at that origin.
 ============================================================ */
 const FILE_BASE_URL = ""; // e.g. "https://cdn.example.com/videos/"
-function videoFileName(id){ return "video" + String(id).padStart(4,"0") + ".mp4"; }
+function videoFileName(id){ return "video" + String(id).padStart(3,"0") + ".mp4"; }
 
 const PAYSTACK_PUBLIC_KEY = "pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415";
 const PREMIUM_AMOUNT_KOBO = 200000; // NGN 2,000.00
