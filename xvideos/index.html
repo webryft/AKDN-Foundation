@@ -9,6 +9,17 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://js.paystack.co/v1/inline.js"></script>
+<!--
+  REAL ADS — two separate Google systems power this page:
+  1) AdSense display units (the grid ad cards) — publisher ID + slot ID
+     are wired in below (ca-pub-3899764771871192 / slot 1567165828).
+  2) IMA SDK video pre-roll (the player ad) — still needs a real VAST
+     tag from Google Ad Manager / AdSense for Video, set in AD_TAG_URL
+     further down. It currently uses Google's public sample tag so the
+     skip button / countdown mechanics work for testing.
+-->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3899764771871192" crossorigin="anonymous"></script>
+<script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
 <style>
 /* ============================================================
    TOKENS
@@ -188,6 +199,7 @@ input{ font-family:inherit; }
   overflow:hidden; background:var(--surface-2);
 }
 .thumb svg.art{ width:100%; height:100%; display:block; }
+.thumb img.frame-thumb{ width:100%; height:100%; object-fit:cover; display:block; }
 .thumb .play-veil{
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
   background:rgba(10,10,12,0); transition:background .18s ease;
@@ -231,18 +243,23 @@ input{ font-family:inherit; }
 .card-meta .channel{ color:var(--text-dim); font-weight:600; }
 .card-meta .sep{ opacity:.5; }
 
-/* Ad card */
+/* Ad card — hosts a real AdSense <ins> unit (auto/responsive format,
+   matching the exact unit configured in the AdSense dashboard) */
 .card.ad-card{
-  border:1.5px dashed var(--border); background:var(--bg-alt); cursor:default;
+  border:1px solid var(--border); background:var(--bg-alt); cursor:default;
+  display:flex; flex-direction:column;
 }
 .card.ad-card:hover{ transform:none; box-shadow:none; }
-.ad-card .thumb{ display:flex; align-items:center; justify-content:center; background:
-  repeating-linear-gradient(135deg, var(--surface) 0 14px, var(--surface-2) 14px 28px); }
-.ad-card .ad-inner{ text-align:center; color:var(--muted); padding:14px; }
-.ad-card .ad-inner .icon{ width:26px; height:26px; margin:0 auto 8px; color:var(--muted); }
+.ad-card .ad-slot-wrap{
+  position:relative; width:100%; min-height:158px; overflow:hidden;
+  background:var(--surface-2); display:flex; align-items:center; justify-content:center;
+}
+.ad-card .ad-slot-wrap .adsbygoogle{ width:100%; }
+.ad-card .ad-fallback{ text-align:center; color:var(--muted); padding:14px; font-size:12px; }
+.ad-card .ad-fallback .icon{ width:22px; height:22px; margin:0 auto 6px; color:var(--muted); }
 .ad-label{
   position:absolute; left:8px; top:8px; background:rgba(0,0,0,.72); color:var(--muted);
-  font-size:10px; font-weight:800; letter-spacing:.6px; padding:3px 7px; border-radius:6px;
+  font-size:10px; font-weight:800; letter-spacing:.6px; padding:3px 7px; border-radius:6px; z-index:2;
 }
 
 /* ============================================================
@@ -464,32 +481,18 @@ footer{ border-top:1px solid var(--border); background:var(--bg-alt); margin-top
 }
 .player-stage video{ width:100%; height:100%; object-fit:contain; background:#000; }
 
-/* Ad pre-roll layer */
+/* Real pre-roll ad container (Google IMA SDK renders its own skip
+   button / countdown / mute control as children of this element). */
 .ad-layer{
-  position:absolute; inset:0; background:#000; display:flex; flex-direction:column; z-index:4;
+  position:absolute; inset:0; background:#000; z-index:4;
 }
 .ad-layer.hidden{ display:none; }
-.ad-canvas{
-  flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px;
-  background:linear-gradient(135deg,#1a1b20,#101114);
-  color:var(--text-dim); text-align:center; padding:20px;
+.ad-fallback-msg{
+  position:absolute; inset:0; display:none; align-items:center; justify-content:center; gap:8px;
+  background:linear-gradient(135deg,#1a1b20,#101114); color:var(--text-dim); font-size:13px; text-align:center; padding:20px;
 }
-.ad-canvas .icon{ width:34px; height:34px; color:var(--muted); }
-.ad-canvas .ad-brand{ font-weight:800; letter-spacing:.5px; color:var(--muted); font-size:12px; text-transform:uppercase; }
-.ad-canvas .ad-copy{ font-size:13px; color:var(--text-dim); max-width:280px; }
-.ad-bar{
-  display:flex; align-items:center; justify-content:space-between; padding:9px 12px;
-  background:rgba(0,0,0,.55); font-size:12.5px; color:var(--text-dim);
-}
-.ad-timer{ display:flex; align-items:center; gap:8px; }
-.ad-progress{ width:90px; height:4px; border-radius:2px; background:rgba(255,255,255,.18); overflow:hidden; }
-.ad-progress > i{ display:block; height:100%; background:var(--yellow); width:0%; transition:width 1s linear; }
-.skip-btn{
-  display:flex; align-items:center; gap:6px; padding:7px 13px; border-radius:8px;
-  background:rgba(255,255,255,.12); color:#fff; font-weight:700; font-size:12.5px; border:none; opacity:.5;
-}
-.skip-btn.enabled{ opacity:1; background:#fff; color:#111; }
-.skip-btn .icon{ width:14px; height:14px; }
+.ad-fallback-msg.show{ display:flex; }
+.ad-fallback-msg .icon{ width:22px; height:22px; color:var(--muted); }
 
 .player-info{ padding:16px 16px 4px; max-width:900px; margin:0 auto; }
 .player-info h1{ font-size:17px; margin:0 0 10px; line-height:1.35; }
@@ -886,21 +889,14 @@ footer{ border-top:1px solid var(--border); background:var(--bg-alt); margin-top
   </div>
 
   <div class="player-stage">
-    <video id="mainVideo" playsinline controls></video>
-    <div class="ad-layer" id="adLayer">
-      <div class="ad-canvas">
+    <video id="mainVideo" playsinline></video>
+    <!-- Real pre-roll ad container for the Google IMA SDK. IMA draws its own
+         skip button, countdown and mute/volume controls inside this div once
+         a real ad has been served — nothing here is simulated. -->
+    <div class="ad-layer hidden" id="adLayer">
+      <div class="ad-fallback-msg" id="adFallbackMsg">
         <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3V9z"/></svg>
-        <div class="ad-brand">Advertisement</div>
-        <div class="ad-copy">Your video will start after this short ad. Go Premium to skip ads entirely.</div>
-      </div>
-      <div class="ad-bar">
-        <div class="ad-timer">
-          <span id="adTimerLabel">Ad · 0:10</span>
-          <div class="ad-progress"><i id="adProgressFill"></i></div>
-        </div>
-        <button class="skip-btn" id="btnSkipAd">
-          Skip ad <svg class="icon" viewBox="0 0 24 24"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
-        </button>
+        <span>No ad available — starting video</span>
       </div>
     </div>
   </div>
@@ -950,20 +946,36 @@ footer{ border-top:1px solid var(--border); background:var(--bg-alt); margin-top
 
 /* ============================================================
    NOTE ON VIDEO FILES
-   This demo streams a single local placeholder, "video001.mp4",
-   which is NOT included in this zip — drop your own file next to
-   index.html (or point VIDEO_SRC at a hosted URL) to see it play.
+   Every video below points at its own numbered file — video001.mp4,
+   video002.mp4, video003.mp4, and so on — none of which are bundled
+   in this download. Drop matching files next to index.html (or swap
+   FILE_BASE_URL below for a hosted folder/CDN prefix) to see them play.
    Do not store your real video library in a Git repo: GitHub hard-
    rejects any file over 100MB and repos are not built for bulk
    binary media. Use object storage + a CDN (Cloudflare R2, Backblaze
    B2, S3) or a service that also transcodes for you (Cloudflare
-   Stream, Mux, Bunny Stream) and point each card's `src` at that URL.
+   Stream, Mux, Bunny Stream) and point FILE_BASE_URL at that origin.
 ============================================================ */
-const VIDEO_SRC = "video001.mp4";
+const FILE_BASE_URL = ""; // e.g. "https://cdn.example.com/videos/"
+function videoFileName(id){ return "video" + String(id).padStart(4,"0") + ".mp4"; }
+
 const PAYSTACK_PUBLIC_KEY = "pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415";
 const PREMIUM_AMOUNT_KOBO = 200000; // NGN 2,000.00
 
-/* ---------- thumbnail art (procedural SVG, no external images) ---------- */
+/* ============================================================
+   REAL ADS CONFIG
+   - ADSENSE_CLIENT / ADSENSE_SLOT power the in-grid ad cards.
+   - AD_TAG_URL powers the real pre-roll ad via the Google IMA SDK.
+   The VAST URL below is Google's own public IMA *sample* tag, used
+   so the pre-roll works out of the box for testing — swap it for
+   your real tag from Google Ad Manager / AdSense for Video to serve
+   your own paid ads.
+============================================================ */
+const ADSENSE_CLIENT = "ca-pub-3899764771871192"; // your AdSense publisher ID
+const ADSENSE_SLOT    = "1567165828";              // your AdSense ad unit slot ID
+const AD_TAG_URL = "https://pubads.g.doubleclick.net/gampad/ads?iu=/21775744923/external/single_ad_samples&sz=640x480&cust_params=sample_ct%3Dlinear&ciu_szs=300x250%2C728x90&gdfp_req=1&output=vast&unviewed_position_start=1&env=vp&impl=s&correlator=";
+
+/* ---------- fallback thumbnail art (used only if a real video frame can't be captured) ---------- */
 const PALETTES = [
   ["#FFC53D","#FF5470"], ["#4ADE80","#1C1E24"], ["#FF5470","#241B02"],
   ["#7C9CFF","#FFC53D"], ["#FF8A65","#4ADE80"], ["#FFC53D","#7C9CFF"]
@@ -985,6 +997,62 @@ function thumbSVG(seed, label){
     ${shapes.join("")}
     <text x="16" y="164" font-family="Lilita One, sans-serif" font-size="18" fill="rgba(255,255,255,.85)">${label}</text>
   </svg>`;
+}
+
+/* ============================================================
+   REAL VIDEO-FRAME THUMBNAILS
+   Loads each video file just enough to seek to its ~1.5s mark,
+   draws that frame to a canvas, and caches the resulting image as
+   a data URL. If the file is missing or fails to load (e.g. before
+   you've uploaded the real .mp4s), the card silently keeps its
+   procedural SVG placeholder instead of showing a broken image.
+============================================================ */
+const thumbCache = new Map(); // src -> dataURL string, once resolved
+function captureVideoFrame(src){
+  if(thumbCache.has(src)) return Promise.resolve(thumbCache.get(src));
+  return new Promise((resolve)=>{
+    const v = document.createElement("video");
+    v.muted = true; v.playsInline = true; v.preload = "auto"; v.crossOrigin = "anonymous";
+    v.src = src;
+    const fail = ()=>{ cleanup(); resolve(null); };
+    const cleanup = ()=>{ v.removeEventListener("loadeddata", onLoaded); v.removeEventListener("seeked", onSeeked); v.removeEventListener("error", fail); };
+    function onLoaded(){
+      // aim for the second-or-so frame rather than a black/blank opening frame
+      const target = Math.min(1.5, (v.duration || 3) / 4);
+      try{ v.currentTime = target; }catch(e){ fail(); }
+    }
+    function onSeeked(){
+      try{
+        const canvas = document.createElement("canvas");
+        canvas.width = v.videoWidth || 320;
+        canvas.height = v.videoHeight || 180;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.72);
+        thumbCache.set(src, dataUrl);
+        cleanup();
+        resolve(dataUrl);
+      }catch(e){ fail(); }
+    }
+    v.addEventListener("loadeddata", onLoaded);
+    v.addEventListener("seeked", onSeeked);
+    v.addEventListener("error", fail);
+    setTimeout(()=>{ if(!thumbCache.has(src)) fail(); }, 4000); // give up quietly if the file never loads
+  });
+}
+function hydrateThumbnails(container){
+  container.querySelectorAll(".thumb[data-frame-src]").forEach(thumbEl=>{
+    const src = thumbEl.dataset.frameSrc;
+    captureVideoFrame(src).then(dataUrl=>{
+      if(!dataUrl) return; // keep the SVG placeholder already in place
+      const img = document.createElement("img");
+      img.className = "frame-thumb";
+      img.src = dataUrl;
+      img.alt = "";
+      const existingArt = thumbEl.querySelector("svg.art");
+      if(existingArt) existingArt.replaceWith(img); else thumbEl.prepend(img);
+    });
+  });
 }
 
 /* ---------- data ---------- */
@@ -1036,7 +1104,7 @@ let ALL_VIDEOS = [];
         id, title, cat, channel, dur, views, laughs,
         quality: (seed % 3 === 0) ? "1080p" : "HD",
         thumb: thumbSVG(seed, cat),
-        src: VIDEO_SRC,
+        src: FILE_BASE_URL + videoFileName(id), // video001.mp4, video002.mp4, video003.mp4, video004.mp4 ...
         isAd: false
       });
       id++;
@@ -1054,7 +1122,9 @@ let activeCat = "all";
 let searchTerm = "";
 let isPremium = false;
 let currentVideoIndex = null;
-let adTimerHandle = null;
+let adDisplayContainer = null;
+let adsLoader = null;
+let adsManager = null;
 
 const grid = document.getElementById("videoGrid");
 const pagerEl = document.getElementById("pager");
@@ -1071,22 +1141,30 @@ function filteredVideos(){
 
 function cardHTML(v, idx){
   if(v.isAd){
+    // Real AdSense display unit — shows a live ad once ADSENSE_CLIENT/ADSENSE_SLOT
+    // above are your real IDs and this domain is approved in your AdSense account.
     return `<div class="card ad-card">
-      <div class="thumb">
+      <div class="ad-slot-wrap">
         <span class="ad-label">AD · SPONSORED</span>
-        <div class="ad-inner">
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-client="${ADSENSE_CLIENT}"
+             data-ad-slot="${ADSENSE_SLOT}"
+             data-ad-format="auto"
+             data-full-width-responsive="true"></ins>
+        <div class="ad-fallback">
           <svg class="icon" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3V9z"/></svg>
-          Your ad unit renders here
+          Ad space — waiting for a fill from AdSense
         </div>
       </div>
       <div class="card-body">
-        <p class="card-title">Advertisement space</p>
-        <div class="card-meta">Reserved for Google Ad Manager / AdSense</div>
+        <p class="card-title">Advertisement</p>
+        <div class="card-meta">Sponsored content via Google AdSense</div>
       </div>
     </div>`;
   }
   return `<div class="card" data-video-id="${v.id}" tabindex="0" role="button" aria-label="Play ${v.title}">
-    <div class="thumb">
+    <div class="thumb" data-frame-src="${v.src}">
       ${v.thumb}
       <span class="quality-tag">${v.quality}</span>
       <span class="laugh-badge"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 3 4 3 4-3 4-3"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>${v.laughs}</span>
@@ -1107,6 +1185,18 @@ function renderGrid(){
   grid.innerHTML = slice.map(cardHTML).join("");
   btnShowMore.style.display = end >= list.length ? "none" : "flex";
   renderPager(list.length);
+  hydrateThumbnails(grid);
+  requestAnsPush(grid);
+}
+
+/* Ask AdSense to fill every <ins class="adsbygoogle"> that was just inserted.
+   Each freshly-added unit needs its own push() call. */
+function requestAnsPush(container){
+  const units = container.querySelectorAll("ins.adsbygoogle:not([data-ad-status])");
+  units.forEach(()=>{
+    try{ (window.adsbygoogle = window.adsbygoogle || []).push({}); }
+    catch(e){ /* AdSense script blocked or not yet approved for this domain */ }
+  });
 }
 
 function renderPager(total){
@@ -1439,14 +1529,12 @@ document.getElementById("btnFooterLang").addEventListener("click", ()=>showToast
 const playerOverlay = document.getElementById("playerOverlay");
 const mainVideo = document.getElementById("mainVideo");
 const adLayer = document.getElementById("adLayer");
-const adTimerLabel = document.getElementById("adTimerLabel");
-const adProgressFill = document.getElementById("adProgressFill");
-const btnSkipAd = document.getElementById("btnSkipAd");
+const adFallbackMsg = document.getElementById("adFallbackMsg");
 const miniPlayer = document.getElementById("miniPlayer");
 const miniVideo = document.getElementById("miniVideo");
 
 let commentSeed = [
-  {name:"JaydenK", time:"2h ago", text:"I lost it at the second half 😂 no emoji though, just pure laughs.", likes:212},
+  {name:"JaydenK", time:"2h ago", text:"I lost it at the second half — pure laughs.", likes:212},
   {name:"comedy_nite", time:"5h ago", text:"This channel never misses. Been watching since episode one.", likes:98},
   {name:"realtalk_ng", time:"1d ago", text:"The editing on this one is actually really clean.", likes:41}
 ];
@@ -1475,43 +1563,100 @@ function openPlayer(videoId){
   document.body.style.overflow = "hidden";
 
   if(!isPremium){
-    startPreRollAd();
+    requestPreRollAd();
   }else{
     adLayer.classList.add("hidden");
     mainVideo.play().catch(()=>{});
   }
 }
 
-function startPreRollAd(){
+/* ============================================================
+   REAL PRE-ROLL AD via Google IMA SDK
+   Runs an actual VAST ad request against AD_TAG_URL. IMA renders its
+   own skip button and countdown inside #adLayer once an ad is
+   returned — no simulated timer here. If the SDK is blocked, offline,
+   or the tag returns no fill, we show a brief note and start the
+   video, so a missing ad never blocks the content.
+============================================================ */
+function requestPreRollAd(){
   adLayer.classList.remove("hidden");
+  adFallbackMsg.classList.remove("show");
   mainVideo.pause();
-  let remaining = 10;
-  btnSkipAd.classList.remove("enabled");
-  adTimerLabel.textContent = "Ad · 0:" + pad(remaining);
-  adProgressFill.style.width = "0%";
-  clearInterval(adTimerHandle);
-  adTimerHandle = setInterval(()=>{
-    remaining--;
-    adTimerLabel.textContent = "Ad · 0:" + pad(Math.max(remaining,0));
-    adProgressFill.style.width = ((10-remaining)/10*100) + "%";
-    if(remaining <= 0){
-      clearInterval(adTimerHandle);
-      btnSkipAd.classList.add("enabled");
-      adTimerLabel.textContent = "Ad finished";
-    }
-  }, 1000);
+
+  if(typeof google === "undefined" || !google.ima){
+    return skipToContentNoAd();
+  }
+
+  try{
+    if(adsManager){ adsManager.destroy(); adsManager = null; }
+
+    adDisplayContainer = new google.ima.AdDisplayContainer(adLayer, mainVideo);
+    adDisplayContainer.initialize();
+
+    adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+    adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, onAdsManagerLoaded, false);
+    adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError, false);
+
+    const adsRequest = new google.ima.AdsRequest();
+    adsRequest.adTagUrl = AD_TAG_URL;
+    adsRequest.linearAdSlotWidth = adLayer.clientWidth || 640;
+    adsRequest.linearAdSlotHeight = adLayer.clientHeight || 360;
+    adsRequest.nonLinearAdSlotWidth = adLayer.clientWidth || 640;
+    adsRequest.nonLinearAdSlotHeight = Math.round((adLayer.clientHeight || 360) / 3);
+
+    adsLoader.requestAds(adsRequest);
+  }catch(err){
+    onAdError();
+  }
 }
-btnSkipAd.addEventListener("click", ()=>{
-  if(!btnSkipAd.classList.contains("enabled")) return;
-  clearInterval(adTimerHandle);
+
+function onAdsManagerLoaded(adsManagerLoadedEvent){
+  const settings = new google.ima.AdsRenderingSettings();
+  settings.restoreCustomPlaybackStateOnAdBreakComplete = true;
+  adsManager = adsManagerLoadedEvent.getAdsManager(mainVideo, settings);
+
+  adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError);
+  adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, ()=>mainVideo.pause());
+  adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, onAdsFinished);
+  adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, onAdsFinished);
+
+  try{
+    adsManager.init(adLayer.clientWidth || 640, adLayer.clientHeight || 360, google.ima.ViewMode.NORMAL);
+    adsManager.start();
+  }catch(err){
+    onAdError();
+  }
+}
+
+function onAdsFinished(){
   adLayer.classList.add("hidden");
   mainVideo.play().catch(()=>{});
+}
+function onAdError(){
+  // No fill, blocked ad request, or a tag that needs replacing — don't
+  // let a missing ad block the video.
+  if(adsManager){ adsManager.destroy(); adsManager = null; }
+  skipToContentNoAd();
+}
+function skipToContentNoAd(){
+  adFallbackMsg.classList.add("show");
+  setTimeout(()=>{
+    adLayer.classList.add("hidden");
+    adFallbackMsg.classList.remove("show");
+    mainVideo.play().catch(()=>{});
+  }, 1200);
+}
+mainVideo.addEventListener("ended", ()=>{
+  if(adsLoader){ try{ adsLoader.contentComplete(); }catch(e){} }
+});
+window.addEventListener("resize", ()=>{
+  if(adsManager){ try{ adsManager.resize(adLayer.clientWidth, adLayer.clientHeight, google.ima.ViewMode.NORMAL); }catch(e){} }
 });
 
 document.getElementById("btnClosePlayer").addEventListener("click", ()=>{
   playerOverlay.classList.remove("show");
   mainVideo.pause();
-  clearInterval(adTimerHandle);
+  if(adsManager){ adsManager.destroy(); adsManager = null; }
   document.body.style.overflow = "";
 });
 
@@ -1589,9 +1734,10 @@ document.getElementById("commentInput").addEventListener("keypress", e=>{
 
 function renderUpNext(current){
   const others = ALL_VIDEOS.filter(v=>!v.isAd && v.id!==current.id).slice(0,12);
-  document.getElementById("playerUpNext").innerHTML = others.map(v=>`
+  const upNextEl = document.getElementById("playerUpNext");
+  upNextEl.innerHTML = others.map(v=>`
     <div class="card" data-video-id="${v.id}" tabindex="0" role="button">
-      <div class="thumb">
+      <div class="thumb" data-frame-src="${v.src}">
         ${v.thumb}
         <span class="duration-tag">${fmtDuration(v.dur)}</span>
         <div class="play-veil"><div class="play-circle"><svg class="icon filled" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg></div></div>
@@ -1601,6 +1747,7 @@ function renderUpNext(current){
         <div class="card-meta"><span class="channel">${v.channel}</span><span class="sep">•</span><span>${fmtViews(v.views)} views</span></div>
       </div>
     </div>`).join("");
+  hydrateThumbnails(upNextEl);
 }
 document.getElementById("playerUpNext").addEventListener("click", e=>{
   const card = e.target.closest(".card[data-video-id]");
