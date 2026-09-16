@@ -357,6 +357,60 @@ footer h2 i{font-style:normal;color:var(--red)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 }
+
+
+.subsec{padding:clamp(2.2rem,6vw,3.6rem) 0}
+.subsec-head{max-width:680px;margin:0 0 1.8rem}
+.subsec-eyebrow{color:var(--red, #E11D2E);font-weight:700;font-size:clamp(1.05rem,3vw,1.35rem);margin:0 0 .3rem}
+.subsec-title{color:var(--blue, #1F55B8);font-weight:700;font-size:clamp(1.5rem,4vw,2.1rem);letter-spacing:-.01em;margin:0 0 .7rem}
+.subsec-text{color:var(--ink-soft, #5A6577);font-size:.98rem;margin:0;max-width:62ch}
+
+.subsec-grid{
+  display:grid;gap:1.1rem;
+  grid-template-columns:1fr;               /* phone: 1 column */
+}
+@media(min-width:760px){
+  .subsec-grid{grid-template-columns:1fr 1fr;}  /* desktop: 2 columns */
+}
+.subcard{
+  background:var(--card, #fff);border:1px solid var(--line, #D8DEE8);border-radius:var(--r, 14px);
+  padding:1.3rem 1.2rem;text-align:center;
+  box-shadow:var(--shadow-s, 0 2px 8px rgba(11,29,77,.08));
+  transition:transform .22s var(--ease, ease),box-shadow .22s var(--ease, ease);
+}
+.subcard:hover{transform:translateY(-3px);box-shadow:var(--shadow-m, 0 10px 30px rgba(11,29,77,.12))}
+.subcard .tile{
+  width:88px;height:88px;margin:0 auto .9rem;border-radius:16px;
+  background:#F1F4FA;overflow:hidden;display:grid;place-items:center;
+}
+.subcard .tile img{width:100%;height:100%;object-fit:cover}
+.subcard h4{color:var(--blue, #1F55B8);font-weight:700;font-size:1.02rem;margin:0 0 .4rem}
+.subcard p{color:var(--ink-soft, #5A6577);font-size:.88rem;margin:0;line-height:1.5}
+
+.subsec-choose{color:var(--blue, #1F55B8);font-weight:700;font-size:clamp(1.15rem,3.2vw,1.5rem);margin:2rem 0 1rem}
+.choose-row{display:flex;flex-direction:column;gap:1rem;max-width:360px}
+.choose-btn{
+  width:100%;padding:.95rem 1.2rem;border-radius:12px;font-weight:700;font-size:1rem;
+  transition:transform .2s var(--ease, ease),box-shadow .2s var(--ease, ease);text-align:center;
+  border:1px solid transparent;
+}
+.choose-btn.receivers{
+  background:var(--card, #fff);color:var(--navy, #0B1D4D);
+  border-color:var(--line, #D8DEE8);
+  box-shadow:var(--shadow-s, 0 2px 8px rgba(11,29,77,.08));
+}
+.choose-btn.receivers:hover{transform:translateY(-2px);box-shadow:var(--shadow-m, 0 10px 30px rgba(11,29,77,.12))}
+.choose-btn.transmitter{
+  background:var(--blue, #1F55B8);color:#fff;border-color:var(--blue, #1F55B8);
+  box-shadow:0 10px 22px rgba(31,85,184,.28);
+}
+.choose-btn.transmitter:hover{transform:translateY(-2px);background:#1A49A0;border-color:#1A49A0}
+
+.bigimgs{display:grid;gap:1.4rem;margin-top:2.4rem}
+.bigimgs img{
+  width:100%;height:clamp(220px,42vw,420px);object-fit:cover;
+  border-radius:18px;box-shadow:var(--shadow-m, 0 10px 30px rgba(11,29,77,.12));
+}
 </style>
 </head>
 <body>
@@ -491,6 +545,63 @@ The IPO for the People.</p>
   </div>
 </main>
 
+  <section class="subsec">
+  <div class="wrap">
+
+    <div class="subsec-head">
+      <p class="subsec-eyebrow">WAYS TO SUBSCRIBE</p>
+      <h3 class="subsec-title">How you can apply</h3>
+      <p class="subsec-text">SEC approved Receiving Agents and Electronic Application Channels may offer one or more of these ways. Check with your channel which options they support.</p>
+    </div>
+
+    <div class="subsec-grid">
+      <div class="subcard">
+        <div class="tile"><img src="bg01.png" alt="" /></div>
+        <h4>App</h4>
+        <p>Subscribe in your bank or fintech app.</p>
+      </div>
+      <div class="subcard">
+        <div class="tile"><img src="bg02.png" alt="" /></div>
+        <h4>Web</h4>
+        <p>Apply on your partner’s website.</p>
+      </div>
+      <div class="subcard">
+        <div class="tile"><img src="bg03.png" alt="" /></div>
+        <h4>USSD</h4>
+        <p>Dial from any phone — no internet needed.</p>
+      </div>
+      <div class="subcard">
+        <div class="tile"><img src="bg04.png" alt="" /></div>
+        <h4>POS</h4>
+        <p>Subscribe with an approved agent.</p>
+      </div>
+      <div class="subcard">
+        <div class="tile"><img src="bg05.png" alt="" /></div>
+        <h4>Bank Hall</h4>
+        <p>Visit a participating bank hall / branch.</p>
+      </div>
+      <div class="subcard">
+        <div class="tile"><img src="bg06.png" alt="" /></div>
+        <h4>ATM</h4>
+        <p>Use a participating bank ATM.</p>
+      </div>
+    </div>
+
+    <h4 class="subsec-choose">Choose how you want to subscribe</h4>
+    <div class="choose-row">
+      <button class="choose-btn receivers">Receiving Agents</button>
+      <button class="choose-btn transmitter">Electronic Application Channels</button>
+    </div>
+
+    <div class="bigimgs">
+      <img src="image01.jpg" alt="" />
+      <img src="image02.jpg" alt="" />
+      <img src="image03.jpg" alt="" />
+    </div>
+
+  </div>
+  </section>
+  
 <!-- ================= FOOTER ================= -->
 <footer>
   <div class="wrap">
