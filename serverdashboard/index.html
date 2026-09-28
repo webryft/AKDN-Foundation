@@ -1,1 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQKO Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#fff;--ink:#0e1512;--muted:#667066;--line:#e6ece8;--card:#f6faf7;--green:#129852;--green-dark:#0d7a41;--green-soft:#e6f6ec;--danger:#d3413a;--radius:14px}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:5}
+  header img{width:32px;height:32px;border-radius:8px}
+  header b{font-size:16px}
+  header span{color:var(--muted);font-size:12px;margin-left:auto}
+  #signOut{margin-left:12px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
 
+  #loginScreen{max-width:360px;margin:14vh auto;padding:0 20px;text-align:center}
+  #loginScreen img{width:44px;height:44px;border-radius:10px;margin-bottom:10px}
+  #loginScreen h2{margin:0 0 4px}
+  #loginScreen p{color:var(--muted);font-size:13.5px;margin:0 0 20px}
+  .form-group{margin-bottom:12px;text-align:left}
+  .form-group label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .form-group input,.form-group textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px;font-size:14px;font-family:inherit;outline:none}
+  .form-group input:focus,.form-group textarea:focus{border-color:var(--green)}
+  .btn{background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 20px;font-weight:800;font-size:14px;cursor:pointer;transition:.2s ease;width:100%}
+  .btn:hover{background:var(--green-dark)}
+  .btn:disabled{background:#c9d3cd;cursor:not-allowed}
+
+  #app{display:none;max-width:720px;margin:0 auto;padding:20px}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+  .tab{padding:10px 14px;border:none;background:none;font-weight:700;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}
+  .tab.active{color:var(--green);border-color:var(--green)}
+  .panel{display:none;animation:fadeIn .25s ease}
+  .panel.active{display:block}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+  .card{border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;background:var(--card);margin-bottom:16px}
+  .card h3{margin:0 0 14px;font-size:15px}
+  .row2{display:flex;gap:10px}
+  .row2>.form-group{flex:1}
+  .list-row{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}
+  .list-row b{font-size:13.5px;display:block}
+  .list-row small{color:var(--muted);font-size:11.5px}
+  .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:24px 0}
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transition:.3s ease;z-index:60;max-width:88vw;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <img src="logo.png" onerror="this.style.display='none'">
+  <h2>SQKO Admin</h2>
+  <p>Sign in with the registered admin account</p>
+  <div class="form-group"><label>Email</label><input type="email" id="ad-email" placeholder="admin@example.com"></div>
+  <div class="form-group"><label>Password</label><input type="password" id="ad-pass" placeholder="Password"></div>
+  <button class="btn" id="ad-login">Sign In</button>
+</div>
+
+<div id="app">
+  <header>
+    <img src="logo.png" onerror="this.style.display='none'">
+    <b>SQKO Admin</b>
+    <span id="whoami"></span>
+    <button id="signOut">Sign Out</button>
+  </header>
+  <div style="padding:20px">
+    <div class="tabs">
+      <button class="tab active" data-tab="send">Send Token</button>
+      <button class="tab" data-tab="broadcast">Broadcast</button>
+      <button class="tab" data-tab="messages">Messages</button>
+    </div>
+
+    <div class="panel active" id="panel-send">
+      <div class="card">
+        <h3>Send an individual token</h3>
+        <div class="form-group"><label>User's registered Gmail</label><input type="email" id="sn-email" placeholder="user@gmail.com"></div>
+        <div class="row2">
+          <div class="form-group"><label>Amount (₦)</label><input type="number" id="sn-amount" placeholder="10000"></div>
+          <div class="form-group"><label>Meter Number</label><input type="text" id="sn-meter" placeholder="Optional"></div>
+        </div>
+        <div class="form-group"><label>Provider</label><input type="text" id="sn-provider" placeholder="Optional"></div>
+        <div class="form-group"><label>Token / Note</label><input type="text" id="sn-token" placeholder="e.g. 1234-5678-9012-3456"></div>
+        <button class="btn" id="sn-submit">Send Token</button>
+      </div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Recently sent</h3>
+      <div id="sentList"><div class="empty">Nothing sent yet</div></div>
+    </div>
+
+    <div class="panel" id="panel-broadcast">
+      <div class="card">
+        <h3>Broadcast to all users</h3>
+        <div class="form-group"><label>Topic / Title</label><input type="text" id="bc-title" placeholder="e.g. Scheduled maintenance"></div>
+        <div class="form-group"><label>Message</label><textarea id="bc-body" rows="4" placeholder="Write the notification body…"></textarea></div>
+        <button class="btn" id="bc-submit">Publish Broadcast</button>
+      </div>
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Past broadcasts</h3>
+      <div id="broadcastList"><div class="empty">No broadcasts yet</div></div>
+    </div>
+
+    <div class="panel" id="panel-messages">
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Contact messages</h3>
+      <div id="messagesList"><div class="empty">No messages yet</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyADFLvww4vFLbYpE5I6AYcKQwQELJLB2pg",
+  authDomain: "unlimitedpower-a6c9e.firebaseapp.com",
+  projectId: "unlimitedpower-a6c9e",
+  storageBucket: "unlimitedpower-a6c9e.firebasestorage.app",
+  messagingSenderId: "229075222841",
+  appId: "1:229075222841:web:3184a5d3ccbc87c47f28e8",
+  measurementId: "G-KWJZZEMEH9"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+const ADMIN_EMAIL = "maxwellfbisteven@gmail.com";
+
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2600);}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+document.getElementById('ad-login').onclick=()=>{
+  const email=document.getElementById('ad-email').value.trim(), pass=document.getElementById('ad-pass').value;
+  if(!email||!pass) return toast('Enter email and password');
+  auth.signInWithEmailAndPassword(email,pass).catch(e=>toast(e.message));
+};
+document.getElementById('signOut').onclick=()=>auth.signOut();
+
+auth.onAuthStateChanged(user=>{
+  if(user && user.email && user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase()){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('whoami').textContent=user.email;
+    loadSent(); loadBroadcasts(); loadMessages();
+  } else {
+    document.getElementById('app').style.display='none';
+    document.getElementById('loginScreen').style.display='block';
+    if(user){ toast('This account is not authorized as admin'); auth.signOut(); }
+  }
+});
+
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  document.getElementById('panel-'+t.dataset.tab).classList.add('active');
+});
+
+/* ---- Send individual token: looks up the user doc by email, writes to their history + personal notification ---- */
+document.getElementById('sn-submit').onclick=async ()=>{
+  const email=document.getElementById('sn-email').value.trim();
+  const amount=Number(document.getElementById('sn-amount').value)||0;
+  const meter=document.getElementById('sn-meter').value.trim();
+  const provider=document.getElementById('sn-provider').value.trim();
+  const token=document.getElementById('sn-token').value.trim();
+  if(!email||!amount) return toast('Enter the user email and an amount');
+  const btn=document.getElementById('sn-submit'); btn.disabled=true; btn.textContent='Sending…';
+  try{
+    const q=await db.collection('users').where('email','==',email).limit(1).get();
+    if(q.empty){ toast('No registered user found with that email'); btn.disabled=false; btn.textContent='Send Token'; return; }
+    const uid=q.docs[0].id;
+    await db.collection('users').doc(uid).collection('history').add({
+      amount, meter, provider, token, source:'admin', timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('users').doc(uid).collection('notifications').add({
+      title:'Token received', body:`₦${amount.toLocaleString()} token has been added to your account${provider?' for '+provider:''}.`,
+      timestamp:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast('Token sent to '+email);
+    ['sn-email','sn-amount','sn-meter','sn-provider','sn-token'].forEach(id=>document.getElementById(id).value='');
+    loadSent();
+  }catch(e){ toast(e.message); }
+  btn.disabled=false; btn.textContent='Send Token';
+};
+function loadSent(){
+  db.collectionGroup('history').where('source','==','admin').orderBy('timestamp','desc').limit(20).get()
+    .then(snap=>{
+      const box=document.getElementById('sentList');
+      if(snap.empty){ box.innerHTML='<div class="empty">Nothing sent yet</div>'; return; }
+      box.innerHTML=snap.docs.map(d=>{const h=d.data();const t=h.timestamp?h.timestamp.toDate():new Date();
+        return `<div class="list-row"><div><b>₦${Number(h.amount||0).toLocaleString()} ${h.provider?'· '+esc(h.provider):''}</b><small>${esc(h.meter||'')}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
+    }).catch(()=>{});
+}
+
+/* ---- Broadcast to everyone ---- */
+document.getElementById('bc-submit').onclick=async ()=>{
+  const title=document.getElementById('bc-title').value.trim(), body=document.getElementById('bc-body').value.trim();
+  if(!title||!body) return toast('Add a title and message');
+  await db.collection('broadcasts').add({title,body,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+  toast('Broadcast published'); document.getElementById('bc-title').value=''; document.getElementById('bc-body').value=''; loadBroadcasts();
+};
+function loadBroadcasts(){
+  db.collection('broadcasts').orderBy('timestamp','desc').limit(20).get().then(snap=>{
+    const box=document.getElementById('broadcastList');
+    if(snap.empty){ box.innerHTML='<div class="empty">No broadcasts yet</div>'; return; }
+    box.innerHTML=snap.docs.map(d=>{const n=d.data();const t=n.timestamp?n.timestamp.toDate():new Date();
+      return `<div class="list-row"><div><b>${esc(n.title)}</b><small>${esc(n.body)}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
+  }).catch(()=>{});
+}
+
+/* ---- Contact messages ---- */
+function loadMessages(){
+  db.collection('contactMessages').orderBy('timestamp','desc').limit(30).get().then(snap=>{
+    const box=document.getElementById('messagesList');
+    if(snap.empty){ box.innerHTML='<div class="empty">No messages yet</div>'; return; }
+    box.innerHTML=snap.docs.map(d=>{const m=d.data();const t=m.timestamp?m.timestamp.toDate():new Date();
+      return `<div class="list-row"><div><b>${esc(m.email)} ${m.phone?'· '+esc(m.phone):''}</b><small>${esc(m.message)}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
+  }).catch(()=>{});
+}
+</script>
+</body>
+</html>
