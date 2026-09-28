@@ -3,183 +3,474 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SQKO Admin</title>
+<title>SQKO DC Meter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#fff;--ink:#0e1512;--muted:#667066;--line:#e6ece8;--card:#f6faf7;--green:#129852;--green-dark:#0d7a41;--green-soft:#e6f6ec;--danger:#d3413a;--radius:14px}
+  :root{
+    --bg:#ffffff; --ink:#0e1512; --muted:#667066; --line:#e6ece8;
+    --card:#f6faf7; --green:#129852; --green-dark:#0d7a41; --green-soft:#e6f6ec;
+    --danger:#d3413a; --radius:14px; --shadow:0 10px 30px rgba(18,152,82,.10);
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-  .icon{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:5}
-  header img{width:32px;height:32px;border-radius:8px}
-  header b{font-size:16px}
-  header span{color:var(--muted);font-size:12px;margin-left:auto}
-  #signOut{margin-left:12px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--ink); font-family:'Manrope',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased; padding-bottom:100px;
+  }
+  a{color:inherit}
+  button{font-family:inherit;cursor:pointer}
+  .icon{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;display:block}
 
-  #loginScreen{max-width:360px;margin:14vh auto;padding:0 20px;text-align:center}
-  #loginScreen img{width:44px;height:44px;border-radius:10px;margin-bottom:10px}
-  #loginScreen h2{margin:0 0 4px}
-  #loginScreen p{color:var(--muted);font-size:13.5px;margin:0 0 20px}
-  .form-group{margin-bottom:12px;text-align:left}
-  .form-group label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
-  .form-group input,.form-group textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px;font-size:14px;font-family:inherit;outline:none}
-  .form-group input:focus,.form-group textarea:focus{border-color:var(--green)}
-  .btn{background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px 20px;font-weight:800;font-size:14px;cursor:pointer;transition:.2s ease;width:100%}
-  .btn:hover{background:var(--green-dark)}
-  .btn:disabled{background:#c9d3cd;cursor:not-allowed}
+  /* HEADER */
+  header{
+    position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;
+  }
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{width:36px;height:36px;border-radius:9px;object-fit:cover;background:var(--green-soft)}
+  .brand span{font-weight:800;font-size:17px;letter-spacing:-.02em}
+  .head-actions{display:flex;align-items:center;gap:6px}
+  .icon-btn{
+    position:relative;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:#fff;
+    display:flex;align-items:center;justify-content:center;color:var(--ink);transition:.2s ease;
+  }
+  .icon-btn:hover{background:var(--green-soft);border-color:var(--green)}
+  .badge{
+    position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;border-radius:10px;background:var(--danger);
+    color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;
+    border:2px solid #fff;
+  }
 
-  #app{display:none;max-width:720px;margin:0 auto;padding:20px}
-  .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line)}
-  .tab{padding:10px 14px;border:none;background:none;font-weight:700;font-size:13.5px;color:var(--muted);border-bottom:2px solid transparent;cursor:pointer}
-  .tab.active{color:var(--green);border-color:var(--green)}
-  .panel{display:none;animation:fadeIn .25s ease}
-  .panel.active{display:block}
+  main{max-width:640px;margin:0 auto;padding:20px 18px 40px}
+
+  /* PLAN TOGGLE */
+  .plan-row{display:flex;gap:12px;margin:6px 0 26px}
+  .plan-card{
+    flex:1;border:1.5px solid var(--line);border-radius:var(--radius);padding:18px 14px;background:var(--card);
+    text-align:center;transition:.22s ease;position:relative;overflow:hidden;
+  }
+  .plan-card svg{width:26px;height:26px;margin-bottom:8px;color:var(--green)}
+  .plan-card h3{margin:0 0 2px;font-size:15px}
+  .plan-card p{margin:0;font-size:12.5px;color:var(--muted)}
+  .plan-card.active{border-color:var(--green);background:#fff;box-shadow:var(--shadow)}
+  .plan-card.active::after{content:'';position:absolute;inset:0;border:2px solid var(--green);border-radius:var(--radius);pointer-events:none}
+
+  section.block{margin-bottom:24px}
+  .block-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .block-title h4{margin:0;font-size:13.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+
+  /* PROVIDER */
+  .provider-toggle{
+    width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 16px;
+    border:1.5px solid var(--line);border-radius:var(--radius);background:#fff;font-weight:700;font-size:14.5px;
+  }
+  .provider-toggle .chev{transition:transform .25s ease;color:var(--green)}
+  .provider-toggle.open .chev{transform:rotate(180deg)}
+  #providerGrid{
+    max-height:0;opacity:0;overflow:hidden;transition:max-height .35s ease,opacity .3s ease,margin .3s ease;
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:0;
+  }
+  #providerGrid.open{max-height:900px;opacity:1;margin-top:12px}
+  .provider-item{
+    display:flex;align-items:center;gap:10px;border:1.5px solid var(--line);border-radius:12px;padding:10px;
+    background:#fff;transition:.2s ease;order:2;
+  }
+  .provider-item img,.provider-item .ph{width:34px;height:34px;border-radius:8px;object-fit:cover;background:var(--green-soft);flex-shrink:0}
+  .provider-item span{font-size:13px;font-weight:600}
+  .provider-item.selected{border-color:var(--green);background:var(--green-soft);order:1}
+  .provider-item.selected span::after{content:' ✓';color:var(--green)}
+  #selectedProviderBanner{
+    display:none;align-items:center;gap:10px;border:1.5px solid var(--green);background:var(--green-soft);
+    border-radius:12px;padding:10px 12px;margin-bottom:10px;font-size:13.5px;font-weight:700;
+  }
+  #selectedProviderBanner img{width:28px;height:28px;border-radius:7px}
+
+  /* INPUTS */
+  .field{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px 16px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .field input{width:100%;border:none;outline:none;font-size:16px;font-weight:700;color:var(--ink);background:transparent}
+
+  .amount-row{display:flex;gap:12px;margin-bottom:12px}
+  .amount-card{
+    flex:1;border:1.5px solid var(--line);border-radius:var(--radius);padding:16px 12px;text-align:center;
+    background:var(--card);transition:.2s ease;
+  }
+  .amount-card b{display:block;font-size:18px;margin-bottom:2px}
+  .amount-card span{font-size:12px;color:var(--muted)}
+  .amount-card.selected{border-color:var(--green);background:#fff;box-shadow:var(--shadow)}
+
+  #payBar{
+    position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);z-index:25;
+    padding:12px 18px;display:flex;align-items:center;gap:12px;max-width:640px;margin:0 auto;
+    box-shadow:0 -8px 24px rgba(0,0,0,.05);
+  }
+  #payBar .sum{flex:1}
+  #payBar .sum small{display:block;color:var(--muted);font-size:11px}
+  #payBar .sum b{font-size:18px}
+  .btn{
+    background:var(--green);color:#fff;border:none;border-radius:12px;padding:14px 22px;font-weight:800;
+    font-size:14.5px;transition:.2s ease;
+  }
+  .btn:hover{background:var(--green-dark);transform:translateY(-1px)}
+  .btn:disabled{background:#c9d3cd;cursor:not-allowed;transform:none}
+  .btn-outline{background:#fff;color:var(--green);border:1.5px solid var(--green)}
+  .btn-block{width:100%}
+
+  /* DRAWER */
+  .overlay{position:fixed;inset:0;background:rgba(10,20,14,.35);opacity:0;pointer-events:none;transition:.25s ease;z-index:40}
+  .overlay.show{opacity:1;pointer-events:auto}
+  #drawer{
+    position:fixed;top:0;right:0;height:100%;width:min(380px,88vw);background:#fff;z-index:41;
+    transform:translateX(105%);transition:transform .32s cubic-bezier(.22,.9,.3,1);
+    display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.12);
+  }
+  #drawer.show{transform:translateX(0)}
+  .drawer-head{padding:18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .drawer-head img{width:34px;height:34px;border-radius:9px}
+  .drawer-head .who{flex:1;min-width:0}
+  .drawer-head .who b{display:block;font-size:14px}
+  .drawer-head .who small{color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .drawer-body{flex:1;overflow-y:auto;padding:10px 8px}
+  .nav-item{
+    width:100%;display:flex;align-items:center;gap:12px;padding:13px 12px;border:none;background:none;
+    border-radius:12px;font-size:14.5px;font-weight:600;color:var(--ink);text-align:left;transition:.15s ease;
+  }
+  .nav-item svg{color:var(--green);flex-shrink:0}
+  .nav-item:hover{background:var(--green-soft)}
+  .view{display:none;padding:14px 12px;animation:fadeIn .25s ease}
+  .view.show{display:block}
   @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-  .card{border:1.5px solid var(--line);border-radius:var(--radius);padding:18px;background:var(--card);margin-bottom:16px}
-  .card h3{margin:0 0 14px;font-size:15px}
-  .row2{display:flex;gap:10px}
-  .row2>.form-group{flex:1}
-  .list-row{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);gap:10px}
-  .list-row b{font-size:13.5px;display:block}
-  .list-row small{color:var(--muted);font-size:11.5px}
-  .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:24px 0}
-  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transition:.3s ease;z-index:60;max-width:88vw;text-align:center}
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .view h3{margin:0 0 14px;font-size:17px}
+  .form-group{margin-bottom:12px}
+  .form-group label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .form-group input,.form-group textarea{
+    width:100%;border:1.5px solid var(--line);border-radius:10px;padding:12px;font-size:14px;font-family:inherit;
+    outline:none;transition:.2s ease;
+  }
+  .form-group input:focus,.form-group textarea:focus{border-color:var(--green)}
+  .switch-line{font-size:13px;color:var(--muted);margin-top:12px;text-align:center}
+  .switch-line a{color:var(--green);font-weight:700;text-decoration:none;cursor:pointer}
+  .back-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;color:var(--muted);font-weight:700;font-size:13px;cursor:pointer}
+  .history-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+  .history-row b{font-size:14px;display:block}
+  .history-row small{color:var(--muted);font-size:11.5px}
+  .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:30px 10px}
+  .notif-row{padding:12px;border-radius:12px;border:1px solid var(--line);margin-bottom:8px}
+  .notif-row.unread{background:var(--green-soft);border-color:var(--green)}
+  .notif-row b{font-size:13.5px;display:block;margin-bottom:3px}
+  .notif-row p{margin:0;font-size:12.5px;color:var(--muted)}
+  .notif-row small{color:#9aa39c;font-size:10.5px}
 
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-  .stat{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;background:var(--card)}
-  .stat small{color:var(--muted);font-size:11.5px;font-weight:600;display:block}
-  .stat b{font-size:22px}
-  .mini{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
-  .mini:hover{border-color:var(--green);color:var(--green)}
-  .mini.danger:hover{border-color:var(--danger);color:var(--danger)}
-  .tag{display:inline-block;background:var(--green-soft);color:var(--green-dark);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700}
-  .modal-overlay{position:fixed;inset:0;background:rgba(10,20,14,.45);display:flex;align-items:center;justify-content:center;z-index:70;opacity:0;pointer-events:none;transition:.25s;padding:20px}
+  /* NOTIF PANEL */
+  #notifPanel{
+    position:fixed;top:64px;right:14px;width:min(340px,90vw);max-height:70vh;overflow-y:auto;background:#fff;
+    border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.15);z-index:42;padding:10px;
+    transform:translateY(-8px) scale(.98);opacity:0;pointer-events:none;transition:.2s ease;
+  }
+  #notifPanel.show{transform:translateY(0) scale(1);opacity:1;pointer-events:auto}
+
+  /* TOAST / MODAL */
+  #toast{
+    position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+    padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transition:.3s ease;z-index:60;
+    max-width:88vw;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.2);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(10,20,14,.45);display:flex;align-items:center;justify-content:center;
+    z-index:70;opacity:0;pointer-events:none;transition:.25s ease;padding:20px;
+  }
   .modal-overlay.show{opacity:1;pointer-events:auto}
-  .modal-box{background:#fff;border-radius:18px;padding:22px;max-width:380px;width:100%;transform:scale(.94);transition:.25s}
+  .modal-box{
+    background:#fff;border-radius:18px;padding:26px 22px;max-width:340px;width:100%;text-align:center;
+    transform:scale(.92);transition:.25s ease;
+  }
   .modal-overlay.show .modal-box{transform:scale(1)}
-  .modal-box h3{margin:0 0 14px}
-  .modal-actions{display:flex;gap:10px;margin-top:14px}
-  .modal-actions .btn{flex:1}
-  .btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
-  .btn.red{background:var(--danger)}
-  .tabs{overflow-x:auto}
-  .tab{white-space:nowrap}
-  .tabs{overflow-x:auto;white-space:nowrap}
-  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-  .stat{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;background:var(--card)}
-  .stat b{display:block;font-size:21px}
-  .stat small{color:var(--muted);font-size:11.5px}
-  .pill{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--green-soft);color:var(--green-dark);margin-left:4px}
-  .pill.red{background:#fdeceb;color:var(--danger)}
-  .mini{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
-  .mini:hover{border-color:var(--green)}
-  .mini.danger{color:var(--danger)}
-  .modal-overlay{position:fixed;inset:0;background:rgba(10,20,14,.45);display:flex;align-items:center;justify-content:center;z-index:70;opacity:0;pointer-events:none;transition:.25s ease;padding:20px}
-  .modal-overlay.show{opacity:1;pointer-events:auto}
-  .modal-box{background:#fff;border-radius:18px;padding:22px;max-width:380px;width:100%;transform:scale(.94);transition:.25s ease}
-  .modal-overlay.show .modal-box{transform:scale(1)}
-  .modal-box h3{margin:0 0 14px;font-size:16px}
-  .modal-box p{color:var(--muted);font-size:13.5px;margin:0 0 16px}
-  .modal-actions{display:flex;gap:10px}
-  .btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
-  .btn-ghost:hover{background:var(--card)}
-  .btn-danger{background:var(--danger)}
-  .btn-danger:hover{background:#b3332d}
+  .modal-box svg{width:52px;height:52px;margin-bottom:12px}
+  .modal-box h3{margin:0 0 8px;font-size:17px}
+  .modal-box p{margin:0 0 18px;color:var(--muted);font-size:13.5px}
 </style>
 </head>
 <body>
 
-<div id="loginScreen">
-  <img src="logo.png" onerror="this.style.display='none'">
-  <h2>SQKO Admin</h2>
-  <p>Sign in with the registered admin account</p>
-  <div class="form-group"><label>Email</label><input type="email" id="ad-email" placeholder="admin@example.com"></div>
-  <div class="form-group"><label>Password</label><input type="password" id="ad-pass" placeholder="Password"></div>
-  <button class="btn" id="ad-login">Sign In</button>
+<header>
+  <div class="brand">
+    <img src="logo.png" alt="logo" style="width:60px;height:60px;border-radius:10px;object-fit:contain">
+    <span>Power Saver</span>
+  </div>
+  <div class="head-actions">
+    <button class="icon-btn" id="bellBtn" aria-label="Notifications">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M9.5 20a2.5 2.5 0 0 0 5 0"/></svg>
+      <span class="badge" id="bellBadge" style="display:none">0</span>
+    </button>
+    <button class="icon-btn" id="menuBtn" aria-label="Menu">
+      <svg class="icon" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12" stroke-dasharray="4 3"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <section class="block">
+    <div class="plan-row">
+      <button class="plan-card active" data-plan="prepaid" id="planPrepaid">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none"><rect x="3" y="7" width="18" height="12" rx="2"/><path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>
+        <h3>Prepaid</h3>
+        <p>Pay before you use</p>
+      </button>
+      <button class="plan-card" data-plan="postpaid" id="planPostpaid">
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5"/></svg>
+        <h3>Postpaid</h3>
+        <p>Pay after you use</p>
+      </button>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-title"><h4 id="providerTitle">Service Provider — Prepaid</h4></div>
+    <button class="provider-toggle" id="providerToggle">
+      <span id="providerToggleLabel">Choose a provider</span>
+      <svg class="icon chev" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </button>
+    <div id="providerGrid"></div>
+  </section>
+
+  <section class="block">
+    <div class="block-title"><h4>Beneficiary</h4></div>
+    <div class="field">
+      <label>Meter Number</label>
+      <input id="meterInput" type="text" inputmode="numeric" placeholder="Enter Meter Number">
+    </div>
+    <div class="field" id="guestPhoneField" style="margin-top:12px;display:none">
+      <label>Your Phone Number (your token will be sent here)</label>
+      <input id="guestPhone" type="tel" inputmode="tel" placeholder="e.g. 08012345678">
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="block-title"><h4>Select Amount</h4></div>
+    <div class="amount-row">
+      <button class="amount-card" id="amt10k" data-amount="10000" data-label="Weekly">
+        <b>₦10,000</b><span>Weekly</span>
+      </button>
+      <button class="amount-card" id="amt30k" data-amount="30000" data-label="Monthly">
+        <b>₦30,000</b><span>Monthly</span>
+      </button>
+    </div>
+    <div class="field">
+      <label>₦ Select Amount</label>
+      <input id="customAmount" type="text" placeholder="Tap an amount above" readonly>
+    </div>
+  </section>
+</main>
+
+<div id="payBar">
+  <div class="sum"><small>Total to pay</small><b id="payTotal">₦0.00</b></div>
+  <button class="btn" id="payBtn" disabled>Pay</button>
 </div>
 
-<div id="app">
-  <header>
-    <img src="logo.png" onerror="this.style.display='none'">
-    <b>SQKO Admin</b>
-    <span id="whoami"></span>
-    <button id="signOut">Sign Out</button>
-  </header>
-  <div style="padding:20px">
-    <div class="tabs">
-      <button class="tab active" data-tab="users">Users</button>
-      <button class="tab" data-tab="send">Send Token</button>
-      <button class="tab" data-tab="broadcast">Broadcast</button>
-      <button class="tab" data-tab="messages">Messages</button>
-      <button class="tab" data-tab="guests">Guest Orders</button>
-      <button class="tab" data-tab="logs">Logs</button>
+<!-- NOTIFICATIONS -->
+<div id="notifPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 6px 10px">
+    <b style="font-size:14px">Notifications</b>
+  </div>
+  <div id="notifList"><div class="empty">No notifications yet</div></div>
+</div>
+
+<!-- DRAWER -->
+<div class="overlay" id="overlay"></div>
+<div id="drawer">
+  <div class="drawer-head">
+    <img src="logo.png" alt="" onerror="this.style.display='none'">
+    <div class="who"><b>Power Saver</b><small id="drawerEmail">Guest — not signed in</small></div>
+    <button class="icon-btn" id="closeDrawer" style="width:34px;height:34px;border:none">
+      <svg class="icon" viewBox="0 0 24 24" style="width:18px;height:18px"><line x1="6" y1="6" x2="18" y2="18"/><line x1="6" y1="18" x2="18" y2="6"/></svg>
+    </button>
+  </div>
+  <div class="drawer-body">
+
+    <div class="view show" id="view-menu">
+      <button class="nav-item" data-view="account"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>Account</button>
+      <button class="nav-item" data-view="history"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>History</button>
+      <button class="nav-item" data-view="about"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="8.02"/><line x1="12" y1="11" x2="12" y2="16"/></svg>About Us</button>
+      <button class="nav-item" data-view="contact"><svg class="icon" viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 6l8 6 8-6"/></svg>Contact Us</button>
+      <button class="nav-item" id="signOutBtn" style="display:none"><svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</button>
     </div>
 
-    <div class="panel active" id="panel-users">
-      <div class="stats">
-        <div class="stat"><small>Total users</small><b id="st-users">–</b></div>
-        <div class="stat"><small>Bought credits</small><b id="st-buyers">–</b></div>
-        <div class="stat"><small>Total sales</small><b id="st-sales">–</b></div>
+    <div class="view" id="view-account">
+      <div class="back-row" data-back><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg>Menu</div>
+
+      <div id="acc-signin">
+        <h3>Sign in</h3>
+        <div class="form-group"><label>Email</label><input type="email" id="si-email" placeholder="you@gmail.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="si-pass" placeholder="Password"></div>
+        <button class="btn btn-block" id="si-submit">Sign In</button>
+        <div class="switch-line">Forgot password? <a data-show="forgot">Reset it</a></div>
+        <div class="switch-line">No account? <a data-show="signup">Create account</a></div>
       </div>
-      <div class="form-group"><input type="text" id="us-search" placeholder="Search users by email, name or phone"></div>
-      <div id="usersList"><div class="empty">Loading…</div></div>
-    </div>
 
-    <div class="panel" id="panel-send">
-      <div class="card">
-        <h3>Send an individual token</h3>
-        <div class="form-group"><label>User's registered Gmail</label><input type="email" id="sn-email" placeholder="user@gmail.com"></div>
-        <div class="row2">
-          <div class="form-group"><label>Amount (₦)</label><input type="number" id="sn-amount" placeholder="10000"></div>
-          <div class="form-group"><label>Meter Number</label><input type="text" id="sn-meter" placeholder="Optional"></div>
-        </div>
-        <div class="form-group"><label>Provider</label><input type="text" id="sn-provider" placeholder="Optional"></div>
-        <div class="form-group"><label>Token / Note</label><input type="text" id="sn-token" placeholder="e.g. 1234-5678-9012-3456"></div>
-        <button class="btn" id="sn-submit">Send Token</button>
+      <div id="acc-signup" style="display:none">
+        <h3>Create account</h3>
+        <div class="form-group"><label>Email</label><input type="email" id="su-email" placeholder="you@gmail.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="su-pass" placeholder="Password"></div>
+        <div class="form-group"><label>Confirm Password</label><input type="password" id="su-pass2" placeholder="Confirm password"></div>
+        <button class="btn btn-block" id="su-submit">Create Account</button>
+        <div class="switch-line">Already have an account? <a data-show="signin">Sign in</a></div>
       </div>
-      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Recently sent</h3>
-      <div id="sentList"><div class="empty">Nothing sent yet</div></div>
-    </div>
 
-    <div class="panel" id="panel-broadcast">
-      <div class="card">
-        <h3>Broadcast to all users</h3>
-        <div class="form-group"><label>Topic / Title</label><input type="text" id="bc-title" placeholder="e.g. Scheduled maintenance"></div>
-        <div class="form-group"><label>Message</label><textarea id="bc-body" rows="4" placeholder="Write the notification body…"></textarea></div>
-        <button class="btn" id="bc-submit">Publish Broadcast</button>
+      <div id="acc-forgot" style="display:none">
+        <h3>Reset password</h3>
+        <div class="form-group"><label>Email</label><input type="email" id="fp-email" placeholder="you@gmail.com"></div>
+        <button class="btn btn-block" id="fp-submit">Send Reset Link</button>
+        <div class="switch-line"><a data-show="signin">Back to sign in</a></div>
       </div>
-      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Past broadcasts</h3>
-      <div id="broadcastList"><div class="empty">No broadcasts yet</div></div>
     </div>
 
-    <div class="panel" id="panel-guests">
-      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Guest purchases (send the token to the phone number)</h3>
-      <div id="guestsList"><div class="empty">No guest orders yet</div></div>
+    <div class="view" id="view-history">
+      <div class="back-row" data-back><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg>Menu</div>
+      <h3>Token History</h3>
+      <div id="historyList"><div class="empty">Sign in to see your deposit tokens</div></div>
     </div>
 
-    <div class="panel" id="panel-logs">
-      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Admin activity logs</h3>
-      <div id="logsList"><div class="empty">No logs yet</div></div>
+    <div class="view" id="view-about">
+      <div class="back-row" data-back><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg>Menu</div>
+      <div>
+  <h3 style="font-size:22px;font-weight:700;color:#1e293b;margin-bottom:12px;margin-top:0;">About Power Saver</h3>
+  
+  <p style="font-size:15px;line-height:1.6;color:#475569;margin-bottom:20px;font-weight:500;">
+    Unlimited Power. Simple Subscription. Zero Stress.
+  </p>
+
+  <p style="font-size:14px;line-height:1.7;color:#334155;margin-bottom:24px;">
+    Power Saver is an innovative subscription-based electricity platform engineered to provide individuals, households, and commercial enterprises with dependable, uninterrupted access to power without the friction of unpredictable daily utility management. We believe energy access should be simple and transparent—giving you predictable electricity costs through structured, fixed-rate plans.
+  </p>
+
+  <hr style="border:0;border-top:1px solid #e2e8f0;margin:28px 0;" />
+
+  <h4 style="font-size:18px;font-weight:600;color:#0f172a;margin-bottom:16px;">Select Your Power Plan</h4>
+
+  <!-- Plan 1 -->
+  <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#eab308" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#ca8a04" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <span style="font-size:16px;font-weight:700;color:#0f172a;">7 Days Unlimited Power — ₦10,000</span>
+    </div>
+    <p style="font-size:13.5px;line-height:1.6;color:#475569;margin:0;">
+      Ideal for short-term residential needs or temporary usage. Get 7 consecutive days of uninterrupted electricity with zero hidden charges.
+    </p>
+  </div>
+
+  <!-- Plan 2 -->
+  <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:28px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="#eab308" xmlns="http://www.w3.org/2000/svg">
+        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="#ca8a04" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <span style="font-size:16px;font-weight:700;color:#0f172a;">1 Month Power Subscription — ₦30,000</span>
+    </div>
+    <p style="font-size:13.5px;line-height:1.6;color:#475569;margin:0;">
+      Complete monthly peace of mind. One predictable rate secures continuous power for 30 full days—tailored for families, business hubs, and high-demand users.
+    </p>
+  </div>
+
+  <h4 style="font-size:18px;font-weight:600;color:#0f172a;margin-bottom:16px;">Why Choose Power Saver?</h4>
+
+  <div style="display:grid;gap:12px;margin-bottom:28px;">
+    <!-- Feature 1 -->
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;">
+        <rect x="2" y="7" width="16" height="10" rx="2" ry="2"></rect>
+        <line x1="22" y1="11" x2="22" y2="13"></line>
+      </svg>
+      <div>
+        <strong style="font-size:14px;color:#1e293b;">Continuous Access:</strong>
+        <span style="font-size:13.5px;color:#475569;"> Enjoy reliable utility uptime throughout your active subscription window.</span>
+      </div>
     </div>
 
-    <div class="panel" id="panel-messages">
-      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Contact messages</h3>
-      <div id="messagesList"><div class="empty">No messages yet</div></div>
+    <!-- Feature 2 -->
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;">
+        <line x1="12" y1="1" x2="12" y2="23"></line>
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+      </svg>
+      <div>
+        <strong style="font-size:14px;color:#1e293b;">Transparent Pricing:</strong>
+        <span style="font-size:13.5px;color:#475569;"> Fixed rates allow you to budget precisely with no unexpected fees.</span>
+      </div>
     </div>
+
+    <!-- Feature 3 -->
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;">
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+      </svg>
+      <div>
+        <strong style="font-size:14px;color:#1e293b;">Seamless Convenience:</strong>
+        <span style="font-size:13.5px;color:#475569;"> Eliminate daily token recharges and focus on living and working smoothly.</span>
+      </div>
+    </div>
+
+    <!-- Feature 4 -->
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+      </svg>
+      <div>
+        <strong style="font-size:14px;color:#1e293b;">Effortless Management:</strong>
+        <span style="font-size:13.5px;color:#475569;"> Subscribing to your home power is as quick and easy as managing a mobile app.</span>
+      </div>
+    </div>
+  </div>
+
+  <hr style="border:0;border-top:1px solid #e2e8f0;margin:28px 0;" />
+
+  <h4 style="font-size:16px;font-weight:600;color:#0f172a;margin-bottom:8px;">Mission & Vision</h4>
+  <p style="font-size:13.5px;line-height:1.7;color:#334155;margin-bottom:16px;">
+    Our mission is to modernize electricity distribution into an accessible, predictable service. We envision a future where power utility management operates like modern digital subscriptions—simple, transparent, and user-centric.
+  </p>
+
+  <div style="background-color:#eff6ff;border-left:4px solid #2563eb;padding:14px;border-radius:0 6px 6px 0;">
+    <p style="font-size:13px;line-height:1.6;color:#1e40af;margin:0;">
+      <strong>All-in-One Account Dashboard:</strong> Once your meter is registered, your subscription history, recharges, and tokens live together in one place. Need assistance? Our dedicated support team is available via email and WhatsApp.
+    </p>
+  </div>
+</div>
+
+    <div class="view" id="view-contact">
+      <div class="back-row" data-back><svg class="icon" viewBox="0 0 24 24" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg>Menu</div>
+      <h3>Contact Us</h3>
+      <div class="form-group"><label>Email</label><input type="email" id="ct-email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Phone</label><input type="tel" id="ct-phone" placeholder="+234..."></div>
+      <div class="form-group"><label>Message</label><textarea id="ct-msg" rows="4" placeholder="How can we help?"></textarea></div>
+      <button class="btn btn-block" id="ct-submit">Send Message</button>
+      <p style="font-size:12px;color:var(--muted);margin-top:12px;text-align:center">We'll reply by email, WhatsApp or chat.</p>
+    </div>
+
   </div>
 </div>
 
 <div id="toast"></div>
-<div class="modal-overlay" id="modal"><div class="modal-box">
-  <h3 id="md-title"></h3><div id="md-body"></div>
-  <div class="modal-actions"><button class="btn ghost" id="md-cancel">Cancel</button><button class="btn" id="md-ok">Confirm</button></div>
-</div></div>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div id="modalIcon"></div>
+    <h3 id="modalTitle"></h3>
+    <p id="modalText"></p>
+    <button class="btn btn-block" id="modalClose">Okay</button>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <script>
+/* ---------- Firebase ---------- */
 const firebaseConfig = {
   apiKey: "AIzaSyADFLvww4vFLbYpE5I6AYcKQwQELJLB2pg",
   authDomain: "unlimitedpower-a6c9e.firebaseapp.com",
@@ -192,192 +483,289 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const ADMIN_EMAIL = "maxwellfbisteven@gmail.com";
+const PAYSTACK_PUBLIC_KEY = "pk_live_4ff37d15381d1d12c78fd66f7bc86beb64c59415";
 
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(()=>t.classList.remove('show'),2600);}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let currentUser = null;
+let lastReadNotif = 0;
+let unsubNotif = null, unsubHistory = null;
 
-document.getElementById('ad-login').onclick=()=>{
-  const email=document.getElementById('ad-email').value.trim(), pass=document.getElementById('ad-pass').value;
-  if(!email||!pass) return toast('Enter email and password');
-  auth.signInWithEmailAndPassword(email,pass).catch(e=>toast(e.message));
+/* ---------- toast / modal ---------- */
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove('show'),2600);
+}
+const ICONS={
+  success:'<svg viewBox="0 0 24 24" stroke="#129852" stroke-width="1.8" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="8 12 11 15 16 9"/></svg>',
+  error:'<svg viewBox="0 0 24 24" stroke="#d3413a" stroke-width="1.8" fill="none"><circle cx="12" cy="12" r="10"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>',
+  info:'<svg viewBox="0 0 24 24" stroke="#129852" stroke-width="1.8" fill="none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="8.02"/><line x1="12" y1="11" x2="12" y2="16"/></svg>'
 };
-document.getElementById('signOut').onclick=()=>auth.signOut();
+function showModal(type,title,text){
+  document.getElementById('modalIcon').innerHTML=ICONS[type]||ICONS.info;
+  document.getElementById('modalTitle').textContent=title;
+  document.getElementById('modalText').textContent=text;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+document.getElementById('modalClose').onclick=()=>document.getElementById('modalOverlay').classList.remove('show');
+
+/* ---------- Drawer ---------- */
+const drawer=document.getElementById('drawer'), overlay=document.getElementById('overlay');
+function openDrawer(){drawer.classList.add('show');overlay.classList.add('show');closeNotif();}
+function closeDrawerFn(){drawer.classList.remove('show');overlay.classList.remove('show');}
+document.getElementById('menuBtn').onclick=openDrawer;
+document.getElementById('closeDrawer').onclick=closeDrawerFn;
+overlay.onclick=()=>{closeDrawerFn();closeNotif();};
+
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('show'));
+  document.getElementById('view-'+name).classList.add('show');
+  if(name==='history') loadHistory();
+}
+document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.onclick=()=>showView(b.dataset.view));
+document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>showView('menu'));
+document.querySelectorAll('[data-show]').forEach(a=>a.onclick=()=>{
+  ['signin','signup','forgot'].forEach(k=>document.getElementById('acc-'+k).style.display='none');
+  document.getElementById('acc-'+a.dataset.show).style.display='block';
+});
+
+/* ---------- Auth ---------- */
+document.getElementById('su-submit').onclick=()=>{
+  const email=document.getElementById('su-email').value.trim();
+  const p1=document.getElementById('su-pass').value, p2=document.getElementById('su-pass2').value;
+  if(!email||!p1) return toast('Enter email and password');
+  if(p1!==p2) return toast("Passwords don't match");
+  auth.createUserWithEmailAndPassword(email,p1)
+    .then(cred=>db.collection('users').doc(cred.user.uid).set({email},{merge:true}))
+    .then(()=>{ showModal('success','Account created','Welcome to SQKO. You are now signed in.'); closeDrawerFn();})
+    .catch(e=>showModal('error','Sign up failed',e.message));
+};
+document.getElementById('si-submit').onclick=()=>{
+  const email=document.getElementById('si-email').value.trim(), p=document.getElementById('si-pass').value;
+  if(!email||!p) return toast('Enter email and password');
+  auth.signInWithEmailAndPassword(email,p)
+    .then(cred=>db.collection('users').doc(cred.user.uid).set({email},{merge:true}))
+    .then(()=>{ toast('Signed in'); closeDrawerFn();})
+    .catch(e=>showModal('error','Sign in failed',e.message));
+};
+document.getElementById('fp-submit').onclick=()=>{
+  const email=document.getElementById('fp-email').value.trim();
+  if(!email) return toast('Enter your email');
+  auth.sendPasswordResetEmail(email)
+    .then(()=>showModal('success','Reset link sent','Check the registered Gmail inbox for a link to reset your password.'))
+    .catch(e=>showModal('error','Could not send reset',e.message));
+};
+document.getElementById('signOutBtn').onclick=()=>auth.signOut().then(()=>{toast('Signed out');showView('menu');});
 
 auth.onAuthStateChanged(user=>{
-  if(user && user.email && user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase()){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.getElementById('whoami').textContent=user.email;
-    loadUsers(); loadGuests(); loadSent(); loadBroadcasts(); loadMessages(); loadLogs();
-  } else {
-    document.getElementById('app').style.display='none';
-    document.getElementById('loginScreen').style.display='block';
-    if(user){ toast('This account is not authorized as admin'); auth.signOut(); }
-  }
-});
-
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-  t.classList.add('active');
-  document.getElementById('panel-'+t.dataset.tab).classList.add('active');
-});
-
-/* ---- Send individual token: looks up the user doc by email, writes to their history + personal notification ---- */
-document.getElementById('sn-submit').onclick=async ()=>{
-  const email=document.getElementById('sn-email').value.trim();
-  const amount=Number(document.getElementById('sn-amount').value)||0;
-  const meter=document.getElementById('sn-meter').value.trim();
-  const provider=document.getElementById('sn-provider').value.trim();
-  const token=document.getElementById('sn-token').value.trim();
-  if(!email||!amount) return toast('Enter the user email and an amount');
-  const btn=document.getElementById('sn-submit'); btn.disabled=true; btn.textContent='Sending…';
-  try{
-    const q=await db.collection('users').where('email','==',email).limit(1).get();
-    if(q.empty){ toast('No registered user found with that email'); btn.disabled=false; btn.textContent='Send Token'; return; }
-    const uid=q.docs[0].id;
-    await db.collection('users').doc(uid).collection('history').add({
-      amount, meter, provider, token, source:'admin', timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    await db.collection('users').doc(uid).collection('notifications').add({
-      title:'Token received', body:`₦${amount.toLocaleString()} token has been added to your account${provider?' for '+provider:''}.`,
-      timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
-    toast('Token sent to '+email); logAction('Token sent',`₦${amount.toLocaleString()} to ${email}`);
-    ['sn-email','sn-amount','sn-meter','sn-provider','sn-token'].forEach(id=>document.getElementById(id).value='');
-    loadSent();
-  }catch(e){ toast(e.message); }
-  btn.disabled=false; btn.textContent='Send Token';
-};
-function loadSent(){
-  db.collectionGroup('history').where('source','==','admin').orderBy('timestamp','desc').limit(20).get()
-    .then(snap=>{
-      const box=document.getElementById('sentList');
-      if(snap.empty){ box.innerHTML='<div class="empty">Nothing sent yet</div>'; return; }
-      box.innerHTML=snap.docs.map(d=>{const h=d.data();const t=h.timestamp?h.timestamp.toDate():new Date();
-        return `<div class="list-row"><div><b>₦${Number(h.amount||0).toLocaleString()} ${h.provider?'· '+esc(h.provider):''}</b><small>${esc(h.meter||'')}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
+  currentUser=user;
+  const emailLbl=document.getElementById('drawerEmail');
+  if(user){
+    db.collection('users').doc(user.uid).get().then(doc=>{
+      if(doc.exists && doc.data().removed){
+        auth.signOut(); showModal('error','Account unavailable','This account has been removed. Please contact support.');
+      }
     }).catch(()=>{});
-}
+    emailLbl.textContent=user.email;
+    document.getElementById('signOutBtn').style.display='flex';
+    listenNotifications(user.uid);
+  } else {
+    emailLbl.textContent='Guest — not signed in';
+    document.getElementById('signOutBtn').style.display='none';
+    if(unsubNotif) unsubNotif.forEach(u=>u());
+    document.getElementById('notifList').innerHTML='<div class="empty">Sign in to see notifications</div>';
+    document.getElementById('bellBadge').style.display='none';
+  }
+  updatePayState();
+});
 
-/* ---- Broadcast to everyone ---- */
-document.getElementById('bc-submit').onclick=async ()=>{
-  const title=document.getElementById('bc-title').value.trim(), body=document.getElementById('bc-body').value.trim();
-  if(!title||!body) return toast('Add a title and message');
-  await db.collection('broadcasts').add({title,body,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-  toast('Broadcast published'); logAction('Broadcast',title); document.getElementById('bc-title').value=''; document.getElementById('bc-body').value=''; loadBroadcasts();
-};
-function loadBroadcasts(){
-  db.collection('broadcasts').orderBy('timestamp','desc').limit(20).get().then(snap=>{
-    const box=document.getElementById('broadcastList');
-    if(snap.empty){ box.innerHTML='<div class="empty">No broadcasts yet</div>'; return; }
-    box.innerHTML=snap.docs.map(d=>{const n=d.data();const t=n.timestamp?n.timestamp.toDate():new Date();
-      return `<div class="list-row"><div><b>${esc(n.title)}</b><small>${esc(n.body)}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
-  }).catch(()=>{});
-}
+/* ---------- Notifications (admin broadcast) ---------- */
+const notifPanel=document.getElementById('notifPanel'), bellBtn=document.getElementById('bellBtn');
+bellBtn.onclick=(e)=>{e.stopPropagation();notifPanel.classList.toggle('show');
+  if(notifPanel.classList.contains('show')) markNotifRead();};
+function closeNotif(){notifPanel.classList.remove('show');}
+document.addEventListener('click',(e)=>{ if(!notifPanel.contains(e.target) && e.target!==bellBtn) closeNotif(); });
 
-/* ---- Contact messages ---- */
-function loadMessages(){
-  db.collection('contactMessages').orderBy('timestamp','desc').limit(30).get().then(snap=>{
-    const box=document.getElementById('messagesList');
-    if(snap.empty){ box.innerHTML='<div class="empty">No messages yet</div>'; return; }
-    box.innerHTML=snap.docs.map(d=>{const m=d.data();const t=m.timestamp?m.timestamp.toDate():new Date();
-      return `<div class="list-row"><div><b>${esc(m.email)} ${m.phone?'· '+esc(m.phone):''}</b><small>${esc(m.message)}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
-  }).catch(()=>{});
-}
-/* ---- Modal helper (no browser popups) ---- */
-function openModal(title,bodyHtml,okLabel,danger,onOk){
-  document.getElementById('md-title').textContent=title;
-  document.getElementById('md-body').innerHTML=bodyHtml;
-  const ok=document.getElementById('md-ok'); ok.textContent=okLabel; ok.className='btn'+(danger?' red':'');
-  ok.onclick=async()=>{ ok.disabled=true; try{ await onOk(); closeModal(); }catch(e){ toast(e.message); } ok.disabled=false; };
-  document.getElementById('modal').classList.add('show');
-}
-function closeModal(){document.getElementById('modal').classList.remove('show');}
-document.getElementById('md-cancel').onclick=closeModal;
-
-/* ---- Logs ---- */
-function logAction(action,detail){
-  return db.collection('adminLogs').add({action,detail,by:ADMIN_EMAIL,timestamp:firebase.firestore.FieldValue.serverTimestamp()})
-    .then(loadLogs).catch(()=>{});
-}
-function loadLogs(){
-  db.collection('adminLogs').orderBy('timestamp','desc').limit(60).get().then(snap=>{
-    const box=document.getElementById('logsList');
-    if(snap.empty){ box.innerHTML='<div class="empty">No logs yet</div>'; return; }
-    box.innerHTML=snap.docs.map(d=>{const l=d.data();const t=l.timestamp?l.timestamp.toDate():new Date();
-      return `<div class="list-row"><div><b>${esc(l.action)}</b><small>${esc(l.detail||'')}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
-  }).catch(()=>{});
-}
-
-/* ---- Users ---- */
-let usersCache=[];
-async function loadUsers(){
-  const box=document.getElementById('usersList'); box.innerHTML='<div class="empty">Loading…</div>';
-  try{
-    const [us,hs]=await Promise.all([db.collection('users').get(), db.collectionGroup('history').get()]);
-    const st={};
-    hs.forEach(d=>{const h=d.data(); if(h.source!=='purchase') return;
-      const uid=d.ref.parent.parent.id; const s=st[uid]||(st[uid]={n:0,t:0}); s.n++; s.t+=Number(h.amount)||0;});
-    usersCache=us.docs.map(d=>({id:d.id,...d.data(),buys:st[d.id]?st[d.id].n:0,spent:st[d.id]?st[d.id].t:0})).filter(u=>!u.removed);
-    document.getElementById('st-users').textContent=usersCache.length;
-    document.getElementById('st-buyers').textContent=usersCache.filter(u=>u.buys>0).length;
-    document.getElementById('st-sales').textContent='₦'+usersCache.reduce((a,u)=>a+u.spent,0).toLocaleString();
-    renderUsers();
-  }catch(e){ box.innerHTML='<div class="empty">Could not load users: '+esc(e.message)+'</div>'; }
-}
-function renderUsers(){
-  const q=document.getElementById('us-search').value.trim().toLowerCase();
-  const list=usersCache.filter(u=>!q||[u.email,u.name,u.phone].join(' ').toLowerCase().includes(q));
-  const box=document.getElementById('usersList');
-  if(!list.length){ box.innerHTML='<div class="empty">No users found</div>'; return; }
-  box.innerHTML=list.map(u=>`<div class="list-row">
-    <div><b>${esc(u.email||'(no email)')} ${u.buys?'<span class="tag">Buyer</span>':''}</b>
-    <small>${esc(u.name||'No name')} · ${esc(u.phone||'No phone')} · ${u.buys} purchase${u.buys===1?'':'s'} · ₦${u.spent.toLocaleString()}</small></div>
-    <div style="display:flex;gap:6px"><button class="mini" data-edit="${u.id}">Edit</button><button class="mini danger" data-del="${u.id}">Remove</button></div></div>`).join('');
-}
-document.getElementById('us-search').oninput=renderUsers;
-document.getElementById('usersList').onclick=(e)=>{
-  const ed=e.target.closest('[data-edit]'), dl=e.target.closest('[data-del]');
-  if(ed) editUser(ed.dataset.edit); if(dl) removeUser(dl.dataset.del);
-};
-function editUser(id){
-  const u=usersCache.find(x=>x.id===id);
-  openModal('Edit user',`<div class="form-group"><label>Email (read-only)</label><input value="${esc(u.email||'')}" disabled></div>
-    <div class="form-group"><label>Name</label><input id="ed-name" value="${esc(u.name||'')}"></div>
-    <div class="form-group"><label>Phone</label><input id="ed-phone" value="${esc(u.phone||'')}"></div>`,'Save',false,async()=>{
-    await db.collection('users').doc(id).set({name:document.getElementById('ed-name').value.trim(),phone:document.getElementById('ed-phone').value.trim()},{merge:true});
-    logAction('User edited',u.email); toast('User updated'); loadUsers();
+let broadcastCache=[], personalCache=[];
+function listenNotifications(uid){
+  if(unsubNotif) unsubNotif.forEach(u=>u());
+  db.collection('users').doc(uid).get().then(doc=>{
+    lastReadNotif = doc.exists && doc.data().lastReadNotif ? doc.data().lastReadNotif.toMillis() : 0;
+    const renderMerged=()=>{
+      const all=[...broadcastCache,...personalCache].sort((a,b)=>b.t-a.t).slice(0,40);
+      const list=document.getElementById('notifList');
+      if(all.length===0){ list.innerHTML='<div class="empty">No notifications yet</div>'; return; }
+      let unread=0;
+      list.innerHTML=all.map(n=>{
+        const isUnread=n.t>lastReadNotif; if(isUnread) unread++;
+        return `<div class="notif-row ${isUnread?'unread':''}"><b>${escapeHtml(n.title||'Update')}</b><p>${escapeHtml(n.body||'')}</p><small>${new Date(n.t).toLocaleString()}</small></div>`;
+      }).join('');
+      const badge=document.getElementById('bellBadge');
+      if(unread>0){ badge.style.display='flex'; badge.textContent=unread>9?'9+':unread; } else { badge.style.display='none'; }
+    };
+    const u1=db.collection('broadcasts').orderBy('timestamp','desc').limit(30).onSnapshot(snap=>{
+      broadcastCache=snap.docs.map(d=>{const n=d.data();return{title:n.title,body:n.body,t:n.timestamp?n.timestamp.toMillis():Date.now()};});
+      renderMerged();
+    });
+    const u2=db.collection('users').doc(uid).collection('notifications').orderBy('timestamp','desc').limit(30).onSnapshot(snap=>{
+      personalCache=snap.docs.map(d=>{const n=d.data();return{title:n.title,body:n.body,t:n.timestamp?n.timestamp.toMillis():Date.now()};});
+      renderMerged();
+    });
+    unsubNotif=[u1,u2];
   });
 }
-function removeUser(id){
-  const u=usersCache.find(x=>x.id===id);
-  openModal('Remove user',`<p style="font-size:13.5px;color:var(--muted);margin:0">This deletes <b>${esc(u.email||id)}</b>'s history and notifications and blocks them from signing in. To free up the email for re-use, also delete the login in Firebase Console → Authentication.</p>`,'Remove',true,async()=>{
-    for(const sub of ['history','notifications']){
-      const snap=await db.collection('users').doc(id).collection(sub).get();
-      await Promise.all(snap.docs.map(d=>d.ref.delete()));
-    }
-    await db.collection('users').doc(id).set({removed:true,email:u.email||''});
-    logAction('User removed',u.email); toast('User removed'); loadUsers();
-  });
+function markNotifRead(){
+  if(!currentUser) return;
+  db.collection('users').doc(currentUser.uid).set({lastReadNotif:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+    .then(()=>{ lastReadNotif=Date.now(); document.getElementById('bellBadge').style.display='none'; });
 }
 
-/* ---- Guest orders ---- */
-function loadGuests(){
-  db.collection('guestPurchases').orderBy('timestamp','desc').limit(100).get().then(snap=>{
-    const box=document.getElementById('guestsList');
-    if(snap.empty){ box.innerHTML='<div class="empty">No guest orders yet</div>'; return; }
-    box.innerHTML=snap.docs.map(d=>{const g=d.data();const t=g.timestamp?g.timestamp.toDate():new Date();
-      return `<div class="list-row"><div><b>${esc(g.phone)} · ₦${Number(g.amount||0).toLocaleString()} <span class="tag">${g.status==='sent'?'Sent':'Pending'}</span></b>
-      <small>${esc(g.provider||'')} · Meter ${esc(g.meter||'')} · ${esc(g.plan||'')} · Ref ${esc(g.ref||'')} · ${t.toLocaleString()}</small></div>
-      ${g.status==='sent'?'':`<button class="mini" data-sent="${d.id}" data-phone="${esc(g.phone)}">Mark sent</button>`}</div>`;}).join('');
-  }).catch(e=>{document.getElementById('guestsList').innerHTML='<div class="empty">Could not load: '+esc(e.message)+'</div>';});
+/* ---------- History (deposit tokens) ---------- */
+function loadHistory(){
+  const box=document.getElementById('historyList');
+  if(!currentUser){ box.innerHTML='<div class="empty">Sign in to see your deposit tokens</div>'; return; }
+  box.innerHTML='<div class="empty">Loading…</div>';
+  db.collection('users').doc(currentUser.uid).collection('history').orderBy('timestamp','desc').limit(50)
+    .get().then(snap=>{
+      if(snap.empty){ box.innerHTML='<div class="empty">No tokens yet</div>'; return; }
+      let html='';
+      snap.forEach(d=>{
+        const h=d.data(); const t=h.timestamp?h.timestamp.toDate():new Date();
+        html+=`<div class="history-row"><div><b>₦${Number(h.amount||0).toLocaleString()} · ${escapeHtml(h.provider||'')}</b><small>${escapeHtml(h.meter||'')} · ${t.toLocaleDateString()}</small></div><small>${escapeHtml(h.token||h.source||'')}</small></div>`;
+      });
+      box.innerHTML=html;
+    }).catch(()=>box.innerHTML='<div class="empty">Could not load history</div>');
 }
-document.getElementById('guestsList').onclick=async(e)=>{
-  const b=e.target.closest('[data-sent]'); if(!b) return;
-  await db.collection('guestPurchases').doc(b.dataset.sent).update({status:'sent'});
-  logAction('Guest token sent',b.dataset.phone); toast('Marked as sent'); loadGuests();
+
+/* ---------- Contact ---------- */
+document.getElementById('ct-submit').onclick=()=>{
+  const email=document.getElementById('ct-email').value.trim();
+  const phone=document.getElementById('ct-phone').value.trim();
+  const msg=document.getElementById('ct-msg').value.trim();
+  if(!email||!msg) return toast('Enter your email and message');
+  db.collection('contactMessages').add({
+    email,phone,message:msg,uid:currentUser?currentUser.uid:null,timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>{
+    showModal('success','Message sent','We got it — reach us anytime on WhatsApp or email too.');
+    document.getElementById('ct-email').value=''; document.getElementById('ct-phone').value=''; document.getElementById('ct-msg').value='';
+  }).catch(e=>showModal('error','Could not send',e.message));
 };
+
+/* ---------- Plan toggle ---------- */
+let currentPlan='prepaid';
+const planPrepaid=document.getElementById('planPrepaid'), planPostpaid=document.getElementById('planPostpaid');
+function setPlan(p){
+  currentPlan=p;
+  planPrepaid.classList.toggle('active',p==='prepaid');
+  planPostpaid.classList.toggle('active',p==='postpaid');
+  document.getElementById('providerTitle').textContent='Service Provider — '+(p==='prepaid'?'Prepaid':'Postpaid');
+  selectedProvider=null; renderProviders(); updateProviderBanner();
+}
+planPrepaid.onclick=()=>setPlan('prepaid');
+planPostpaid.onclick=()=>setPlan('postpaid');
+
+/* ---------- Providers ---------- */
+const providerToggle=document.getElementById('providerToggle');
+const providerGrid=document.getElementById('providerGrid');
+let providersOpen=false, selectedProvider=null;
+/* ===== EDIT PROVIDER NAMES HERE: change the text inside quotes, keep the order matching image1.jpg to image13.jpg ===== */
+const providerNames = [
+  "Ibadan Electricity",   // image1.jpg
+  "Jos Electricity",   // image2.jpg
+  "Port Harcourt Electricity",   // image3.jpg
+  "Kaduna Electricity",   // image4.jpg
+  "Ikeja Electricity",   // image5.jpg
+  "Abuja Electricity",   // image6.jpg
+  "Eko Electricity",   // image7.jpg
+  "Enugu Electricity",   // image8.jpg
+  "Kano Electricity",   // image9.jpg
+  "Benin Electricity",  // image10.jpg
+  "Startimes Energy",  // image11.jpg
+  "Yola Electricity",  // image12.jpg
+  "Aba Electricity"   // image13.jpg
+];
+const providers = providerNames.map((name,i)=>({id:i+1,name,img:`image${i+1}.jpg`}));
+
+function renderProviders(){
+  providerGrid.innerHTML = providers.map(p=>`
+    <div class="provider-item ${selectedProvider===p.id?'selected':''}" data-id="${p.id}">
+      <img src="${p.img}" alt="" onerror="this.outerHTML='<div class=&quot;ph&quot;></div>'">
+      <span>${p.name}</span>
+    </div>`).join('');
+  providerGrid.querySelectorAll('.provider-item').forEach(el=>{
+    el.onclick=()=>{ selectedProvider=Number(el.dataset.id); renderProviders(); updateProviderBanner(); updatePayState();
+      providersOpen=false; providerGrid.classList.remove('open'); providerToggle.classList.remove('open'); };
+  });
+}
+function updateProviderBanner(){
+  const label=document.getElementById('providerToggleLabel');
+  if(selectedProvider){
+    const p=providers.find(x=>x.id===selectedProvider);
+    label.textContent=p.name+' selected';
+  } else { label.textContent='Choose a provider'; }
+}
+providerToggle.onclick=()=>{
+  providersOpen=!providersOpen;
+  providerGrid.classList.toggle('open',providersOpen);
+  providerToggle.classList.toggle('open',providersOpen);
+};
+renderProviders();
+
+/* ---------- Amount ---------- */
+let selectedAmount=0, selectedLabel='';
+const amt10k=document.getElementById('amt10k'), amt30k=document.getElementById('amt30k'), customAmount=document.getElementById('customAmount');
+function pickPreset(el){
+  [amt10k,amt30k].forEach(x=>x.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAmount=Number(el.dataset.amount); selectedLabel=el.dataset.label;
+  customAmount.value='₦'+selectedAmount.toLocaleString()+' · '+selectedLabel;
+  updatePayState();
+}
+amt10k.onclick=()=>pickPreset(amt10k);
+amt30k.onclick=()=>pickPreset(amt30k);
+
+/* ---------- Pay bar ---------- */
+const payTotal=document.getElementById('payTotal'), payBtn=document.getElementById('payBtn'), meterInput=document.getElementById('meterInput');
+function updatePayState(){
+  payTotal.textContent='₦'+selectedAmount.toLocaleString(undefined,{minimumFractionDigits:2});
+  const guestPhone=document.getElementById('guestPhone');
+  const phoneOk=/^(\+?234|0)[789]\d{9}$/.test(guestPhone.value.replace(/[\s-]/g,''));
+  document.getElementById('guestPhoneField').style.display=currentUser?'none':'block';
+  payBtn.disabled = !(selectedAmount>0 && selectedProvider && meterInput.value.trim().length>3 && (currentUser||phoneOk));
+}
+meterInput.addEventListener('input',updatePayState);
+document.getElementById('guestPhone').addEventListener('input',updatePayState);
+
+payBtn.onclick=()=>{
+  if(!(typeof PaystackPop!=='undefined')){ showModal('error','Payment unavailable','Could not load the payment library. Check your connection.'); return; }
+  const providerName = providers.find(p=>p.id===selectedProvider)?.name || '';
+  const guestPhoneClean=document.getElementById('guestPhone').value.replace(/[^\d+]/g,'');
+  const handler = PaystackPop.setup({
+    key: PAYSTACK_PUBLIC_KEY,
+    email: currentUser ? currentUser.email : 'guest.'+guestPhoneClean+'@example.com',
+    amount: Math.round(selectedAmount*100),
+    currency:'NGN',
+    metadata:{ meter:meterInput.value.trim(), provider:providerName, plan:currentPlan },
+    callback: function(response){
+      const record={
+        amount:selectedAmount, provider:providerName, meter:meterInput.value.trim(), plan:currentPlan,
+        label:selectedLabel, ref:response.reference, timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if(currentUser){
+        db.collection('users').doc(currentUser.uid).collection('history').add({...record,source:'purchase'})
+          .then(()=>showModal('success','Payment successful','Your token request has been recorded. Reference: '+response.reference))
+          .catch(()=>showModal('success','Payment successful','Payment received. Reference: '+response.reference+'. Please keep it for support.'));
+      } else {
+        db.collection('guestPurchases').add({...record,phone:guestPhoneClean,status:'pending'})
+          .then(()=>showModal('success','Payment successful','Your token will be sent to '+guestPhoneClean+'. Reference: '+response.reference))
+          .catch(()=>showModal('success','Payment successful','Payment received. Reference: '+response.reference+'. Please contact support with this reference and your phone number.'));
+      }
+    },
+    onClose: function(){ toast('Payment window closed'); }
+  });
+  handler.openIframe();
+};
+
+/* ---------- helpers ---------- */
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 </script>
 </body>
 </html>
