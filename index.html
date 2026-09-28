@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SQKO Meter</title>
+<title>SQKO DC Meter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -199,7 +199,7 @@
 <header>
   <div class="brand">
     <img src="logo.png" alt="logo" style="width:60px;height:60px;border-radius:10px;object-fit:contain">
-    <span>PowerSaver</span>
+    <span>Power Saver</span>
   </div>
   <div class="head-actions">
     <button class="icon-btn" id="bellBtn" aria-label="Notifications">
@@ -243,6 +243,10 @@
       <label>Meter Number</label>
       <input id="meterInput" type="text" inputmode="numeric" placeholder="Enter Meter Number">
     </div>
+    <div class="field" id="guestPhoneField" style="margin-top:12px;display:none">
+      <label>Your Phone Number (your token will be sent here)</label>
+      <input id="guestPhone" type="tel" inputmode="tel" placeholder="e.g. 08012345678">
+    </div>
   </section>
 
   <section class="block">
@@ -257,7 +261,7 @@
     </div>
     <div class="field">
       <label>₦ Select Amount</label>
-      <input id="customAmount" type="number" placeholder="0.00" min="0">
+      <input id="customAmount" type="text" placeholder="Tap an amount above" readonly>
     </div>
   </section>
 </main>
@@ -454,6 +458,11 @@ auth.onAuthStateChanged(user=>{
   currentUser=user;
   const emailLbl=document.getElementById('drawerEmail');
   if(user){
+    db.collection('users').doc(user.uid).get().then(doc=>{
+      if(doc.exists && doc.data().removed){
+        auth.signOut(); showModal('error','Account unavailable','This account has been removed. Please contact support.');
+      }
+    }).catch(()=>{});
     emailLbl.textContent=user.email;
     document.getElementById('signOutBtn').style.display='flex';
     listenNotifications(user.uid);
@@ -604,44 +613,50 @@ let selectedAmount=0, selectedLabel='';
 const amt10k=document.getElementById('amt10k'), amt30k=document.getElementById('amt30k'), customAmount=document.getElementById('customAmount');
 function pickPreset(el){
   [amt10k,amt30k].forEach(x=>x.classList.remove('selected'));
-  el.classList.add('selected'); customAmount.value='';
+  el.classList.add('selected');
   selectedAmount=Number(el.dataset.amount); selectedLabel=el.dataset.label;
+  customAmount.value='₦'+selectedAmount.toLocaleString()+' · '+selectedLabel;
   updatePayState();
 }
 amt10k.onclick=()=>pickPreset(amt10k);
 amt30k.onclick=()=>pickPreset(amt30k);
-customAmount.oninput=()=>{
-  [amt10k,amt30k].forEach(x=>x.classList.remove('selected'));
-  selectedAmount=Number(customAmount.value)||0; selectedLabel='Custom';
-  updatePayState();
-};
 
 /* ---------- Pay bar ---------- */
 const payTotal=document.getElementById('payTotal'), payBtn=document.getElementById('payBtn'), meterInput=document.getElementById('meterInput');
 function updatePayState(){
   payTotal.textContent='₦'+selectedAmount.toLocaleString(undefined,{minimumFractionDigits:2});
-  payBtn.disabled = !(selectedAmount>0 && selectedProvider && meterInput.value.trim().length>3);
+  const guestPhone=document.getElementById('guestPhone');
+  const phoneOk=/^(\+?234|0)[789]\d{9}$/.test(guestPhone.value.replace(/[\s-]/g,''));
+  document.getElementById('guestPhoneField').style.display=currentUser?'none':'block';
+  payBtn.disabled = !(selectedAmount>0 && selectedProvider && meterInput.value.trim().length>3 && (currentUser||phoneOk));
 }
 meterInput.addEventListener('input',updatePayState);
+document.getElementById('guestPhone').addEventListener('input',updatePayState);
 
 payBtn.onclick=()=>{
-  if(!currentUser){ toast('Please sign in to continue'); openDrawer(); showView('account'); return; }
   if(!(typeof PaystackPop!=='undefined')){ showModal('error','Payment unavailable','Could not load the payment library. Check your connection.'); return; }
   const providerName = providers.find(p=>p.id===selectedProvider)?.name || '';
+  const guestPhoneClean=document.getElementById('guestPhone').value.replace(/[^\d+]/g,'');
   const handler = PaystackPop.setup({
     key: PAYSTACK_PUBLIC_KEY,
-    email: currentUser.email,
+    email: currentUser ? currentUser.email : 'guest.'+guestPhoneClean+'@example.com',
     amount: Math.round(selectedAmount*100),
     currency:'NGN',
     metadata:{ meter:meterInput.value.trim(), provider:providerName, plan:currentPlan },
     callback: function(response){
-      db.collection('users').doc(currentUser.uid).collection('history').add({
+      const record={
         amount:selectedAmount, provider:providerName, meter:meterInput.value.trim(), plan:currentPlan,
-        label:selectedLabel, source:'purchase', ref:response.reference,
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-      }).then(()=>{
-        showModal('success','Payment successful','Your token request has been recorded. Reference: '+response.reference);
-      });
+        label:selectedLabel, ref:response.reference, timestamp:firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if(currentUser){
+        db.collection('users').doc(currentUser.uid).collection('history').add({...record,source:'purchase'})
+          .then(()=>showModal('success','Payment successful','Your token request has been recorded. Reference: '+response.reference))
+          .catch(()=>showModal('success','Payment successful','Payment received. Reference: '+response.reference+'. Please keep it for support.'));
+      } else {
+        db.collection('guestPurchases').add({...record,phone:guestPhoneClean,status:'pending'})
+          .then(()=>showModal('success','Payment successful','Your token will be sent to '+guestPhoneClean+'. Reference: '+response.reference))
+          .catch(()=>showModal('success','Payment successful','Payment received. Reference: '+response.reference+'. Please contact support with this reference and your phone number.'));
+      }
     },
     onClose: function(){ toast('Payment window closed'); }
   });
