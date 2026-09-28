@@ -45,6 +45,47 @@
   .empty{color:var(--muted);font-size:13.5px;text-align:center;padding:24px 0}
   #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transition:.3s ease;z-index:60;max-width:88vw;text-align:center}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .stat{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;background:var(--card)}
+  .stat small{color:var(--muted);font-size:11.5px;font-weight:600;display:block}
+  .stat b{font-size:22px}
+  .mini{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+  .mini:hover{border-color:var(--green);color:var(--green)}
+  .mini.danger:hover{border-color:var(--danger);color:var(--danger)}
+  .tag{display:inline-block;background:var(--green-soft);color:var(--green-dark);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:700}
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,20,14,.45);display:flex;align-items:center;justify-content:center;z-index:70;opacity:0;pointer-events:none;transition:.25s;padding:20px}
+  .modal-overlay.show{opacity:1;pointer-events:auto}
+  .modal-box{background:#fff;border-radius:18px;padding:22px;max-width:380px;width:100%;transform:scale(.94);transition:.25s}
+  .modal-overlay.show .modal-box{transform:scale(1)}
+  .modal-box h3{margin:0 0 14px}
+  .modal-actions{display:flex;gap:10px;margin-top:14px}
+  .modal-actions .btn{flex:1}
+  .btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+  .btn.red{background:var(--danger)}
+  .tabs{overflow-x:auto}
+  .tab{white-space:nowrap}
+  .tabs{overflow-x:auto;white-space:nowrap}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+  .stat{border:1.5px solid var(--line);border-radius:var(--radius);padding:14px;background:var(--card)}
+  .stat b{display:block;font-size:21px}
+  .stat small{color:var(--muted);font-size:11.5px}
+  .pill{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--green-soft);color:var(--green-dark);margin-left:4px}
+  .pill.red{background:#fdeceb;color:var(--danger)}
+  .mini{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+  .mini:hover{border-color:var(--green)}
+  .mini.danger{color:var(--danger)}
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,20,14,.45);display:flex;align-items:center;justify-content:center;z-index:70;opacity:0;pointer-events:none;transition:.25s ease;padding:20px}
+  .modal-overlay.show{opacity:1;pointer-events:auto}
+  .modal-box{background:#fff;border-radius:18px;padding:22px;max-width:380px;width:100%;transform:scale(.94);transition:.25s ease}
+  .modal-overlay.show .modal-box{transform:scale(1)}
+  .modal-box h3{margin:0 0 14px;font-size:16px}
+  .modal-box p{color:var(--muted);font-size:13.5px;margin:0 0 16px}
+  .modal-actions{display:flex;gap:10px}
+  .btn-ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+  .btn-ghost:hover{background:var(--card)}
+  .btn-danger{background:var(--danger)}
+  .btn-danger:hover{background:#b3332d}
 </style>
 </head>
 <body>
@@ -67,12 +108,25 @@
   </header>
   <div style="padding:20px">
     <div class="tabs">
-      <button class="tab active" data-tab="send">Send Token</button>
+      <button class="tab active" data-tab="users">Users</button>
+      <button class="tab" data-tab="send">Send Token</button>
       <button class="tab" data-tab="broadcast">Broadcast</button>
       <button class="tab" data-tab="messages">Messages</button>
+      <button class="tab" data-tab="guests">Guest Orders</button>
+      <button class="tab" data-tab="logs">Logs</button>
     </div>
 
-    <div class="panel active" id="panel-send">
+    <div class="panel active" id="panel-users">
+      <div class="stats">
+        <div class="stat"><small>Total users</small><b id="st-users">–</b></div>
+        <div class="stat"><small>Bought credits</small><b id="st-buyers">–</b></div>
+        <div class="stat"><small>Total sales</small><b id="st-sales">–</b></div>
+      </div>
+      <div class="form-group"><input type="text" id="us-search" placeholder="Search users by email, name or phone"></div>
+      <div id="usersList"><div class="empty">Loading…</div></div>
+    </div>
+
+    <div class="panel" id="panel-send">
       <div class="card">
         <h3>Send an individual token</h3>
         <div class="form-group"><label>User's registered Gmail</label><input type="email" id="sn-email" placeholder="user@gmail.com"></div>
@@ -99,6 +153,16 @@
       <div id="broadcastList"><div class="empty">No broadcasts yet</div></div>
     </div>
 
+    <div class="panel" id="panel-guests">
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Guest purchases (send the token to the phone number)</h3>
+      <div id="guestsList"><div class="empty">No guest orders yet</div></div>
+    </div>
+
+    <div class="panel" id="panel-logs">
+      <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Admin activity logs</h3>
+      <div id="logsList"><div class="empty">No logs yet</div></div>
+    </div>
+
     <div class="panel" id="panel-messages">
       <h3 style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em">Contact messages</h3>
       <div id="messagesList"><div class="empty">No messages yet</div></div>
@@ -107,6 +171,10 @@
 </div>
 
 <div id="toast"></div>
+<div class="modal-overlay" id="modal"><div class="modal-box">
+  <h3 id="md-title"></h3><div id="md-body"></div>
+  <div class="modal-actions"><button class="btn ghost" id="md-cancel">Cancel</button><button class="btn" id="md-ok">Confirm</button></div>
+</div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -141,7 +209,7 @@ auth.onAuthStateChanged(user=>{
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='block';
     document.getElementById('whoami').textContent=user.email;
-    loadSent(); loadBroadcasts(); loadMessages();
+    loadUsers(); loadGuests(); loadSent(); loadBroadcasts(); loadMessages(); loadLogs();
   } else {
     document.getElementById('app').style.display='none';
     document.getElementById('loginScreen').style.display='block';
@@ -176,7 +244,7 @@ document.getElementById('sn-submit').onclick=async ()=>{
       title:'Token received', body:`₦${amount.toLocaleString()} token has been added to your account${provider?' for '+provider:''}.`,
       timestamp:firebase.firestore.FieldValue.serverTimestamp()
     });
-    toast('Token sent to '+email);
+    toast('Token sent to '+email); logAction('Token sent',`₦${amount.toLocaleString()} to ${email}`);
     ['sn-email','sn-amount','sn-meter','sn-provider','sn-token'].forEach(id=>document.getElementById(id).value='');
     loadSent();
   }catch(e){ toast(e.message); }
@@ -197,7 +265,7 @@ document.getElementById('bc-submit').onclick=async ()=>{
   const title=document.getElementById('bc-title').value.trim(), body=document.getElementById('bc-body').value.trim();
   if(!title||!body) return toast('Add a title and message');
   await db.collection('broadcasts').add({title,body,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-  toast('Broadcast published'); document.getElementById('bc-title').value=''; document.getElementById('bc-body').value=''; loadBroadcasts();
+  toast('Broadcast published'); logAction('Broadcast',title); document.getElementById('bc-title').value=''; document.getElementById('bc-body').value=''; loadBroadcasts();
 };
 function loadBroadcasts(){
   db.collection('broadcasts').orderBy('timestamp','desc').limit(20).get().then(snap=>{
@@ -217,6 +285,99 @@ function loadMessages(){
       return `<div class="list-row"><div><b>${esc(m.email)} ${m.phone?'· '+esc(m.phone):''}</b><small>${esc(m.message)}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
   }).catch(()=>{});
 }
+/* ---- Modal helper (no browser popups) ---- */
+function openModal(title,bodyHtml,okLabel,danger,onOk){
+  document.getElementById('md-title').textContent=title;
+  document.getElementById('md-body').innerHTML=bodyHtml;
+  const ok=document.getElementById('md-ok'); ok.textContent=okLabel; ok.className='btn'+(danger?' red':'');
+  ok.onclick=async()=>{ ok.disabled=true; try{ await onOk(); closeModal(); }catch(e){ toast(e.message); } ok.disabled=false; };
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+document.getElementById('md-cancel').onclick=closeModal;
+
+/* ---- Logs ---- */
+function logAction(action,detail){
+  return db.collection('adminLogs').add({action,detail,by:ADMIN_EMAIL,timestamp:firebase.firestore.FieldValue.serverTimestamp()})
+    .then(loadLogs).catch(()=>{});
+}
+function loadLogs(){
+  db.collection('adminLogs').orderBy('timestamp','desc').limit(60).get().then(snap=>{
+    const box=document.getElementById('logsList');
+    if(snap.empty){ box.innerHTML='<div class="empty">No logs yet</div>'; return; }
+    box.innerHTML=snap.docs.map(d=>{const l=d.data();const t=l.timestamp?l.timestamp.toDate():new Date();
+      return `<div class="list-row"><div><b>${esc(l.action)}</b><small>${esc(l.detail||'')}</small></div><small>${t.toLocaleString()}</small></div>`;}).join('');
+  }).catch(()=>{});
+}
+
+/* ---- Users ---- */
+let usersCache=[];
+async function loadUsers(){
+  const box=document.getElementById('usersList'); box.innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const [us,hs]=await Promise.all([db.collection('users').get(), db.collectionGroup('history').get()]);
+    const st={};
+    hs.forEach(d=>{const h=d.data(); if(h.source!=='purchase') return;
+      const uid=d.ref.parent.parent.id; const s=st[uid]||(st[uid]={n:0,t:0}); s.n++; s.t+=Number(h.amount)||0;});
+    usersCache=us.docs.map(d=>({id:d.id,...d.data(),buys:st[d.id]?st[d.id].n:0,spent:st[d.id]?st[d.id].t:0})).filter(u=>!u.removed);
+    document.getElementById('st-users').textContent=usersCache.length;
+    document.getElementById('st-buyers').textContent=usersCache.filter(u=>u.buys>0).length;
+    document.getElementById('st-sales').textContent='₦'+usersCache.reduce((a,u)=>a+u.spent,0).toLocaleString();
+    renderUsers();
+  }catch(e){ box.innerHTML='<div class="empty">Could not load users: '+esc(e.message)+'</div>'; }
+}
+function renderUsers(){
+  const q=document.getElementById('us-search').value.trim().toLowerCase();
+  const list=usersCache.filter(u=>!q||[u.email,u.name,u.phone].join(' ').toLowerCase().includes(q));
+  const box=document.getElementById('usersList');
+  if(!list.length){ box.innerHTML='<div class="empty">No users found</div>'; return; }
+  box.innerHTML=list.map(u=>`<div class="list-row">
+    <div><b>${esc(u.email||'(no email)')} ${u.buys?'<span class="tag">Buyer</span>':''}</b>
+    <small>${esc(u.name||'No name')} · ${esc(u.phone||'No phone')} · ${u.buys} purchase${u.buys===1?'':'s'} · ₦${u.spent.toLocaleString()}</small></div>
+    <div style="display:flex;gap:6px"><button class="mini" data-edit="${u.id}">Edit</button><button class="mini danger" data-del="${u.id}">Remove</button></div></div>`).join('');
+}
+document.getElementById('us-search').oninput=renderUsers;
+document.getElementById('usersList').onclick=(e)=>{
+  const ed=e.target.closest('[data-edit]'), dl=e.target.closest('[data-del]');
+  if(ed) editUser(ed.dataset.edit); if(dl) removeUser(dl.dataset.del);
+};
+function editUser(id){
+  const u=usersCache.find(x=>x.id===id);
+  openModal('Edit user',`<div class="form-group"><label>Email (read-only)</label><input value="${esc(u.email||'')}" disabled></div>
+    <div class="form-group"><label>Name</label><input id="ed-name" value="${esc(u.name||'')}"></div>
+    <div class="form-group"><label>Phone</label><input id="ed-phone" value="${esc(u.phone||'')}"></div>`,'Save',false,async()=>{
+    await db.collection('users').doc(id).set({name:document.getElementById('ed-name').value.trim(),phone:document.getElementById('ed-phone').value.trim()},{merge:true});
+    logAction('User edited',u.email); toast('User updated'); loadUsers();
+  });
+}
+function removeUser(id){
+  const u=usersCache.find(x=>x.id===id);
+  openModal('Remove user',`<p style="font-size:13.5px;color:var(--muted);margin:0">This deletes <b>${esc(u.email||id)}</b>'s history and notifications and blocks them from signing in. To free up the email for re-use, also delete the login in Firebase Console → Authentication.</p>`,'Remove',true,async()=>{
+    for(const sub of ['history','notifications']){
+      const snap=await db.collection('users').doc(id).collection(sub).get();
+      await Promise.all(snap.docs.map(d=>d.ref.delete()));
+    }
+    await db.collection('users').doc(id).set({removed:true,email:u.email||''});
+    logAction('User removed',u.email); toast('User removed'); loadUsers();
+  });
+}
+
+/* ---- Guest orders ---- */
+function loadGuests(){
+  db.collection('guestPurchases').orderBy('timestamp','desc').limit(100).get().then(snap=>{
+    const box=document.getElementById('guestsList');
+    if(snap.empty){ box.innerHTML='<div class="empty">No guest orders yet</div>'; return; }
+    box.innerHTML=snap.docs.map(d=>{const g=d.data();const t=g.timestamp?g.timestamp.toDate():new Date();
+      return `<div class="list-row"><div><b>${esc(g.phone)} · ₦${Number(g.amount||0).toLocaleString()} <span class="tag">${g.status==='sent'?'Sent':'Pending'}</span></b>
+      <small>${esc(g.provider||'')} · Meter ${esc(g.meter||'')} · ${esc(g.plan||'')} · Ref ${esc(g.ref||'')} · ${t.toLocaleString()}</small></div>
+      ${g.status==='sent'?'':`<button class="mini" data-sent="${d.id}" data-phone="${esc(g.phone)}">Mark sent</button>`}</div>`;}).join('');
+  }).catch(e=>{document.getElementById('guestsList').innerHTML='<div class="empty">Could not load: '+esc(e.message)+'</div>';});
+}
+document.getElementById('guestsList').onclick=async(e)=>{
+  const b=e.target.closest('[data-sent]'); if(!b) return;
+  await db.collection('guestPurchases').doc(b.dataset.sent).update({status:'sent'});
+  logAction('Guest token sent',b.dataset.phone); toast('Marked as sent'); loadGuests();
+};
 </script>
 </body>
 </html>
