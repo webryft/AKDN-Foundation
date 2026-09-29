@@ -173,7 +173,7 @@
 <div id="toast"></div>
 <div class="modal-overlay" id="modal"><div class="modal-box">
   <h3 id="md-title"></h3><div id="md-body"></div>
-  <div class="modal-actions"><button class="btn" id="md-cancel" style="background:#fff;color:var(--ink);border:1.5px solid var(--line)">Cancel</button><button class="btn" id="md-ok">Confirm</button></div>
+  <div class="modal-actions"><button class="btn ghost" id="md-cancel">Cancel</button><button class="btn" id="md-ok">Confirm</button></div>
 </div></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
@@ -264,13 +264,8 @@ function loadSent(){
 document.getElementById('bc-submit').onclick=async ()=>{
   const title=document.getElementById('bc-title').value.trim(), body=document.getElementById('bc-body').value.trim();
   if(!title||!body) return toast('Add a title and message');
-  const btn=document.getElementById('bc-submit'); btn.disabled=true; btn.textContent='Publishing…';
-  try{
-    await db.collection('broadcasts').add({title,body,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-    toast('Broadcast published'); logAction('Broadcast',title);
-    document.getElementById('bc-title').value=''; document.getElementById('bc-body').value=''; loadBroadcasts();
-  }catch(e){ toast('Failed: '+e.message); }
-  btn.disabled=false; btn.textContent='Publish Broadcast';
+  await db.collection('broadcasts').add({title,body,timestamp:firebase.firestore.FieldValue.serverTimestamp()});
+  toast('Broadcast published'); logAction('Broadcast',title); document.getElementById('bc-title').value=''; document.getElementById('bc-body').value=''; loadBroadcasts();
 };
 function loadBroadcasts(){
   db.collection('broadcasts').orderBy('timestamp','desc').limit(20).get().then(snap=>{
@@ -337,7 +332,7 @@ function renderUsers(){
   const box=document.getElementById('usersList');
   if(!list.length){ box.innerHTML='<div class="empty">No users found</div>'; return; }
   box.innerHTML=list.map(u=>`<div class="list-row">
-    <div><b>${esc(u.email||'(no email)')} ${u.buys?'<span class="pill">Buyer</span>':''}</b>
+    <div><b>${esc(u.email||'(no email)')} ${u.buys?'<span class="tag">Buyer</span>':''}</b>
     <small>${esc(u.name||'No name')} · ${esc(u.phone||'No phone')} · ${u.buys} purchase${u.buys===1?'':'s'} · ₦${u.spent.toLocaleString()}</small></div>
     <div style="display:flex;gap:6px"><button class="mini" data-edit="${u.id}">Edit</button><button class="mini danger" data-del="${u.id}">Remove</button></div></div>`).join('');
 }
@@ -373,18 +368,15 @@ function loadGuests(){
     const box=document.getElementById('guestsList');
     if(snap.empty){ box.innerHTML='<div class="empty">No guest orders yet</div>'; return; }
     box.innerHTML=snap.docs.map(d=>{const g=d.data();const t=g.timestamp?g.timestamp.toDate():new Date();
-      return `<div class="list-row"><div><b>${esc(g.phone)} · ₦${Number(g.amount||0).toLocaleString()} <span class="pill${g.status==='sent'?'':' red'}">${g.status==='sent'?'Sent':'Pending'}</span></b>
+      return `<div class="list-row"><div><b>${esc(g.phone)} · ₦${Number(g.amount||0).toLocaleString()} <span class="tag">${g.status==='sent'?'Sent':'Pending'}</span></b>
       <small>${esc(g.provider||'')} · Meter ${esc(g.meter||'')} · ${esc(g.plan||'')} · Ref ${esc(g.ref||'')} · ${t.toLocaleString()}</small></div>
       ${g.status==='sent'?'':`<button class="mini" data-sent="${d.id}" data-phone="${esc(g.phone)}">Mark sent</button>`}</div>`;}).join('');
   }).catch(e=>{document.getElementById('guestsList').innerHTML='<div class="empty">Could not load: '+esc(e.message)+'</div>';});
 }
 document.getElementById('guestsList').onclick=async(e)=>{
   const b=e.target.closest('[data-sent]'); if(!b) return;
-  b.disabled=true; b.textContent='Saving…';
-  try{
-    await db.collection('guestPurchases').doc(b.dataset.sent).update({status:'sent'});
-    logAction('Guest token sent',b.dataset.phone); toast('Marked as sent'); loadGuests();
-  }catch(e2){ toast('Failed: '+e2.message); b.disabled=false; b.textContent='Mark sent'; }
+  await db.collection('guestPurchases').doc(b.dataset.sent).update({status:'sent'});
+  logAction('Guest token sent',b.dataset.phone); toast('Marked as sent'); loadGuests();
 };
 </script>
 </body>
